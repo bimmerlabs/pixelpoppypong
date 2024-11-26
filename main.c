@@ -74,7 +74,6 @@ void my_input_callback(void) {
             break;
         case GAME_STATE_GAMEPLAY:
             gameplay_input();
-            // my_input();
             break;
         default:
             break;

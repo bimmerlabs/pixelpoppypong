@@ -11,4 +11,11 @@ void playCDTrack(int track, bool repeat)
     cd_is_playing = true;
 }
 
-
+void reset_audio(int new_volume) {
+    if (cd_is_playing) {
+        jo_audio_stop_cd();
+        volume = new_volume;
+        jo_audio_set_volume(volume);
+        cd_is_playing = false;
+    }
+}

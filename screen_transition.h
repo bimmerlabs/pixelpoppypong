@@ -3,6 +3,7 @@
 #define MINIMUM_FADE -254
 #define NEUTRAL_FADE 0
 #define MAXIMUM_FADE 254
+#define PAUSE_FADE -75
 
 extern unsigned int g_TransitionTimer;
 extern Sint16 nbg0_rate;

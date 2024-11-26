@@ -4,6 +4,7 @@
 #include "main.h"
 #include "assets.h"
 #include "util.h"
+#include "screen_transition.h"
 // #include "objects/player.h"
 // #include "audio.h"
 
@@ -99,8 +100,7 @@ void pauseGame(void)
 {
 
     g_PauseChoice = 0;
-    // slColOffsetA(-150,-150,-150);
-    slColOffsetB(-75,-75,-75);
+    slColOffsetB(PAUSE_FADE, PAUSE_FADE, PAUSE_FADE);
     g_Game.isPaused = true;
 
     volume = HALF_VOLUME;
@@ -169,7 +169,7 @@ static void checkForPauseMenu(void)
         {
             case PAUSE_OPTIONS_RESUME:
                 // simply unpause
-                slColOffsetB(0,0,0);
+                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
                 jo_audio_set_volume(volume);
@@ -177,6 +177,7 @@ static void checkForPauseMenu(void)
 
             case PAUSE_OPTIONS_RESTART:
                 // start a new game without going to title or team select
+                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 changeState(GAME_STATE_GAMEPLAY);
                 break;
 
@@ -184,12 +185,13 @@ static void checkForPauseMenu(void)
                 // quits to the title screen
                 // directly to menu instead of restarting the entire game (ABC+START)
                 // need to make sure the game is completely initialized here
-                changeState(GAME_STATE_TITLE_SCREEN);
+                // slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE); // only needed if no transition
+                transitionState(GAME_STATE_TITLE_SCREEN); // work transition for menu instead
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
                 // simply unpause
-                slColOffsetB(0,0,0);
+                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
                 jo_audio_set_volume(volume);

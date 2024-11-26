@@ -16,6 +16,7 @@ void pppLogo_init(void)
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
     slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+    screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
     slColOffsetOn(NBG0ON | NBG1ON);
     slColOffsetAUse(NBG0ON);
     slColOffsetBUse(NBG1ON);
@@ -35,7 +36,7 @@ void pppLogo_input(void)
        jo_is_pad1_key_down(JO_KEY_A) ||
        jo_is_pad1_key_down(JO_KEY_C))
     {
-            changeState(GAME_STATE_TITLE_SCREEN);
+            transitionState(GAME_STATE_TITLE_SCREEN);
             return;
     }
 

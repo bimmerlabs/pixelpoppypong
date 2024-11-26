@@ -6,7 +6,7 @@
 #include "screen_transition.h"
 #include "team_select.h"
 #include "objects/player.h"
-// #include "audio.h"
+#include "audio.h"
 // #include "gameplay.h"
 
 bool transition_complete = false;
@@ -15,13 +15,6 @@ Uint16 state_fade_timer = STATE_FADE_TIMER;
 // transistions between game states
 void changeState(GAME_STATE newState)
 {
-    if (cd_is_playing) {
-        jo_audio_stop_cd();
-        volume = MIN_VOLUME;
-        jo_audio_set_volume(volume);
-        cd_is_playing = false;
-    }
-    
     transition_complete = false;
     
     switch(newState)
@@ -31,35 +24,36 @@ void changeState(GAME_STATE newState)
             volume = MAX_VOLUME;
             jo_audio_set_volume(volume);
             playCDTrack(LOGO_TRACK, false);
-            screenTransition_init(-254, -254, -254);
             pppLogo_init();
             g_Game.gameState = GAME_STATE_PPP_LOGO;
             break;
         }
         case GAME_STATE_TITLE_SCREEN:
         {
-            // volume = MAX_VOLUME;
-            // jo_audio_set_volume(volume);
-            // playCDTrack(TITLE_TRACK);
-            screenTransition_init(-254, -254, -254);
+            if (g_Game.gameState != GAME_STATE_TITLE_MENU) {
+                reset_audio(MIN_VOLUME);
+                playCDTrack(TITLE_TRACK, true);
+            }
+            g_Game.nextState = GAME_STATE_TITLE_SCREEN;
             titleScreen_init();
-            g_Game.gameState = GAME_STATE_TITLE_SCREEN;
+            g_Game.gameState = g_Game.nextState;
             break;
         }
         case GAME_STATE_TITLE_MENU:
         {
-            volume = HALF_VOLUME;
-            // jo_audio_set_volume(volume);
-            // titleScreen_init();
-            g_Game.gameState = GAME_STATE_TITLE_MENU;
+            if (g_Game.gameState == GAME_STATE_GAMEPLAY || g_Game.gameState == GAME_STATE_TEAM_SELECT) {
+                reset_audio(MIN_VOLUME);
+                playCDTrack(TITLE_TRACK, true);
+            }
+            g_Game.nextState = GAME_STATE_TITLE_MENU;
+            g_Game.gameState = g_Game.nextState;
             break;
         }
         case GAME_STATE_DEMO_LOOP:
         {
-            // volume = MAX_VOLUME;
-            // jo_audio_set_volume(volume);
-            // playCDTrack(DEMO_TRACK);
             g_Game.nextState = GAME_STATE_DEMO_LOOP;
+            reset_audio(MIN_VOLUME);
+            // playCDTrack(DEMO_TRACK, false);
             initDemoPlayers();
             gameplay_init();
             demo_init();
@@ -68,11 +62,9 @@ void changeState(GAME_STATE newState)
         }
         case GAME_STATE_GAMEPLAY:
         {
-            // volume = MAX_VOLUME;
-            // jo_audio_set_volume(volume);
-            // jo_audio_stop_cd();
-            // playCDTrack(GAME_TRACK);
             g_Game.nextState = GAME_STATE_GAMEPLAY;
+            reset_audio(MIN_VOLUME);
+            // playCDTrack(GAME_TRACK, true);
             gameplay_init();
             g_Game.gameState = g_Game.nextState;
 
@@ -91,8 +83,7 @@ void changeState(GAME_STATE newState)
         {
             jo_core_tv_off();
             frame = 1;
-            volume = MAX_VOLUME;
-            jo_audio_set_volume(volume);
+            reset_audio(MAX_VOLUME);
             slColOffsetOn(OFF);
             jo_set_default_background_color(JO_COLOR_Black);
             jo_set_displayed_screens(JO_BACK_SCREEN);
@@ -142,12 +133,12 @@ void transition_draw(void)
         
     volume--;
     if (volume < MIN_VOLUME) {
-    volume = MIN_VOLUME;
+        volume = MIN_VOLUME;
     }
     jo_audio_set_volume(volume);            
 
     if (volume == MIN_VOLUME) {
-    changeState(g_Game.nextState);
+        changeState(g_Game.nextState);
     }
 }
 

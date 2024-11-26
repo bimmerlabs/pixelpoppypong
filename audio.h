@@ -3,7 +3,7 @@
 
 // CD sound tracks
 #define LOGO_TRACK                2
-// #define TITLE_TRACK               3
+#define TITLE_TRACK               3 // temp
 #define SELECT_TRACK              3
 // #define GAME_TRACK                5
 // #define PAUSE_TRACK               6
@@ -21,3 +21,5 @@ extern bool cd_is_playing;
 extern int volume;
 
 void playCDTrack(int track, bool repeat);
+
+void reset_audio(int new_volume);

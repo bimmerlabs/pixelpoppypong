@@ -176,13 +176,6 @@ void drawTeamSelectGrid(void)
 // initializations for PPP screen
 void teamSelect_init(void)
 {
-    
-    // slColOffsetOn(NBG0ON | NBG1ON | SPRON);
-    // slColOffsetAUse(NBG0ON);
-    // slColOffsetBUse(NBG1ON);
-    // screenTransition_init(0, 0, 0);
-    // slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
-    // slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     initPlayers();
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
@@ -198,16 +191,10 @@ void assign_team(int oldTeam, int newTeam) {
 }
 
 void characterSelect_input(void)
-{
-    // int characterSelectChoice = 0;
-    
-    // if (!transition_complete) {
-        // return;
-    // }
-    
+{    
     if (jo_is_pad1_key_down(JO_KEY_B) && g_Players[0].character.startSelection == false && g_Players[0].pressedB == false)
     {
-        changeState(GAME_STATE_TITLE_SCREEN);
+        transitionState(GAME_STATE_TITLE_SCREEN);
     }
     
     for(int i = 0; i < MAX_PLAYERS; i++)
@@ -239,8 +226,6 @@ void characterSelect_input(void)
                     }
                 } while (!characterAvailable[player->character.choice]);
             }
-            
-            // player->_sprite = &paw_blank;
 
                 player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
                 player->acceleration = characterAttributes[player->character.choice].acceleration;
