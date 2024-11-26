@@ -1,51 +1,23 @@
 #include <jo/jo.h>
 #include <string.h>
 #include "../main.h"
-// #include "../assets.h"
+#include "../assets.h"
 #include "player.h"
 // #include "grid.h"
 // #include "explosion.h"
+// #include "../team_select.h"
+#include "../sprites.h"
 #include "../gameplay.h"
 #include "../util.h"
-
-#define X_SPEED_INC toFIXED(0.5)
-#define Y_SPEED_INC toFIXED(4.0)
-#define X_FRICTION_SPEED toFIXED(0.375)
-
-#define MAX_Y_SPEED               toFIXED(8.0)  // don't fall faster than this
-#define MAX_Y_SPEED2              toFIXED(-8.0)
-#define MAX_X_SPEED               toFIXED(7.0)  // don't move faster than this
-#define MAX_X_SPEED2              toFIXED(-7.0) // don't move faster than this
-
-#define MAX_X_SPEED3               toFIXED(4.5)  // don't move faster than this
-#define MAX_Y_SPEED3              toFIXED(-5.0)
-
-
-#define PLAYER_HEIGHT toFIXED(20)
-#define PLAYER_WIDTH toFIXED(64)
-// TODO: move this
-// screen definition
-#define SCREEN_RIGHT  toFIXED(352.0)
-#define SCREEN_LEFT  toFIXED(-352.0)
-#define SCREEN_MIDDLE  toFIXED(0)
-#define SCREEN_WIDTH  toFIXED(704.0)
-
-#define SCREEN_TOP toFIXED(-240.0)
-#define SCREEN_BOTTOM toFIXED(240.0)
-
-#define SCREEN_OFFSET toFIXED(100)
-#define GAMEPLAY_ABOVE_SCREEN (SCREEN_TOP - SCREEN_OFFSET)
-#define GAMEPLAY_BELOW_SCREEN (SCREEN_BOTTOM + SCREEN_OFFSET)
-
-
-#define EXPLODING_FRAME_COUNT (2 * 30)
-#define EXPLODE_FRAME_COUNT (4 * 30)
 
 // distance formula without the square root
 bool checkDistance(PPLAYER a, PPLAYER b);
 
-
 PLAYER g_Players[MAX_PLAYERS] = {0};
+
+bool characterAvailable[TOTAL_CHARACTERS] = {
+    true, true, true, true, true, true, true, true
+};
 
 void drawPlayerSprite(PPLAYER player);
 void speedLimitPlayer(PPLAYER player);
@@ -55,6 +27,33 @@ void explodeNeighbors(PPLAYER player);
 void respawnPlayer(PPLAYER player, bool deductLife);
 
 static int getLives(GAME_MODE mode);
+
+// const CHARACTER_ATTRIBUTES characterAttributes[] = {
+   // //s  a  p   // speed, acceleration, power - scale 0-100
+    // {70, 60, 55}, // MACCHI: High speed, medium acceleration, medium power
+    // {55, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
+    // {60, 50, 70}, // PENNY: Medium-high speed, medium acceleration, high power
+    // {60, 45, 80}, // POPPY: Low attributes (for cursors) (was 4 4 4)
+    // {50, 60, 70}, // POTTER: Low attributes (for cursors) (was 4 4 4)
+    // {70, 80, 50}, // SPARTA: High acceleration, high speed, medium power
+    // {65, 65, 65}, // TJ: Balanced attributes
+    // {70, 50, 85}, // WUPPY: High power, medium speed, low acceleration
+    // {60, 60, 60}, // NONE: Medium attributes (for CPU)
+// };
+const CHARACTER_ATTRIBUTES characterAttributes[] = {
+   //s   a   p   // speed, acceleration, power - scale 0-80
+    {56, 48, 44}, // MACCHI: High speed, medium acceleration, medium power
+    {44, 56, 48}, // JELLY: Medium speed, high acceleration, medium-high power
+    {48, 40, 56}, // PENNY: Medium-high speed, medium acceleration, high power
+    {48, 36, 64}, // POPPY: Low attributes (for cursors)
+    {40, 48, 56}, // POTTER: Low attributes (for cursors)
+    {56, 64, 40}, // SPARTA: High acceleration, high speed, medium power
+    {52, 52, 52}, // TJ: Balanced attributes
+    {56, 40, 68}, // WUPPY: High power, medium speed, low acceleration
+    {48, 48, 48}, // NONE: Medium attributes (for CPU)
+};
+
+int teamCount[MAX_TEAMS] = {0};
 
 void spawnPlayers(void)
 {
@@ -117,8 +116,85 @@ static int getLives(GAME_MODE mode)
 
 }
 
-// initialize the title cursors that scroll in the background
-void initTitlePlayers(void)
+void initPlayers(void)
+{
+    PPLAYER player = NULL;
+
+    memset(g_Players, 0, sizeof(g_Players));
+    
+    for (int i = 0; i < TOTAL_CHARACTERS; i++)
+    {
+        characterAvailable[i] = true;
+    }
+    
+    for(int i = 0; i < MAX_PLAYERS; i++)
+    {
+        player = &g_Players[i];
+        
+        player->playerID = i;
+        player->objectState = OBJECT_STATE_ACTIVE;
+        player->character.selected = CHARACTER_NONE;
+        // player->_sprite = &paw_blank;
+
+        // SPRITES
+        // assign cursor & bg tile to each player
+        player->_cursor = &player_cursor;
+        player->_bg = &player_bg;
+        player->_sprite = &paw_blank;
+        g_Players[i]._sprite->spr_id = paw_blank_id; // this won't reset for some reason?
+        // character portrait
+        player->_portrait = &character_portrait;
+        player->_portrait->spr_id = player->_portrait->anim1.asset[CHARACTER_NONE];
+        
+        // CHARACTER
+        player->character.choice = CHARACTER_NONE;
+        player->character.selected = false;
+        player->character.startSelection = false;
+        bool pressedB = false;
+        
+        // TEAM
+        player->team.choice = TEAM_CPU;
+        player->team.oldTeam = TEAM_CPU;
+        player->team.startSelection = false;
+        player->team.selected = false;
+        
+        // GAMEPLAY
+        player->numLives = 0;
+    }
+}
+
+void initVsModePlayers(void)
+{
+    PPLAYER player = NULL;
+
+    for(int i = 0; i < MAX_PLAYERS; i++)
+    {
+        player = &g_Players[i];
+        
+        g_Players[i]._sprite->spr_id = g_Players[i]._sprite->anim1.asset[0];
+        
+        // Flip the sprite based on even/odd team
+        if (i == 0) {
+            player->_sprite->flip = sprNoflip;
+            set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+        } 
+        else if (i == 1) {
+            player->_sprite->flip = sprHflip;
+            set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+        }
+        else if (i == 2) {
+            player->_sprite->flip = sprNoflip;
+            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+        }
+        else if (i == 3) {
+            player->_sprite->flip = sprHflip;
+            set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+        }
+        
+    }
+}
+
+void initDemoPlayers(void)
 {
     PPLAYER player = NULL;
 
@@ -127,46 +203,7 @@ void initTitlePlayers(void)
     for(int i = 0; i < MAX_PLAYERS; i++)
     {
         player = &g_Players[i];
-
-        player->objectState = OBJECT_STATE_ACTIVE;
-        player->subState = PLAYER_STATE_TITLE;
-        player->playerID = i;
-
-        // cursor players start in the bottom left and move to the top right
-        // randomizeTitlePlayerPosition(&player->curPos.x, &player->curPos.y);
-
-        player->curPos.dx = MAX_X_SPEED3;
-        player->curPos.dy = MAX_Y_SPEED3;
-    }
-}
-
-
-void initPlayers(void)
-{
-    PPLAYER player = NULL;
-    int numLives = 0;
-
-    memset(g_Players, 0, sizeof(g_Players));
-
-    numLives = getLives(g_Game.gameMode);
-
-    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
-    {
-        player = &g_Players[i];
-
-        player->playerID = i;
-
-        // TODO: one player for now
-        player->objectState = OBJECT_STATE_ACTIVE;
-
-        // the player is initially not on a team
-        player->teamSelectChoice = i; // assign them to a character sprite instead
-
-        player->numLives = numLives;
-        player->crackChoice = jo_random(4) - 1;
-        // if (i == 0) {
-            // player->_sprite = &macchi;
-        // }
+        
     }
 }
 
@@ -324,8 +361,8 @@ void updatePlayers(void)
         // move the player
         player->_sprite->pos.y += player->curPos.dy;
         player->_sprite->pos.x += player->curPos.dx;
-        player->size += player->ds;
-        player->angle += player->da;
+        // player->size += player->ds;
+        // player->angle += player->da;
 
         boundPlayer(player);
     }
@@ -341,8 +378,7 @@ void drawPlayers(void)
         {
             continue;
         }
-
-        drawPlayerSprite(player);
+        my_sprite_draw(player->_sprite);
     }
 }
 
@@ -371,7 +407,7 @@ void drawPlayerSprite(PPLAYER player)
             // jo_sprite_restore_sprite_scale();
         // }
 
-        jo_sprite_change_sprite_scale_xy_fixed(player->size, player->size);
+        // jo_sprite_change_sprite_scale_xy_fixed(player->size, player->size);
 
 
         // jo_sprite_draw3D_and_rotate(playerSprite, toINT(player->curPos.x), toINT(player->curPos.y), PLAYER_Z, player->angle);
@@ -465,9 +501,9 @@ void boundPlayer(PPLAYER player)
         player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
     }
 
-    if(player->_sprite->pos.x < SCREEN_LEFT)
+    if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
     {
-        player->_sprite->pos.x = SCREEN_LEFT;
+        player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
     }
 
     if(player->_sprite->pos.y > SCREEN_BOTTOM - PLAYER_HEIGHT)
@@ -486,25 +522,25 @@ void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion)
     int rand = 0;
 
     player->subState = PLAYER_STATE_EXPLODING;
-    player->frameCount = EXPLODING_FRAME_COUNT + jo_random(EXPLODING_FRAME_COUNT);
+    // player->frameCount = EXPLODING_FRAME_COUNT + jo_random(EXPLODING_FRAME_COUNT);
     player->score.deaths++;
 
     player->curPos.dx = jo_random(0x40000) - 0x20000;
     player->curPos.dy = jo_random(0x40000) - 0x20000;
 
-    player->size = toFIXED(1);
-    player->ds = toFIXED(.07);
+    // player->size = toFIXED(1);
+    // player->ds = toFIXED(.07);
 
-    player->angle = jo_random(360);
+    // player->angle = jo_random(360);
 
 
-    player->da = 45 - jo_random(30);
+    // player->da = 45 - jo_random(30);
 
     // 50% chance to flip the direction
     rand = jo_random(2);
     if(rand == 1)
     {
-        player->da *= -1;
+        // player->da *= -1;
     }
 
     // if(showExplosion)
@@ -581,14 +617,14 @@ void respawnPlayer(PPLAYER player, bool deductLife)
     // set position
     player->curPos.x = toFIXED(jo_random(660) - 330);
     player->curPos.y = toFIXED(jo_random(330) - 150);
-    player->angle = 0;
-    player->size = toFIXED(1);
+    // player->angle = 0;
+    // player->size = toFIXED(1);
 
     // reset speed to zero
     player->curPos.dx = 0;
     player->curPos.dy = 0;
-    player->da = 0;
-    player->ds = 0;
+    // player->da = 0;
+    // player->ds = 0;
 
     player->subState = PLAYER_STATE_ACTIVE;
 }

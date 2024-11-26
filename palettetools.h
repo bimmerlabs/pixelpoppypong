@@ -44,8 +44,8 @@ typedef struct
     ObjectHSL color[MAX_PALETTE_ENTRIES];
 } HslPalette;
 
-extern Bool do_update;
-extern Bool update_palette;
+extern bool do_update;
+extern bool update_palette;
 
 typedef struct {
     Uint16 hue;

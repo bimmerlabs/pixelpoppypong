@@ -1,3 +1,5 @@
+// not used yet, for VDP2 stuff
+
 #include	"sgl.h"
 void MapWrite(Uint16* MapAddr, Uint16 x, Uint16 y, Uint16 data);
 

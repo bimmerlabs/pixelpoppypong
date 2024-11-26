@@ -2,13 +2,16 @@
 
 #include <jo/jo.h>
 
-#define FRAMERATE 4
-#define DEMO_TIMER (30 * 60)
+// #define ROUND_OVER_TIME (4 * 60)
+
+#define GAME_BEGIN_TIME (3 * 60)
+#define DEMO_TIME (30 * 60)
 
 extern ANGLE ball_rotation;
 extern unsigned int g_DemoTimer;
-extern Bool start_timer;
-extern Bool g_RoundOver;
+extern bool start_timer;
+extern bool g_RoundOver;
+extern Uint16 g_GameBeginTimer;
 extern Uint16 g_RoundOverTimer;
 
 void demo_update(void);
@@ -20,3 +23,4 @@ void gameplay_init(void);
 void demo_init(void);
 void gameplay_update(void);
 void gameplay_input(void);
+void demo_input(void);

@@ -1,8 +1,9 @@
 #pragma once
-// #ifndef SPRITES_H
-// #define SPRITES_H
 
 #include <jo/jo.h>
+#include "main.h"
+
+#define FRAMERATE 4 // for animation speed
 
 typedef struct {
     FIXED x, y, z;
@@ -48,31 +49,49 @@ typedef struct {
 
 extern Sprite cursor;
 extern Sprite menu_text;
-extern Sprite menu_bg;
+extern Sprite menu_bg1;
+extern Sprite menu_bg2;
+extern Sprite character_portrait;
+extern Sprite player_bg;
+extern Sprite player_cursor;
 extern Sprite timer_num1;
 extern Sprite timer_num10;
-extern Sprite poppy;
+extern Sprite meter;
+extern Sprite pixel_poppy;
 extern Sprite macchi;
 extern Sprite jelly;
 extern Sprite penny;
 extern Sprite potter;
 extern Sprite sparta;
-extern Sprite player1; // player can make their own pet
+extern Sprite poppy; // player can make their own pet
+extern Sprite paw_blank;
 extern Sprite boss1;
 extern Sprite boss2;
 
-#define SET_SPR_POSITION(pos, px, py, pz) \
-    do {                           \
-        (pos).x = (toFIXED(px));             \
-        (pos).y = (toFIXED(py));             \
-        (pos).z = (toFIXED(pz));             \
-    } while (0)
+// #define SET_SPR_POSITION(pos, px, py, pz)
+    // do {
+        // (pos).x = (toFIXED(px));
+        // (pos).y = (toFIXED(py));
+        // (pos).z = (toFIXED(pz));
+    // } while (0)
 
-#define SET_SPR_SCALE(scl, sx, sy) \
-    do {                     \
-        (scl).x = (toFIXED(sx));       \
-        (scl).y = (toFIXED(sy));       \
-    } while (0)
+// #define SET_SPR_SCALE(scl, sx, sy) 
+    // do {                     
+        // (scl).x = (toFIXED(sx));       
+        // (scl).y = (toFIXED(sy));       
+    // } while (0)
+
+static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
+    sprite->pos.x = toFIXED(px);
+    sprite->pos.y = toFIXED(py);
+    sprite->pos.z = toFIXED(pz);
+}
+
+static inline void set_spr_scale(Sprite *sprite, int sx, int sy) {
+    sprite->scl.x = toFIXED(sx);
+    sprite->scl.y = toFIXED(sy);
+}
+
 
 // states
 
@@ -83,10 +102,29 @@ extern Sprite boss2;
 // sprHflip : Horizontally flipped display.
 // sprHVflip : Flip the display vertically and horizontally.
 
-void	my_sprite_draw(Sprite *sprite);
+static inline void	my_sprite_draw(Sprite *sprite) {
+	FIXED pos[XYZSS] = { sprite->pos.x, sprite->pos.y, sprite->pos.z, sprite->scl.x, sprite->scl.y };
+	SPR_ATTR attr = SPR_ATTRIBUTE( sprite->spr_id, JO_MULT_BY_64(sprite->pal_id), No_Gouraud, sprite->mesh | ECdis | CL64Bnk, sprite->flip | sprite->zmode );
+	slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
+}
 
-// #endif // SPRITES_H
+// // works but not really
+// static inline void	my_polygon_draw(Sprite *sprite) {
+	// FIXED pos[XYZSS] = { sprite->pos.x, sprite->pos.y, sprite->pos.z, sprite->scl.x, sprite->scl.y };
+	// SPR_ATTR attr = SPR_ATTRIBUTE( No_Texture, 256, No_Gouraud, sprite->mesh | ECdis | CL32KRGB, sprPolyLine | sprite->zmode );
+	// slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
+// }
 
+static inline void my_sprite_animation(Sprite *sprite) {
+        // move to an animation module
+        if (frame % FRAMERATE == 0) {
+            sprite->anim1.frame++;
+            if (sprite->anim1.frame > sprite->anim1.max) {
+                sprite->anim1.frame = 0;
+            }
+            sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        }
+}
 
 // SPR_ATTRIBUTE
 // Format

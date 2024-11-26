@@ -2,8 +2,9 @@
 
 #define TRANSITION_TIMER (3 * 60)
 #define STATE_FADE_TIMER (1 * 60)
-extern unsigned int g_TransitionTimer;
 
+extern bool transition_complete;
+extern unsigned int g_TransitionTimer;
 // various game states
 // each game state has it's own input/update/draw routines
 typedef enum
@@ -19,8 +20,8 @@ typedef enum
     GAME_STATE_TRANSITION,
 } GAME_STATE;
 
-void transitionState(GAME_STATE newState);
-
 void changeState(GAME_STATE newState);
+
+void transitionState(GAME_STATE newState);
 
 void transition_draw(void);

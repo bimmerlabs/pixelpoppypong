@@ -3,18 +3,22 @@
 #include <jo/jo.h>
 #include "state.h"
 #include "util.h"
+#include "audio.h"
 
-#define VERSION "v0.1"
+#define VERSION "0.2"
 #define MAX_DEBUG_LEVEL (1)
-#define MAX_PLAYERS (6)
-#define MAX_TEAMS (3)
+#define MAX_PLAYERS (4)
+#define MAX_TEAMS (4)
+#define MAX_TEAM_MEMBERS 3
 #define TIMEOUT (99) // seconds
 
-extern Bool first_load;
-extern Bool debug_display;
+extern Uint8 max_players; // replaces MAX_PLAYERS
+extern bool first_load;
+extern bool debug_display;
+extern bool widescreen; // anamorphic
 extern Uint8 frame;
 extern Uint8 g_GameTimer;
-extern Uint16 cursor_angle;
+extern Uint16 cursor_angle; // for title & pawsed menus
 
 // supported game types
 typedef enum _GAME_MODE
@@ -34,6 +38,14 @@ typedef enum _GAME_DIFFICULTY
     GAME_DIFFICULTY_HARD = 2,
     GAME_DIFFICULTY_MAX,
 } GAME_DIFFICULTY;
+
+// supported game difficulty
+typedef enum _GAME_RESOLUTION
+{
+    RESOLUTION_NORMAL = TV_352x240,
+    RESOLUTION_HIGH = TV_704x480,
+    RESOLUTION_WIDE   = TV_704x240,
+} GAME_RESOLUTION;
 
 // represents game state
 typedef struct _GAME

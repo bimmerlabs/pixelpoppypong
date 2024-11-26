@@ -3,15 +3,11 @@
 #include "sprites.h"
 #include "util.h"
 
-jo_palette sprite_pal;
-
-jo_palette      *my_game_palette_handling(void)
-{
-    jo_create_palette(&sprite_pal);
-    return (&sprite_pal);
-}
+// I haven't made any of my assets so this file is a mess
+// NOTE: Palette is loaded with the font and shared with all other sprites.
 
 Uint8 palette_transparent_index = 2;
+int paw_blank_id = 0;
 
 // // loads PCMs from the CD to the g_Assets struct
 // void loadPCMAssets(void)
@@ -94,35 +90,23 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
 // each sprite uses the same palette
 void loadSpriteAssets(void)
 {
-    #define NUM_PAW_SPRITES 5
-    #define NUM_POPPY_SPRITES 1
-    
-    // #define NUM_CURSORS_SPRITES 12
-    // #define NUM_FLAGS_SPRITES 12
-    // #define NUM_GRID_SPRITES 10
-    // #define NUM_MINE_SPRITES 5
-    // #define NUM_TEAM_SELECT_SPRITES 2
-    // #define NUM_PAUSE_LETTERS_SPRITES 6
-    // #define NUM_SCORE_DIGITS_SPRITES 10
-    // #define NUM_CRACKS_SPRITES 4
-    // #define NUM_SCORES_SPRITES 120
-    #define NUM_TITLE_TEXT_SPRITES 10
-    #define NUM_TIMER_SPRITES 11
-    // #define NUM_SHADOW_TITLE_TEXT_SPRITES 10
-    // #define NUM_PAUSE_TEXT_SPRITES 3
-    // #define NUM_EXPLOSION_SPRITES 6
 
     jo_tile paw1_tileset[NUM_PAW_SPRITES] = {0};
     jo_tile paw2_tileset[NUM_PAW_SPRITES] = {0};
-    jo_tile poppy1_tileset[NUM_POPPY_SPRITES] = {0};
-    // jo_tile poppy2_tileset[NUM_POPPY_SPRITES] = {0};
+    jo_tile pixel_poppy1_tileset[NUM_POPPY_SPRITES] = {0};
+    // jo_tile pixel_poppy2_tileset[NUM_POPPY_SPRITES] = {0};
     
     jo_tile title_text_tileset[NUM_TITLE_TEXT_SPRITES] = {0};
     jo_tile timer_tileset[NUM_TIMER_SPRITES] = {0};
+    
+    jo_tile menubg_tileset[NUM_MENUBG_SPRITES] = {0};
+    
+    jo_tile character_tileset[NUM_CHARACTER_SPRITES] = {0};
+    jo_tile pcursor_tileset[NUM_PCURSOR_SPRITES] = {0};
 
-    jo_set_tga_palette_handling(my_game_palette_handling);
+    // jo_set_tga_palette_handling(my_game_palette_handling);
     loadSprite(&macchi, g_Assets.paw1, "PAW1.TGA", paw1_tileset, COUNTOF(paw1_tileset), NUM_PAW_SPRITES, 32, 32, NUM_PAW_SPRITES);
-    jo_set_tga_palette_handling(JO_NULL);
+    // jo_set_tga_palette_handling(JO_NULL);
     loadSprite(&jelly, g_Assets.paw2, "PAW2.TGA", paw2_tileset, COUNTOF(paw2_tileset), NUM_PAW_SPRITES, 32, 32, NUM_PAW_SPRITES);
         
         penny.anim1.asset = g_Assets.paw1;
@@ -132,30 +116,43 @@ void loadSpriteAssets(void)
         
         sparta.anim1.asset = g_Assets.paw1;
         sparta.anim1.max = NUM_PAW_SPRITES-1;
-        player1.anim1.asset = g_Assets.paw2;
-        player1.anim1.max = NUM_PAW_SPRITES-1;
+        poppy.anim1.asset = g_Assets.paw2;
+        poppy.anim1.max = NUM_PAW_SPRITES-1;
         
         boss1.anim1.asset = g_Assets.paw1;
         boss1.anim1.max = NUM_PAW_SPRITES-1;
         boss2.anim1.asset = g_Assets.paw2;
         boss2.anim1.max = NUM_PAW_SPRITES-1;
-        
-    loadSprite(&poppy, g_Assets.poppy1, "POPPY0.TGA", poppy1_tileset, COUNTOF(poppy1_tileset), NUM_POPPY_SPRITES, 64, 48, NUM_POPPY_SPRITES);
+
+
+    paw_blank_id = jo_sprite_add_tga(NULL, "PAW0.TGA", palette_transparent_index);
+    paw_blank.spr_id = paw_blank_id;
     
-    
-    // initTileset(title_text_tileset, COUNTOF(title_text_tileset), 1, 224, 22);
-    
+    loadSprite(&pixel_poppy, g_Assets.pixel_poppy1, "POPPY0.TGA", pixel_poppy1_tileset, COUNTOF(pixel_poppy1_tileset), NUM_POPPY_SPRITES, 64, 48, NUM_POPPY_SPRITES);
+      
     loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, COUNTOF(timer_tileset), NUM_TIMER_SPRITES, 16, 16, 1);
     timer_num10.anim1.asset = g_Assets.timer;
     
     loadSprite(&menu_text, g_Assets.options, "MENU.TGA", title_text_tileset, COUNTOF(title_text_tileset), NUM_TITLE_TEXT_SPRITES, 224, 22, 1);
-    menu_bg.spr_id = jo_sprite_add_tga(NULL, "MENU_BG.TGA", palette_transparent_index);
     
-    // loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, int num_tilesets, int frames, int w, int h)
+    
+    loadSprite(&menu_bg1, g_Assets.menubg, "MENU_BG.TGA", menubg_tileset, COUNTOF(menubg_tileset), NUM_MENUBG_SPRITES, 2, 2, 8);
+    menu_bg1.spr_id = menu_bg1.anim1.asset[4];
+    menu_bg2.anim1.asset = g_Assets.menubg;
+    menu_bg2.spr_id = menu_bg2.anim1.asset[5];
+    player_bg.anim1.asset = g_Assets.menubg; // spr_id is set while drawing
+    
+    meter.anim1.asset = g_Assets.menubg;
+    meter.spr_id = meter.anim1.asset[6];
+    
+    loadSprite(&character_portrait, g_Assets.characters, "PORTRAIT.TGA", character_tileset, COUNTOF(character_tileset), NUM_CHARACTER_SPRITES, 48, 48, 3);
+    
+    loadSprite(&player_cursor, g_Assets.pcursor, "PCURSOR.TGA", pcursor_tileset, COUNTOF(pcursor_tileset), NUM_PCURSOR_SPRITES, 24, 24, 2);
     
     // g_Assets.mode = jo_sprite_add_tga_tileset(NULL, "TEXT.TGA", palette_transparent_index, title_text_tileset, COUNTOF(title_text_tileset));
     
     // non-animated sprites
     cursor.spr_id = jo_sprite_add_tga(NULL, "CURSOR.TGA", palette_transparent_index);
+    // meter.spr_id = jo_sprite_add_tga(NULL, "METER.TGA", palette_transparent_index);
 
 }

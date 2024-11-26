@@ -12,7 +12,7 @@
 int g_PauseChoice = 0;
 int g_PauseCursor = 0;
 
-#define PAUSE_TRACK 0
+// #define PAUSE_TRACK 0
 
 typedef enum _PAUSE_OPTIONS
 {
@@ -103,6 +103,8 @@ void pauseGame(void)
     slColOffsetB(-75,-75,-75);
     g_Game.isPaused = true;
 
+    volume = HALF_VOLUME;
+    jo_audio_set_volume(volume);
     // TODO:
     // playCDTrack(track);
     // maybe reduce the audio volume instead
@@ -169,24 +171,28 @@ static void checkForPauseMenu(void)
                 // simply unpause
                 slColOffsetB(0,0,0);
                 g_Game.isPaused = false;
+                volume = MAX_VOLUME;
+                jo_audio_set_volume(volume);
                 break;
 
             case PAUSE_OPTIONS_RESTART:
                 // start a new game without going to title or team select
-                transitionState(GAME_STATE_GAMEPLAY);
+                changeState(GAME_STATE_GAMEPLAY);
                 break;
 
             case PAUSE_OPTIONS_QUIT:
                 // quits to the title screen
                 // directly to menu instead of restarting the entire game (ABC+START)
                 // need to make sure the game is completely initialized here
-                transitionState(GAME_STATE_TITLE_SCREEN);
+                changeState(GAME_STATE_TITLE_SCREEN);
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
                 // simply unpause
                 slColOffsetB(0,0,0);
                 g_Game.isPaused = false;
+                volume = MAX_VOLUME;
+                jo_audio_set_volume(volume);
                 break;
 
             default:

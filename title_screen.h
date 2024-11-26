@@ -5,7 +5,7 @@
 #define MODE_OFFSET 6 // sprite index offset for mode select
 #define DIFF_ID 1     // sprite index offset for menu text
 #define DIFF_OFFSET 3 // sprite index offset for difficulty select
-#define START_ID 2     // sprite index offset for menu text
+#define START_ID 2    // sprite index offset for menu text
 
 extern FIXED pos_x;
 extern FIXED pos_y;

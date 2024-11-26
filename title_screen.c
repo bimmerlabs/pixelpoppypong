@@ -2,8 +2,8 @@
 #include "main.h"
 #include "main.h"
 #include "assets.h"
-#include "input.h"
 #include "title_screen.h"
+#include "screen_transition.h"
 // #include "objects/player.h"
 #include "BG_DEF/BG25.h"
 
@@ -12,10 +12,10 @@ int g_TitleScreenChoice = 0;
 int g_TitleScreenCursorColor = 0;
 
 unsigned int g_TitleTimer = 0;
-static Bool draw_start_text = true;
-static Bool draw_option_mode  = true;
-static Bool draw_option_difficulty  = true;
-static Bool draw_option_start  = true;
+static bool draw_start_text = true;
+static bool draw_option_mode  = true;
+static bool draw_option_difficulty  = true;
+static bool draw_option_start  = true;
 
 FIXED pos_x = 0; // for the background - should use the attribute instead
 FIXED pos_y = 0;
@@ -43,14 +43,14 @@ void titleScreen_init(void)
         init_bg25_img();
         first_load = false;
     }
-    slColOffsetOn(OFF);
     g_TitleTimer = 0;
-    poppy.scl.x = toFIXED(5);
-    poppy.scl.y = toFIXED(5);
-    poppy.rot.z = 0;
+    pixel_poppy.scl.x = toFIXED(5);
+    pixel_poppy.scl.y = toFIXED(5);
+    pixel_poppy.rot.z = 0;
     
-    slColOffsetAUse(OFF);
-    slColOffsetBUse(OFF);
+    slColOffsetOn(NBG0ON | NBG1ON | SPRON);
+    slColOffsetAUse(NBG0ON);
+    slColOffsetBUse(NBG1ON | SPRON);
     
     jo_set_default_background_color(JO_COLOR_DarkGray);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -62,10 +62,11 @@ void titleScreen_init(void)
     g_Game.gameMode = GAME_MODE_PRACTICE;
     g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
     
-    SET_SPR_POSITION(menu_bg.pos, 0, 130, 95);
-    SET_SPR_SCALE(menu_bg.scl, 78, 50);
+    // menu_bg1.mesh = MESHon;
+    set_spr_position(&menu_bg1, 0, 130, 95);
+    
+    set_spr_scale(&menu_bg1, 156, 50);
 
-    // initTitlePlayers();
     return;
 }
 
@@ -75,7 +76,7 @@ void titleScreen_input(void)
 {
     // select an option here
     if (jo_is_pad1_key_down(JO_KEY_START)) {
-        transitionState(GAME_STATE_TITLE_MENU);
+        changeState(GAME_STATE_TITLE_MENU);
     }
 }
 
@@ -143,7 +144,6 @@ void titleScreen_menu(void)
         {
             case TITLE_OPTION_GAME_START:
                 transitionState(GAME_STATE_TEAM_SELECT);
-                // transitionState(GAME_STATE_GAMEPLAY);
                 break;
                 
             default:
@@ -152,7 +152,7 @@ void titleScreen_menu(void)
     }
     if (jo_is_pad1_key_down(JO_KEY_B) )
     {
-        transitionState(GAME_STATE_TITLE_SCREEN); // TEMP
+        changeState(GAME_STATE_TITLE_SCREEN);
     }
 }
 
@@ -164,10 +164,23 @@ void titleScreen_update(void)
     }
     g_TitleTimer++;
 
+    // standard transition-in
+    if (!transition_complete && volume < MAX_VOLUME) {
+        volume += 2;
+        if (volume > MAX_VOLUME) {
+            volume = MAX_VOLUME;
+        }
+        jo_audio_set_volume(volume);
+    }
+    if (!transition_complete) {
+        transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
+    }
+    
     // check if the frameAnim has expired
     if(g_TitleTimer > TITLE_TIMER)
     {
-        changeState(GAME_STATE_DEMO_LOOP);
+        transitionState(GAME_STATE_DEMO_LOOP);
+        g_TitleTimer = 0;
     }
 }
 
@@ -177,6 +190,7 @@ void titleScreen_draw(void)
     {
         return;
     }
+    
     if (attrBg250.x_scroll > toFIXED(0)) {
         pos_x += attrBg250.x_scroll;
         if (pos_x > toFIXED(512.0))
@@ -188,7 +202,7 @@ void titleScreen_draw(void)
             pos_y = toFIXED(0);
     }
     slScrPosNbg1(pos_x, pos_y);
-
+    
     drawMenu();
     drawMenuCursor();
     drawTitle();
@@ -201,9 +215,9 @@ void titleScreen_draw(void)
 // draws title image + version number
 static void drawTitle(void)
 {
-    my_sprite_draw(&poppy);
+    my_sprite_draw(&pixel_poppy);
     // version number
-    jo_nbg0_printf(19, 27, "%s", VERSION);
+    jo_nbg0_printf(20, 27, "%s", VERSION);
     // title graphic
     switch (g_Game.gameState) {
         case GAME_STATE_TITLE_SCREEN:
@@ -216,10 +230,6 @@ static void drawTitle(void)
                 jo_nbg0_printf(16, 25, "PRESS START");
             }
             break;
-
-        // case GAME_STATE_TITLE_MENU:
-            // jo_nbg0_printf(19, 24, "MENU...");
-            // break;
 
         default:
             break;
@@ -296,7 +306,7 @@ static void drawMenu(void)
     if (draw_option_start)
         my_sprite_draw(&menu_text); // start
 
-    my_sprite_draw(&menu_bg); // shadow
+    my_sprite_draw(&menu_bg1); // shadow
 
 }
 

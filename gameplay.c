@@ -2,25 +2,24 @@
 #include "main.h"
 #include "gameplay.h"
 #include "assets.h"
-#include "font.h"
-#include "input.h"
+#include "screen_transition.h"
 #include "objects/player.h"
 // background images
 // #include "BG_DEF/BG25.h"
 // #include "palettetools.h"
 // #include "BG_DEF/bg0.h"
 #include "BG_DEF/hexagon.h" // normal map
-
+
 extern PLAYER g_Players[MAX_PLAYERS];
 
 unsigned int g_DemoTimer = 0;
-static Bool draw_demo_text = true;
-Bool start_timer = false;
-static Bool times_up = false;
-Bool g_RoundOver = false;
+bool start_timer = false;
+bool g_RoundOver = false;
+Uint16 g_GameBeginTimer = 0;
 Uint16 g_RoundOverTimer = 0;
 
-#define ROUND_OVER_TIME_FRAMES (30*4)
+static bool draw_demo_text = true;
+static bool times_up = false;
 
 static bool isRoundOver(void);
 // static void drawStats(void);
@@ -41,20 +40,24 @@ void demo_update(void)
     g_DemoTimer++;
 
     // check if the frameAnim has expired
-    if(g_DemoTimer > DEMO_TIMER)
+    if(g_DemoTimer > DEMO_TIME)
     {
-        changeState(GAME_STATE_PPP_LOGO);
+        transitionState(GAME_STATE_PPP_LOGO);
         g_DemoTimer = 0;
     }
 }void game_timer(void)
 {
+    // wait 3 seconds to start the game
+    if (!start_timer && g_GameBeginTimer >= GAME_BEGIN_TIME) {
+        start_timer = true;
+    }
     if (!start_timer) {
+        g_GameBeginTimer++;
         return;
     }
     // game timer
     Uint8 ones = g_GameTimer % 10; // Extracts the ones place
     Uint8 tens = g_GameTimer / 10; // Extracts the tens place
-    // Uint8 hnds = g_GameTimer / 100; // Extracts the hundreds place
         
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
@@ -74,42 +77,34 @@ void demo_update(void)
         return;
     }
     if (!g_Game.isPaused && !times_up) {
-        
+                // standard transition-in
+        if (!transition_complete && volume < MAX_VOLUME) {
+            volume += 2;
+            if (volume > MAX_VOLUME) {
+                volume = MAX_VOLUME;
+            }
+            jo_audio_set_volume(volume);
+        }
+        if (!transition_complete) {
+            transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
+        }
+                // move to draw/HUD timer function
         game_timer();
         my_sprite_draw(&timer_num10); // tens
         my_sprite_draw(&timer_num1);  // ones
-        my_sprite_draw(&menu_bg);     // shadow
+        my_sprite_draw(&menu_bg1);     // shadow
+                drawPlayers();
+        my_sprite_draw(&pixel_poppy);
         
-        my_sprite_draw(&macchi);
-        my_sprite_draw(&jelly);
-        my_sprite_draw(&penny);
-        my_sprite_draw(&potter);
-        my_sprite_draw(&sparta);
-        my_sprite_draw(&player1);
-        my_sprite_draw(&boss1);
-        my_sprite_draw(&boss2);
-        my_sprite_draw(&poppy);
+        // move to a physics module
+        pixel_poppy.rot.z++;
         
-                // move to a physics module
-        poppy.rot.z++;
-        
-        // move to an animation module
-        if (frame % FRAMERATE == 0) {
-            macchi.anim1.frame++;
-            if (macchi.anim1.frame > macchi.anim1.max) {
-                macchi.anim1.frame = 0;
-            }
-            macchi.spr_id = macchi.anim1.asset[macchi.anim1.frame];
-            
-            jelly.anim1.frame++;
-            if (jelly.anim1.frame > jelly.anim1.max) {
-                jelly.anim1.frame = 0;
-            }
-            jelly.spr_id = jelly.anim1.asset[jelly.anim1.frame];
-        }
+        // // move to an animation module
+        my_sprite_animation(&macchi);
+        my_sprite_animation(&jelly);
     }
     else if (!g_Game.isPaused && times_up) {
-        jo_nbg0_printf(16, 14, "TIME OUT");
+        jo_nbg0_printf(17, 14, "TIME OUT");
     }
 }
 
@@ -142,7 +137,6 @@ void load_gameplay_assets(void) {
     // jo_vdp2_clear_bitmap_nbg1(0);
     // sprites
     loadAssets();
-    init_font();
     // init_bg0_img();
     // init_hexagon_img();
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -154,22 +148,25 @@ void gameplay_init() {
     // jo_memset((void *)JO_VDP2_LAST_REG, 0, 0x40000);
     // jo_memset((void *)JO_VDP2_VRAM, 0, 0x40000);
     // jo_memset((void *)JO_VDP2_CRAM, 0, 0x0800);
-    resetPlayerScores();
-
-    poppy.scl.x = toFIXED(1.0);
-    poppy.scl.y = toFIXED(1.1);
-    macchi.pos.x = toFIXED(-350);
-    macchi.pos.y = toFIXED(0);
+    
+    // do different inits depending on game mode (demo etc)
+    switch(g_Game.nextState)
+    {
+        case GAME_STATE_GAMEPLAY: // should use an option instead of game state
+            initVsModePlayers();
+            break;
+        default:
+            break;
+    }
+    
+    resetPlayerScores();
+    pixel_poppy.scl.x = toFIXED(1.0);
+    pixel_poppy.scl.y = toFIXED(1.1);
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
     slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-    
-    slColOffsetAUse(OFF);
-    slColOffsetBUse(NBG1ON);
-    // slColOffsetA(0,0,0);
-    slColOffsetB(0,0,0);
     
     // FOR PALETTES
     do_update = true;
@@ -185,8 +182,10 @@ void gameplay_init() {
     g_RoundOver = false;
     
     slScrPosNbg0(toFIXED(0), toFIXED(0));
-    SET_SPR_POSITION(menu_bg.pos, 0, -200, 85);
-    SET_SPR_SCALE(menu_bg.scl, 18, 20);
+    
+    // menu_bg1.mesh = MESHon;
+    set_spr_position(&menu_bg1, 0, -200, 85);
+    set_spr_scale(&menu_bg1, 36, 20);
 }
 
 void demo_init(void) {
@@ -204,7 +203,7 @@ static bool isRoundOver(void)
     // {
         // // no more teams left, players lost
         // g_RoundOver = true;
-        // g_RoundOverTimer = ROUND_OVER_TIME_FRAMES;
+        // g_RoundOverTimer = ROUND_OVER_TIME;
         // playCDTrack(DEATH_TRACK);
         // return true;
     // }
@@ -214,7 +213,7 @@ static bool isRoundOver(void)
     // {
         // // no more squares left to open, players win
         // g_RoundOver = true;
-        // g_RoundOverTimer = ROUND_OVER_TIME_FRAMES;
+        // g_RoundOverTimer = ROUND_OVER_TIME;
         // playCDTrack(VICTORY_TRACK);
         // return true;
     // }
@@ -259,4 +258,11 @@ void gameplay_update(void)
     }
 
     getPlayersInput();
+}
+
+void    demo_input(void)	{
+    if (jo_is_pad1_key_down(JO_KEY_START)) {
+        changeState(GAME_STATE_TITLE_SCREEN);
+        g_DemoTimer = 0;
+    }
 }

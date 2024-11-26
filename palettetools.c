@@ -1,8 +1,8 @@
 #include <jo/jo.h>
 #include "ColorHelpers.h"
 
-Bool do_update = false;
-Bool update_palette = false;
+bool do_update = false;
+bool update_palette = false;
 
 // palettes
 void clamp_hue(ObjectHSL *hsl)

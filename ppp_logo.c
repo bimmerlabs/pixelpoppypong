@@ -12,7 +12,6 @@ Uint16 ppp_fade_timer = PPP_FADE_TIMER;
 // initializations for PPP screen
 void pppLogo_init(void)
 {
-    //g_LogoTimer
     g_LogoTimer = 0;
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
@@ -36,7 +35,7 @@ void pppLogo_input(void)
        jo_is_pad1_key_down(JO_KEY_A) ||
        jo_is_pad1_key_down(JO_KEY_C))
     {
-            transitionState(GAME_STATE_TITLE_SCREEN);
+            changeState(GAME_STATE_TITLE_SCREEN);
             return;
     }
 
@@ -52,7 +51,7 @@ void pppLogo_update(void)
     }
 
     g_LogoTimer++;
-    screenTransition(4, 2, 0, ppp_fade_timer);
+    screenTransition(PPP_NBG0_INC, PPP_NBG1_INC, PPP_NBG1_MIN, ppp_fade_timer);
     
     // check if the frameAnim has expired
     if(g_LogoTimer > PPP_LOGO_TIMER)

@@ -4,27 +4,51 @@
 #include "main.h"
 #include "sprites.h"
 
-// sprites Z-depth
-// lower numbers are closer to the screen
-// larger numbers are farther away
-typedef enum _SPRITE_DEPTH
-{
-    SCORE_Z = 480,
+// I haven't made any of my assets so this file is a mess
 
-    CRACKS_Z = 490,
-    TITLE_MENU_Z = 491,
+#define NUM_PAW_SPRITES 5
+#define NUM_POPPY_SPRITES 1
 
-    TITLE_SCREEN_Z = 495,
+// #define NUM_CURSORS_SPRITES 12
+// #define NUM_FLAGS_SPRITES 12
+// #define NUM_GRID_SPRITES 10
+// #define NUM_MINE_SPRITES 5
+// #define NUM_TEAM_SELECT_SPRITES 2
+#define NUM_CHARACTER_SPRITES 9
+#define NUM_PCURSOR_SPRITES 4
+// #define NUM_PAUSE_LETTERS_SPRITES 6
+// #define NUM_SCORE_DIGITS_SPRITES 10
+// #define NUM_CRACKS_SPRITES 4
+// #define NUM_SCORES_SPRITES 120
+#define NUM_TITLE_TEXT_SPRITES 10
+#define NUM_TIMER_SPRITES 11
 
-    EXPLOSION_Z = 498,
+#define NUM_MENUBG_SPRITES 8
+// #define NUM_SHADOW_TITLE_TEXT_SPRITES 10
+// #define NUM_PAUSE_TEXT_SPRITES 3
+// #define NUM_EXPLOSION_SPRITES 6
+    
+// // sprites Z-depth
+// // lower numbers are closer to the screen
+// // larger numbers are farther away
+// typedef enum _SPRITE_DEPTH
+// {
+    // SCORE_Z = 480,
 
-    PLAYER_Z = 500,
+    // CRACKS_Z = 490,
+    // TITLE_MENU_Z = 491,
 
-    GRID_Z = 510,
+    // TITLE_SCREEN_Z = 495,
 
-    SSMTF_GRID_Z = 510,
+    // EXPLOSION_Z = 498,
 
-} SPRITE_DEPTH;
+    // PLAYER_Z = 500,
+
+    // GRID_Z = 510,
+
+    // SSMTF_GRID_Z = 510,
+
+// } SPRITE_DEPTH;
 
 // holds sprite and audio assets
 typedef struct _assets
@@ -33,9 +57,10 @@ typedef struct _assets
 
     // title screen
     int title;
-    int options[10];
-    int timer[11];
-
+    int options[NUM_TITLE_TEXT_SPRITES];
+    int timer[NUM_TIMER_SPRITES];
+    // backgrounds for menus, player select, etc
+    int menubg[NUM_MENUBG_SPRITES];
     // // shadows
     // int mode_s;
     // int modes_s[4];
@@ -48,6 +73,8 @@ typedef struct _assets
     // int open;
 
     // // team selection
+    int characters[NUM_CHARACTER_SPRITES];
+    int pcursor[NUM_PCURSOR_SPRITES];
     // int open_select;
     // int mine_exploded_select;
 
@@ -55,12 +82,12 @@ typedef struct _assets
     // int cursor[1];
     
     // players sprites
-    int paw1[5];
-    int paw2[5];    
+    int paw1[NUM_PAW_SPRITES];
+    int paw2[NUM_PAW_SPRITES];    
     
     // players sprites
-    int poppy1[11];
-    int poppy2[6];
+    int pixel_poppy1[NUM_POPPY_SPRITES];
+    int pixel_poppy2[NUM_POPPY_SPRITES];
 
     // // screen cracks
     // int cracks[4];
@@ -110,6 +137,7 @@ typedef struct _assets
 } ASSETS, *PASSETS;
 
 extern ASSETS g_Assets;
+extern int paw_blank_id;
 
 // initialize assets
 void loadAssets(void);

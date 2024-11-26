@@ -28,7 +28,7 @@
 
 #include <jo/jo.h>
 #include "main.h"
-#include "input.h"
+#include "font.h"
 #include "gameplay.h"
 #include "pause.h"
 #include "assets.h"
@@ -40,8 +40,9 @@
 
 GAME g_Game = {0};
 ASSETS g_Assets = {0};
-Bool first_load = true;
-Bool debug_display = true;
+bool first_load = true;
+bool debug_display = false;
+bool widescreen = false;
 Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
 
@@ -69,6 +70,7 @@ void my_input_callback(void) {
             break;
         case GAME_STATE_TEAM_SELECT:
             teamSelect_input();
+            characterSelect_input();
             break;
         case GAME_STATE_GAMEPLAY:
             gameplay_input();
@@ -91,7 +93,7 @@ void abcStart_callback(void)
         && jo_is_pad1_key_pressed(JO_KEY_A)  
         && jo_is_pad1_key_pressed(JO_KEY_B)  
         && jo_is_pad1_key_pressed(JO_KEY_C)) {
-        transitionState(GAME_STATE_UNINITIALIZED);
+        changeState(GAME_STATE_UNINITIALIZED);
     }
 }
 
@@ -99,12 +101,15 @@ void			jo_main(void)
 {
     jo_core_init(JO_COLOR_Black);
     #ifndef JO_COMPILE_WITH_3D_SUPPORT
-        slZdspLevel(5); // if not using jo_3d (JO_COMPILE_WITH_3D_MODULE = 0)
+        slZdspLevel(3); // if not using jo_3d (JO_COMPILE_WITH_3D_MODULE = 0)
     #endif
     jo_core_tv_off();
     
-    slSetSprTVMode(TV_704x480);
-    load_gameplay_assets(); // this has to happen first (sprites get 1st palette slot)
+    slSetSprTVMode(RESOLUTION_HIGH);
+    
+    init_font(); // this has to happen first (sprites get 1st palette slot)
+    // show loading screen here?
+    load_gameplay_assets();
     titleScreen_init();
     
     jo_core_add_callback(transition_draw);
@@ -133,9 +138,10 @@ void			jo_main(void)
     
     jo_core_add_vblank_callback(main_loop);
     
-    transitionState(GAME_STATE_PPP_LOGO);
-    // transitionState(GAME_STATE_TITLE_SCREEN);
-    // transitionState(GAME_STATE_GAMEPLAY);
+    changeState(GAME_STATE_PPP_LOGO);
+    // changeState(GAME_STATE_TITLE_SCREEN);
+    // changeState(GAME_STATE_TEAM_SELECT);
+    // changeState(GAME_STATE_GAMEPLAY);
     
     jo_core_tv_on();
     jo_core_run();
