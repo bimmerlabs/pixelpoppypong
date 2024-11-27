@@ -163,18 +163,6 @@ void titleScreen_update(void)
         return;
     }
     g_TitleTimer++;
-
-    // standard transition-in
-    if (!transition_complete && volume < MAX_VOLUME) {
-        volume += 2;
-        if (volume > MAX_VOLUME) {
-            volume = MAX_VOLUME;
-        }
-        jo_audio_set_volume(volume);
-    }
-    if (!transition_complete) {
-        transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
-    }
     
     // check if the frameAnim has expired
     if(g_TitleTimer > TITLE_TIMER)
@@ -189,6 +177,19 @@ void titleScreen_draw(void)
     if(g_Game.gameState != GAME_STATE_TITLE_SCREEN && g_Game.gameState != GAME_STATE_TITLE_MENU)
     {
         return;
+    }
+    
+    // move here so the menu screen doesn't get stuck
+    // standard transition-in
+    if (!transition_complete && volume < MAX_VOLUME) {
+        volume += 2;
+        if (volume > MAX_VOLUME) {
+            volume = MAX_VOLUME;
+        }
+        jo_audio_set_volume(volume);
+    }
+    if (!transition_complete) {
+        transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
     }
     
     if (attrBg250.x_scroll > toFIXED(0)) {

@@ -38,11 +38,36 @@ void debux_text(void)
                 
             case GAME_STATE_TEAM_SELECT: // menu
                 jo_nbg0_printf(2, 5, "GAMEMODE: %i", g_Game.gameMode);
-                jo_nbg0_printf(2, 7, "STARTSELECTION: %i",  g_Players[0].character.startSelection);
-                jo_nbg0_printf(2, 8, "TEAMSELECTED: %i",  g_Players[0].team.selected);
-                jo_nbg0_printf(2, 9, "PRESSEDSTART: %i",  g_TeamSelectPressedStart);
-                jo_nbg0_printf(2, 10, "TRANSITION_COMPLETE: %i",  transition_complete);
-                jo_nbg0_printf(2, 11, "STARTGAMEFRAMES: %i",  g_StartGameFrames);
+                
+                jo_nbg0_printf(2, 7, "P1 STARTSELECT:%i",  g_Players[0].startSelection);
+                jo_nbg0_printf(2, 8, "P1 CHAR SELECT:%i", g_Players[0].character.selected);
+                jo_nbg0_printf(2, 9, "P1 TEAM SELECT:%i", g_Players[0].team.selected);
+                jo_nbg0_printf(2, 10, "P1 TEAM CHOICE:%i", g_Players[0].team.choice);
+                jo_nbg0_printf(2, 11, "P1 READY:%i", g_Players[0].isReady);
+                
+                jo_nbg0_printf(2, 13, "P2 STARTSELECT:%i",  g_Players[1].startSelection);
+                jo_nbg0_printf(2, 14, "P2 CHAR SELECT:%i", g_Players[1].character.selected);
+                jo_nbg0_printf(2, 15, "P2 TEAM SELECT:%i", g_Players[1].team.selected);
+                jo_nbg0_printf(2, 16, "P2 TEAM CHOICE:%i", g_Players[1].team.choice);
+                jo_nbg0_printf(2, 17, "P2 READY:%i", g_Players[1].isReady);
+                
+                jo_nbg0_printf(20, 7, "P3 STARTSELECT:%i",  g_Players[2].startSelection);
+                jo_nbg0_printf(20, 8, "P3 CHAR SELECT:%i", g_Players[2].character.selected);
+                jo_nbg0_printf(20, 9, "P3 TEAM SELECT:%i", g_Players[2].team.selected);
+                jo_nbg0_printf(20, 10, "P3 TEAM CHOICE:%i", g_Players[2].team.choice);
+                jo_nbg0_printf(20, 11, "P3 READY:%i", g_Players[2].isReady);
+                
+                jo_nbg0_printf(20, 13, "P4 STARTSELECT:%i",  g_Players[3].startSelection);
+                jo_nbg0_printf(20, 14, "P4 CHAR SELECT:%i", g_Players[3].character.selected);
+                jo_nbg0_printf(20, 15, "P4 TEAM SELECT:%i", g_Players[3].team.selected);
+                jo_nbg0_printf(20, 16, "P4 TEAM CHOICE:%i", g_Players[3].team.choice);
+                jo_nbg0_printf(20, 17, "P4 READY:%i", g_Players[3].isReady);
+                
+                
+                jo_nbg0_printf(2, 18, "NUM.TEAMS %i:", numTeams);
+                jo_nbg0_printf(2, 19, "ALL READY:%i", all_players_ready);
+                jo_nbg0_printf(2, 20, "PRESSEDSTART:%i",  g_TeamSelectPressedStart);
+                
                 break;
                 
             case GAME_STATE_DEMO_LOOP: // demo

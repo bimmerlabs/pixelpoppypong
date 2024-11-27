@@ -30,17 +30,19 @@
 #define PORTRAIT_DEPTH 90
 #define CURSOR_DEPTH 80
 
-// extern CHARACTER g_Characters[MAX_PLAYERS];
-
 extern const char *characterNames[];
 extern int g_StartGameFrames; // for debugging
 extern bool g_TeamSelectPressedStart; // for debugging
+extern bool all_players_ready; // for debugging
+extern int numTeams;
 
-void drawCharacterSelectGrid(void);
+void drawCharacterSelectGrid(void);  // re-organize these to be in order
 void characterSelect_input(void);
-void characterSelectBg(void);
 void teamSelect_init(void);
 void assign_team(int oldTeam, int newTeam);
 void teamSelect_input(void);
+bool playerReadyState(void);
+void resetReadyState(void);
+bool validateTeams(void);
 void teamSelect_update(void);
 void teamSelect_draw(void);

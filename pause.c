@@ -100,6 +100,10 @@ void pauseGame(void)
 {
 
     g_PauseChoice = 0;
+    
+    slColOffsetOn(NBG1ON);
+    slColOffsetAUse(OFF);
+    slColOffsetBUse(NBG1ON);
     slColOffsetB(PAUSE_FADE, PAUSE_FADE, PAUSE_FADE);
     g_Game.isPaused = true;
 

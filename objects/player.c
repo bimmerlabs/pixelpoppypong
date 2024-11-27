@@ -131,35 +131,46 @@ void initPlayers(void)
     {
         player = &g_Players[i];
         
-        player->playerID = i;
         player->objectState = OBJECT_STATE_ACTIVE;
-        player->character.selected = CHARACTER_NONE;
-        // player->_sprite = &paw_blank;
+        player->playerID = i;
+        
+        player->score.deaths = 0;
+        player->score.points = 0;
+        player->score.team_points = 0;
 
+        // PLAYER      
+        player->startSelection = false;
+        player->isReady = false;
+        player->pressedB = false; // get rid of this?
+        player->isPlaying = false; // get rid of this?
+        
+        // GAMEPLAY
+        player->numLives = 9;
+        
+        // CHARACTER
+        player->character.choice = CHARACTER_NONE;
+        player->character.selected = false;
+        player->maxSpeed = 0;
+        player->acceleration = 0;
+        player->power = 0;
+        
+        // TEAM
+        player->team.choice = TEAM_CPU;
+        player->team.oldTeam = TEAM_CPU;
+        player->team.selected = false;
+        
+        player->moveHorizontal = false;
+        player->moveVertical = false;
+        
         // SPRITES
         // assign cursor & bg tile to each player
         player->_cursor = &player_cursor;
         player->_bg = &player_bg;
         player->_sprite = &paw_blank;
-        g_Players[i]._sprite->spr_id = paw_blank_id; // this won't reset for some reason?
+        player->_sprite->spr_id = paw_blank_id; // not sure why this changes
         // character portrait
         player->_portrait = &character_portrait;
-        player->_portrait->spr_id = player->_portrait->anim1.asset[CHARACTER_NONE];
-        
-        // CHARACTER
-        player->character.choice = CHARACTER_NONE;
-        player->character.selected = false;
-        player->character.startSelection = false;
-        bool pressedB = false;
-        
-        // TEAM
-        player->team.choice = TEAM_CPU;
-        player->team.oldTeam = TEAM_CPU;
-        player->team.startSelection = false;
-        player->team.selected = false;
-        
-        // GAMEPLAY
-        player->numLives = 0;
+        player->_portrait->spr_id = player->_portrait->anim1.asset[0];
     }
 }
 

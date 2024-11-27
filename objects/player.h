@@ -98,7 +98,6 @@ extern int teamCount[MAX_TEAMS];
 
 typedef struct _CHARACTER
 {
-    bool startSelection;
     int  choice;
     bool selected;
     bool selectColor;
@@ -107,7 +106,6 @@ typedef struct _CHARACTER
 
 typedef struct _TEAM
 {   
-    bool startSelection;
     int choice;
     int oldTeam;
     bool selected;
@@ -118,53 +116,41 @@ typedef struct _PLAYER
 {
     GAME_OBJECT;
     PLAYER_STATE subState;
-
-    // jo_fixed size; // DELETE?
-    // jo_fixed ds; // DELETE
-
-    // int angle; // DELETE??
-    // int da; // DELETE?
-
-    // int frameCount; // DELETE?
-
+    SCORE score;
+    CHARACTER character;
+    TEAM team;
+    
     // 0-11, controller ID
     int playerID;
 
-    // 0 if not playing, 1 if playing
-    bool isPlaying; // MAKE A BOOL?
-
-
+    // player
+    bool startSelection;
+    bool isReady;
     bool pressedB;
     bool pressedStart;
+    bool isPlaying;
     
-    // Index into the players array
-    CHARACTER character;    
+    int numLives;
+    
     // Attributes from the selected character
     int maxSpeed;
     int acceleration;
     int power;
     
-    TEAM team;
-    int teamID;
-
-    int numLives;
-
     // timers (in frames)
     int invulnerabilityFrames; // how long player in invulerable
     int respawnFrames; // how long before respawning player after death
     int crackChoice; // style of cracked screen graphic
 
-    SCORE score;
-
     // used for movement acceleration
     bool moveHorizontal;
     bool moveVertical;
     
-    // sprite
+    // sprites
+    Sprite *_bg;
+    Sprite *_cursor;
     Sprite *_sprite;
     Sprite *_portrait;
-    Sprite *_cursor;
-    Sprite *_bg;
 
 } PLAYER, *PPLAYER;
 
