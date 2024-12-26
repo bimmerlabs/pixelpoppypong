@@ -7,23 +7,28 @@
 // I haven't made any of my assets so this file is a mess
 
 #define NUM_PAW_SPRITES 5
-#define NUM_POPPY_SPRITES 1
+#define NUM_POPPY_SPRITES 4
 
 // #define NUM_CURSORS_SPRITES 12
 // #define NUM_FLAGS_SPRITES 12
 // #define NUM_GRID_SPRITES 10
 // #define NUM_MINE_SPRITES 5
 // #define NUM_TEAM_SELECT_SPRITES 2
-#define NUM_CHARACTER_SPRITES 9
+#define NUM_CHARACTER_SPRITES 12
 #define NUM_PCURSOR_SPRITES 4
 // #define NUM_PAUSE_LETTERS_SPRITES 6
 // #define NUM_SCORE_DIGITS_SPRITES 10
 // #define NUM_CRACKS_SPRITES 4
 // #define NUM_SCORES_SPRITES 120
-#define NUM_TITLE_TEXT_SPRITES 10
+
+#define NUM_TITLE_MENU_TEXT 12
+// #define NUM_TITLE_MODE_TEXT 3
+// #define NUM_TITLE_PLAYER_TEXT 4
+// #define NUM_TITLE_DIFFICULTY_TEXT 3
+
 #define NUM_TIMER_SPRITES 11
 
-#define NUM_MENUBG_SPRITES 8
+#define NUM_MENUBG_SPRITES 9
 // #define NUM_SHADOW_TITLE_TEXT_SPRITES 10
 // #define NUM_PAUSE_TEXT_SPRITES 3
 // #define NUM_EXPLOSION_SPRITES 6
@@ -57,7 +62,13 @@ typedef struct _assets
 
     // title screen
     int title;
-    int options[NUM_TITLE_TEXT_SPRITES];
+    
+    // individual tilesets are smaller, but this works for now..
+    int menu[NUM_TITLE_MENU_TEXT];
+    // int mode[NUM_TITLE_MODE_TEXT];
+    // int player[NUM_TITLE_PLAYER_TEXT];
+    // int difficulty[NUM_TITLE_DIFFICULTY_TEXT];
+    
     int timer[NUM_TIMER_SPRITES];
     // backgrounds for menus, player select, etc
     int menubg[NUM_MENUBG_SPRITES];

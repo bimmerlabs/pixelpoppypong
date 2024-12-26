@@ -2,6 +2,7 @@
 
 #include <jo/jo.h>
 #include "main.h"
+#include "math.h"
 
 #define FRAMERATE 4 // for animation speed
 
@@ -38,6 +39,7 @@ typedef struct {
     Vector   vec2;
     Velocity vel;
     Uint8    spr_id;
+    bool   visible;
     int    pal_id;
     int    flip;
     int    mesh;
@@ -47,8 +49,11 @@ typedef struct {
     Animation anim3;
 } Sprite;
 
+extern Sprite logo1;
+extern Sprite logo2;
 extern Sprite cursor;
 extern Sprite menu_text;
+extern Sprite menu_choices;
 extern Sprite menu_bg1;
 extern Sprite menu_bg2;
 extern Sprite character_portrait;
@@ -87,7 +92,7 @@ static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
     sprite->pos.z = toFIXED(pz);
 }
 
-static inline void set_spr_scale(Sprite *sprite, int sx, int sy) {
+static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
     sprite->scl.x = toFIXED(sx);
     sprite->scl.y = toFIXED(sy);
 }
@@ -124,6 +129,24 @@ static inline void my_sprite_animation(Sprite *sprite) {
             }
             sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
         }
+}
+
+static inline void static_sprite_animation(Sprite *sprite) {
+    sprite->anim1.frame++;
+    if (sprite->anim1.frame > sprite->anim1.max) {
+        sprite->anim1.frame = 0;
+    }
+    sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+}
+
+static inline void random_sprite_animation(Sprite *sprite, int min, int max) {
+    sprite->anim1.frame = my_random_range(min, max);
+    sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+}
+
+static inline void sprite_frame_reset(Sprite *sprite) {
+    sprite->anim1.frame = 0;
+    sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
 }
 
 // SPR_ATTRIBUTE

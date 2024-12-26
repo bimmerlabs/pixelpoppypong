@@ -21,11 +21,14 @@ const char *characterNames[] = {
     "MACCHI",
     "JELLY",
     "PENNY",
-    "POPPY",
     "POTTER",
     "SPARTA",
+    "POPPY",
     "T.J.",
+    "GEORGE",
     "WUPPY",
+    "CRAIG",
+    "GARF.",
     "CPU"
 };
 
@@ -37,11 +40,16 @@ void teamSelect_init(void)
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
     numTeams = 0;
-    
-    // TODO: add boolean to toggle mesh on/off for UI elements    
-    // menu_bg1.mesh = MESHoff;
+    if (game_options.debug_mode == true) {
+        minTeams = 0;
+    }
+    mosaic_in = true;
+    music_in = true;
+    fade_in = true;
+    transition_in = true;
     
     // some assets don't change in scale
+    menu_bg1.spr_id = menu_bg1.anim1.asset[4];
     set_spr_scale(&menu_bg1, 46, 46);
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
     set_spr_scale(&menu_bg2, 54, 352); // ONLY HAPPENS ONCE?
@@ -53,18 +61,6 @@ void teamSelect_update(void)
     if(g_Game.gameState != GAME_STATE_TEAM_SELECT)
     {
         return;
-    }
-    
-    // standard transition-in
-    if (!transition_complete && volume < MAX_VOLUME) {
-        volume += 2;
-        if (volume > MAX_VOLUME) {
-            volume = MAX_VOLUME;
-        }
-        jo_audio_set_volume(volume);
-    }
-    if (!transition_complete) {
-        transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
     }
     
     // EVERYONE PRESSED START
@@ -83,7 +79,6 @@ void teamSelect_update(void)
                     player->objectState = OBJECT_STATE_INACTIVE;
                 }
             }
-            
             transitionState(GAME_STATE_GAMEPLAY);
         }
     }
@@ -134,7 +129,7 @@ void drawCharacterSelectGrid(void)
     {
         PPLAYER player = &g_Players[i];
         
-        if (!debug_display) {
+        if (!game_options.debug_display) {
             jo_nbg0_printf(text_x, text_y, "PLAYER %i:", i+1);
             jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
             
@@ -235,36 +230,36 @@ void drawCharacterSelectGrid(void)
         if (player->startSelection) {
             jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
             // yellow
-            meter.spr_id = meter.anim1.asset[6];
+            meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->maxSpeed), METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y-METER_Y1, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
-            meter.spr_id = meter.anim1.asset[7];
+            meter.spr_id = meter.anim1.asset[8];
             set_spr_scale(&meter, (METER_WIDTH-player->maxSpeed), METER_HEIGHT);
             set_spr_position(&meter, (METER_X+(2*player->maxSpeed)), portrait_y-METER_Y1, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             
             jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", player->acceleration); 
             // yellow       
-            meter.spr_id = meter.anim1.asset[6];
+            meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->acceleration), METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
-            meter.spr_id = meter.anim1.asset[7];
+            meter.spr_id = meter.anim1.asset[8];
             set_spr_scale(&meter, (METER_WIDTH-player->acceleration), METER_HEIGHT);
             set_spr_position(&meter, (METER_X+(2*player->acceleration)), portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             
             jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
             // yellow
-            meter.spr_id = meter.anim1.asset[6];
+            meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->power), METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y+METER_Y3, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
-            meter.spr_id = meter.anim1.asset[7];
+            meter.spr_id = meter.anim1.asset[8];
             set_spr_scale(&meter, (METER_WIDTH-player->power), METER_HEIGHT);
             set_spr_position(&meter, (METER_X+(2*player->power)), portrait_y+METER_Y3, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
@@ -296,7 +291,7 @@ void characterSelect_input(void)
                     player->character.choice--;
                     if (player->character.choice < CHARACTER_MACCHI)
                     {
-                        player->character.choice = CHARACTER_WUPPY;
+                        player->character.choice = TOTAL_CHARACTERS;
                     }
                 } while (!characterAvailable[player->character.choice]);
             }
@@ -305,7 +300,7 @@ void characterSelect_input(void)
                 do
                 {
                     player->character.choice++;
-                    if (player->character.choice > CHARACTER_WUPPY)
+                    if (player->character.choice > TOTAL_CHARACTERS)
                     {
                         player->character.choice = CHARACTER_MACCHI;
                     }
@@ -368,7 +363,16 @@ void characterSelect_input(void)
                  case CHARACTER_TJ:
                     player->_sprite = &macchi;
                     break;
+                 case CHARACTER_GEORGE:
+                    player->_sprite = &jelly;
+                    break;
                  case CHARACTER_WUPPY:
+                    player->_sprite = &jelly;
+                    break;
+                 case CHARACTER_WALRUS:
+                    player->_sprite = &jelly;
+                    break;
+                 case CHARACTER_GARF:
                     player->_sprite = &jelly;
                     break;
                  default:
@@ -386,7 +390,7 @@ void characterSelect_input(void)
                 // only select available characters // maybe use for a random selection
                 while (!characterAvailable[player->character.choice]) {
                         player->character.choice++;
-                        if (player->character.choice > CHARACTER_WUPPY)
+                        if (player->character.choice > TOTAL_CHARACTERS)
                         {
                             player->character.choice = CHARACTER_MACCHI;
                         }
@@ -401,7 +405,7 @@ void characterSelect_input(void)
             if (player->startSelection) {
                 while (!characterAvailable[player->character.choice]) {
                         player->character.choice++;
-                        if (player->character.choice > CHARACTER_WUPPY)
+                        if (player->character.choice > TOTAL_CHARACTERS)
                         {
                             player->character.choice = CHARACTER_MACCHI;
                         }

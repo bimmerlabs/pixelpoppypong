@@ -5,25 +5,59 @@
 #include "ppp_logo.h"
 #include "screen_transition.h"
 // #include "objects/explosion.h"
+#include "BG_DEF/BG25.h"
 
 unsigned int g_LogoTimer = 0;
-Uint16 ppp_fade_timer = PPP_FADE_TIMER;
+static int transparency_rate = TRANSPARENCY_MAX;
 
 // initializations for PPP screen
 void pppLogo_init(void)
 {
     g_LogoTimer = 0;
+    
+    if (first_load) {
+        // init_bg0_img();
+        init_bg25_img();
+        first_load = false;
+    }
+    
+    mosaic_in_rate = MOSAIC_SLOW_RATE;
+    music_in = true;
+    transition_in = true;
+    
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
-    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-    screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
-    slColOffsetOn(NBG0ON | NBG1ON);
-    slColOffsetAUse(NBG0ON);
-    slColOffsetBUse(NBG1ON);
-    slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
-    slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     
-    // initLogoCursor();
+    slColRAMMode ( CRM16_1024 ); // CRAM mode 0 - required for ngb0 transparency
+    if (!game_options.debug_display) {
+        slColorCalc ( CC_RATE | CC_TOP | NBG0ON );
+        transparency_rate = TRANSPARENCY_MAX;
+        slColRateNbg0 ( transparency_rate );
+    }
+    else {
+        transparency_rate = TRANSPARENCY_MIN;
+    }
+    
+    screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
+    
+    if (game_options.mosaic_display) {
+        mosaicInit();
+    }
+    fade_in_rate = 2;
+    
+    if (!game_options.debug_display) {
+        slColOffsetOn(NBG0ON | NBG1ON);
+        slColOffsetAUse(NBG0ON);
+        slColOffsetBUse(NBG1ON);
+        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
+    }
+    else {
+        slColOffsetOn(NBG1ON);
+        slColOffsetAUse(OFF);
+        slColOffsetBUse(NBG1ON);
+        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
+    }
 }
 
 // update callback routine for PPP logo
@@ -36,11 +70,17 @@ void pppLogo_input(void)
        jo_is_pad1_key_down(JO_KEY_A) ||
        jo_is_pad1_key_down(JO_KEY_C))
     {
-            transitionState(GAME_STATE_TITLE_SCREEN);
-            return;
+        // set everything back to defaults
+        nbg0_rate = NEUTRAL_FADE;
+        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        mosaic_x = MOSAIC_MIN;
+        mosaic_y = MOSAIC_MIN;
+	slScrMosSize(mosaic_x, mosaic_y);
+        fade_in_rate = 8;
+        changeState(GAME_STATE_TITLE_SCREEN);
+        return;
     }
-
-    // getPlayersInput();
 }
 
 // update callback routine for PPP logo
@@ -50,27 +90,65 @@ void pppLogo_update(void)
     {
         return;
     }
-
     g_LogoTimer++;
-    screenTransition(PPP_NBG0_INC, PPP_NBG1_INC, PPP_NBG1_MIN, ppp_fade_timer);
     
-    // check if the frameAnim has expired
+    pppLogo_draw();
+    
+    // transition mosaic in
+    if(g_LogoTimer > 4)
+    {
+        slow_fade_in = true;
+        transition_in = true;
+        if (frame % 60 == 0 && transparency_rate > TRANSPARENCY_MIN+16 && !fade_out) {
+            transparency_rate--;
+            slColRateNbg0 ( transparency_rate );
+        }
+    }    
+    // transition mosaic in
+    if(g_LogoTimer > PPP_MOSAIC_TIMER)
+    {
+        mosaic_in = true;
+        transition_in = true;
+        if (fade_out) {
+            fade_out = fadeOut(1, NEUTRAL_FADE);
+        }
+        if (frame % 15 == 0 && transparency_rate > TRANSPARENCY_MIN) {
+            transparency_rate--;
+            slColRateNbg0 ( transparency_rate );
+        }
+        else if (transparency_rate <= TRANSPARENCY_MIN){
+            slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+        }
+    }
+    else if (game_options.mosaic_display) {
+        mosaicRandom();
+    }
+    
+    if(g_LogoTimer == PPP_MOSAIC_TIMER-10)
+    {
+        fade_out = true;
+        nbg0_rate = MAXIMUM_FADE;
+        if (!game_options.debug_display) {
+            slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+        }
+        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        
+        transparency_rate = TRANSPARENCY_MAX;
+        slColRateNbg0 ( transparency_rate );
+    }
+
     if(g_LogoTimer > PPP_LOGO_TIMER)
     {
+        fade_in_rate = 8;
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }
-    
-    // updateExplosions();
 }
 
-// draws Pixel Poppy Productions logo
 void pppLogo_draw(void)
 {
-    if(g_Game.gameState != GAME_STATE_PPP_LOGO)
-    {
-        return;
-    }
-    jo_nbg0_printf(5, 14, "PIXEL POPPY PRODUCTIONS PRESENTS...");
+    // jo_nbg0_printf(5, 14, "PIXEL POPPY PRODUCTIONS PRESENTS...");
+    jo_nbg0_printf(11, 13, "PIXEL POPPY PRODUCTIONS");
+    jo_nbg0_printf(19, 15, "PRESENTS...");
 }
 

@@ -4,7 +4,7 @@
 
 // #define ROUND_OVER_TIME (4 * 60)
 
-#define GAME_BEGIN_TIME (3 * 60)
+#define GAME_BEGIN_TIME (4 * 60)
 #define DEMO_TIME (30 * 60)
 
 extern ANGLE ball_rotation;

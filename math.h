@@ -27,4 +27,6 @@ Uint8 RandomInRange(Uint8 from, Uint8 to);
 
 Uint8 FastRandom();
 
+int my_random_range(int min, int max);
+
 #endif // MATH_H

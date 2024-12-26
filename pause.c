@@ -72,6 +72,12 @@ void pause_input(void)
         // only check for pause menu presses if the game is paused
         checkForPauseMenu();
     }
+    if (mosaic_out) {
+        mosaic_out = mosaicOut();
+    }
+    if (mosaic_in) {
+        mosaic_in = mosaicIn();
+    }
 }
 
 // draw the current score while the game is paused
@@ -105,9 +111,12 @@ void pauseGame(void)
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
     slColOffsetB(PAUSE_FADE, PAUSE_FADE, PAUSE_FADE);
+    if (game_options.mosaic_display) {
+        mosaic_out = true;
+    }
     g_Game.isPaused = true;
-
-    volume = HALF_VOLUME;
+    mosaic_in_rate = MOSAIC_FAST_RATE;
+    volume = LOWER_VOLUME;
     jo_audio_set_volume(volume);
     // TODO:
     // playCDTrack(track);
@@ -145,7 +154,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
-                debug_display = !debug_display;
+                game_options.debug_display = !game_options.debug_display;
                 break;
             default:
                 break;
@@ -157,7 +166,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
-                debug_display = !debug_display;
+                game_options.debug_display = !game_options.debug_display;
                 break;
             default:
                 break;
@@ -173,6 +182,10 @@ static void checkForPauseMenu(void)
         {
             case PAUSE_OPTIONS_RESUME:
                 // simply unpause
+                mosaic_in_rate = MOSAIC_FAST_RATE;
+                if (game_options.mosaic_display) {
+                    mosaic_in = true;
+                }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
@@ -181,6 +194,10 @@ static void checkForPauseMenu(void)
 
             case PAUSE_OPTIONS_RESTART:
                 // start a new game without going to title or team select
+                mosaic_in_rate = MOSAIC_FAST_RATE;
+                if (game_options.mosaic_display) {
+                    mosaic_in = true;
+                }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 changeState(GAME_STATE_GAMEPLAY);
                 break;
@@ -189,12 +206,17 @@ static void checkForPauseMenu(void)
                 // quits to the title screen
                 // directly to menu instead of restarting the entire game (ABC+START)
                 // need to make sure the game is completely initialized here
-                // slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE); // only needed if no transition
-                transitionState(GAME_STATE_TITLE_SCREEN); // work transition for menu instead
+                changeState(GAME_STATE_UNINITIALIZED); // why does this work????
+                // transitionState(GAME_STATE_TITLE_SCREEN); // doesn't work??
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
                 // simply unpause
+                
+                mosaic_in_rate = MOSAIC_FAST_RATE;
+                if (game_options.mosaic_display) {
+                    mosaic_in = true;
+                }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
@@ -216,7 +238,7 @@ static void drawPauseMenu(void)
 
     jo_nbg0_printf(19, 20, "QUIT");
     
-    if (debug_display) {
+    if (game_options.debug_display) {
         jo_nbg0_printf(19, 22, "DEBUG ON");
     }
     else {
@@ -225,12 +247,11 @@ static void drawPauseMenu(void)
     
 }
 
-// The cursor is a random flag
 static void drawPauseMenuCursor(void)
 {
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
     cursor.pos.x = toFIXED(-80) + offset;
-    cursor.pos.y = toFIXED(32 + (g_PauseChoice * 33)); // vertical position varies based on selection
+    cursor.pos.y = toFIXED(32 + (g_PauseChoice * 32)); // vertical position varies based on selection
     my_sprite_draw(&cursor);
     cursor_angle += 8;
     if (cursor_angle > 360) {

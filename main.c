@@ -32,6 +32,7 @@
 #include "gameplay.h"
 #include "pause.h"
 #include "assets.h"
+#include "screen_transition.h"
 #include "ppp_logo.h"
 #include "title_screen.h"
 #include "team_select.h"
@@ -41,10 +42,16 @@
 GAME g_Game = {0};
 ASSETS g_Assets = {0};
 bool first_load = true;
-bool debug_display = false;
-bool widescreen = false;
 Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
+
+GameOptions game_options = {
+    .debug_mode = true,
+    .debug_display = false,
+    .mesh_display = true,
+    .mosaic_display = true,
+    .widescreen = false,
+};
 
 void main_loop(void) {
     frame++; // this controls a lot of logic, drawing, & timing..
@@ -66,7 +73,10 @@ void my_input_callback(void) {
             demo_input();
             break;
         case GAME_STATE_TITLE_MENU:
-            titleScreen_menu();
+            menuScreen_input();
+            break;
+        case GAME_STATE_TITLE_OPTIONS:
+            optionsScreen_input();
             break;
         case GAME_STATE_TEAM_SELECT:
             teamSelect_input();
@@ -83,12 +93,28 @@ void my_input_callback(void) {
 // returns to title screen if player one presses ABC+Start
 void abcStart_callback(void)
 {
+    if (game_options.debug_mode) {
+        if (jo_is_pad1_key_down(JO_KEY_Z)) {
+            g_Game.nextState = g_Game.gameState +1;
+            if (g_Game.nextState == GAME_STATE_TRANSITION) {
+                g_Game.nextState = GAME_STATE_UNINITIALIZED;
+            }
+            transitionState(g_Game.nextState);
+        }
+        if (jo_is_pad1_key_down(JO_KEY_Y)) {
+            g_Game.nextState = g_Game.gameState +1;
+            if (g_Game.nextState == GAME_STATE_TRANSITION) {
+                g_Game.nextState = GAME_STATE_UNINITIALIZED;
+            }
+            changeState(g_Game.nextState);
+        }
+    }
     if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_PPP_LOGO)
     {        
         return;
     }
     // if (jo_is_pad1_key_down(JO_KEY_START)
-    if (jo_is_pad1_key_down(JO_KEY_X)  // for retrobit controller testing only
+    if ((jo_is_pad1_key_down(JO_KEY_X) || jo_is_pad1_key_down(JO_KEY_START)) // for retrobit controller testing only
         && jo_is_pad1_key_pressed(JO_KEY_A)  
         && jo_is_pad1_key_pressed(JO_KEY_B)  
         && jo_is_pad1_key_pressed(JO_KEY_C)) {
@@ -109,9 +135,9 @@ void			jo_main(void)
     init_font(); // this has to happen first (sprites get 1st palette slot)
     // show loading screen here?
     load_gameplay_assets();
-    titleScreen_init();
     
-    jo_core_add_callback(transition_draw);
+    jo_core_add_callback(screenTransition_update);
+    jo_core_add_callback(game_state_update);
     
     jo_core_add_callback(pause_input);
     jo_core_add_callback(pause_draw);   
@@ -120,10 +146,10 @@ void			jo_main(void)
     jo_core_add_callback(abcStart_callback);
     
     jo_core_add_callback(pppLogo_update);
-    jo_core_add_callback(pppLogo_draw);
     
+    jo_core_add_callback(startScreen_update);
     jo_core_add_callback(titleScreen_update);
-    jo_core_add_callback(titleScreen_draw);
+    jo_core_add_callback(optionsScreen_update);
     
     jo_core_add_callback(demo_update);
     
@@ -138,9 +164,6 @@ void			jo_main(void)
     jo_core_add_vblank_callback(main_loop);
     
     changeState(GAME_STATE_PPP_LOGO);
-    // changeState(GAME_STATE_TITLE_SCREEN);
-    // changeState(GAME_STATE_TEAM_SELECT);
-    // changeState(GAME_STATE_GAMEPLAY);
     
     jo_core_tv_on();
     jo_core_run();

@@ -25,6 +25,79 @@ static bool isRoundOver(void);
 // static void drawStats(void);
 // static void drawScore(void);
 
+void gameplay_init() {
+    // jo_memset((void *)JO_VDP2_LAST_REG, 0, 0x40000);
+    // jo_memset((void *)JO_VDP2_VRAM, 0, 0x40000);
+    // jo_memset((void *)JO_VDP2_CRAM, 0, 0x0800);
+        if (g_Game.nextState == GAME_STATE_GAMEPLAY)
+    {
+        // do different inits depending on game mode (demo etc)
+        switch(g_Game.gameMode)
+        {
+            case GAME_MODE_BATTLE:
+                initVsModePlayers();
+                break;
+            case GAME_MODE_CLASSIC:
+                initDemoPlayers();
+                break;
+            case GAME_MODE_STORY:
+                initDemoPlayers();
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (game_options.mosaic_display) {
+        mosaic_in = true;
+    }
+    music_in = true;
+    fade_in = true;
+    transition_in = true;
+
+    resetPlayerScores();
+
+
+    set_spr_scale(&pixel_poppy, 1.0, 1.1);
+    // pixel_poppy.scl.x = toFIXED(1.0);
+    // pixel_poppy.scl.y = toFIXED(1.1);
+    sprite_frame_reset(&pixel_poppy);
+    
+    jo_set_default_background_color(JO_COLOR_Black);
+    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
+    jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
+    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+    
+    // FOR PALETTES
+    do_update = true;
+    
+    g_Game.isPaused = false;
+    g_GameTimer = TIMEOUT;
+    timer_num1.spr_id = timer_num1.anim1.asset[9];
+    timer_num10.spr_id = timer_num10.anim1.asset[9];
+    // NEED BETTER NAMES FOR THESE
+    start_timer = false;
+    g_GameBeginTimer = 0;
+    times_up = false;
+    
+    g_RoundOver = false;
+    
+    slScrPosNbg0(toFIXED(0), toFIXED(0));
+    
+    menu_bg1.spr_id = menu_bg1.anim1.asset[4];
+    set_spr_position(&menu_bg1, 0, -200, 85);
+    set_spr_scale(&menu_bg1, 36, 20);
+    
+    reset_audio(MAX_VOLUME);
+    playCDTrack(BEGIN_GAME_TRACK, false);
+}
+
+void demo_init(void) {
+    initDemoPlayers();
+    g_Game.gameMode = GAME_MODE_BATTLE;
+    // start_timer = true;
+}
+
 void demo_update(void)
 {
     if(g_Game.gameState != GAME_STATE_DEMO_LOOP)
@@ -48,7 +121,7 @@ void demo_update(void)
 }void game_timer(void)
 {
     // wait 3 seconds to start the game
-    if (!start_timer && g_GameBeginTimer >= GAME_BEGIN_TIME) {
+    if (g_GameBeginTimer > GAME_BEGIN_TIME) {
         start_timer = true;
     }
     if (!start_timer) {
@@ -77,17 +150,6 @@ void demo_update(void)
         return;
     }
     if (!g_Game.isPaused && !times_up) {
-                // standard transition-in
-        if (!transition_complete && volume < MAX_VOLUME) {
-            volume += 2;
-            if (volume > MAX_VOLUME) {
-                volume = MAX_VOLUME;
-            }
-            jo_audio_set_volume(volume);
-        }
-        if (!transition_complete) {
-            transition_complete = fadeIn(fade_rate, NEUTRAL_FADE);
-        }
                 // move to draw/HUD timer function
         game_timer();
         my_sprite_draw(&timer_num10); // tens
@@ -138,58 +200,11 @@ void load_gameplay_assets(void) {
     // sprites
     loadAssets();
     // init_bg0_img();
-    // init_hexagon_img();
-    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
-    jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
-    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-}
-
-void gameplay_init() {
-    // jo_memset((void *)JO_VDP2_LAST_REG, 0, 0x40000);
-    // jo_memset((void *)JO_VDP2_VRAM, 0, 0x40000);
-    // jo_memset((void *)JO_VDP2_CRAM, 0, 0x0800);
+    init_hexagon_img();
     
-    // do different inits depending on game mode (demo etc)
-    switch(g_Game.nextState)
-    {
-        case GAME_STATE_GAMEPLAY: // should use an option instead of game state
-            initVsModePlayers();
-            break;
-        default:
-            break;
-    }
-    
-    resetPlayerScores();
-    pixel_poppy.scl.x = toFIXED(1.0);
-    pixel_poppy.scl.y = toFIXED(1.1);
-    
-    jo_set_default_background_color(JO_COLOR_Black);
-    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
-    jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
-    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-    
-    // FOR PALETTES
-    do_update = true;
-    
-    g_Game.isPaused = false;
-    g_GameTimer = TIMEOUT;
-    timer_num1.spr_id = timer_num1.anim1.asset[9];
-    timer_num10.spr_id = timer_num10.anim1.asset[9];
-    // NEED BETTER NAMES FOR THESE
-    start_timer = false;
-    times_up = false;
-    
-    g_RoundOver = false;
-    
-    slScrPosNbg0(toFIXED(0), toFIXED(0));
-    
-    // menu_bg1.mesh = MESHon;
-    set_spr_position(&menu_bg1, 0, -200, 85);
-    set_spr_scale(&menu_bg1, 36, 20);
-}
-
-void demo_init(void) {
-    start_timer = true;
+    // jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
+    // jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
+    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
 }
 
 static bool isRoundOver(void)

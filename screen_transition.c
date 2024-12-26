@@ -2,14 +2,31 @@
 #include "screen_transition.h"
 #include "main.h"
 #include "state.h"
+#include "math.h"
 
 unsigned int g_TransitionTimer = 0;
+bool transition_out = false;
+bool transition_in = false;
 Sint16 nbg0_rate = MINIMUM_FADE;
 Sint16 nbg1_rate = MINIMUM_FADE;
 Sint16 spr_rate  = MINIMUM_FADE;
 Sint8 fadeDirection = 1;
-Sint8 fade_rate = 4;
+Sint8 fade_in_rate = 8;
+Sint8 fade_out_rate = 4;
+Uint8 mosaic_in_rate = MOSAIC_SLOW_RATE;
 unsigned int g_FadeTimer = 0;
+bool fade_out = false;
+bool fade_in = false;
+bool slow_fade_in = false;
+
+unsigned short mosaic_x = MOSAIC_MIN;
+unsigned short mosaic_y = MOSAIC_MIN;
+bool mosaic_out = false;
+bool mosaic_in = false;
+static int rand_max = MOSAIC_MAX;
+
+bool music_out = false;
+bool music_in = false;
 
 void screenTransition_init(Sint16 nbg0, Sint16 nbg1, Sint16 spr) {
     g_FadeTimer = 0;
@@ -19,30 +36,51 @@ void screenTransition_init(Sint16 nbg0, Sint16 nbg1, Sint16 spr) {
     spr_rate  = spr;
 }
 
-// mainly for logo screen (rename?)
-void screenTransition(Sint16 nbg0_inc, Sint16 nbg1_inc, Sint16 nbg1_min, Uint16 transition_time) {
-    if (fadeDirection == 1 && nbg0_rate < 0) {
-        nbg0_rate += nbg0_inc;
-        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+void screenTransition_update(void) {
+    if (!transition_out && !transition_in) {
+        return;
     }
-    if (fadeDirection == 1 && nbg1_rate < 0) {
-        nbg1_rate += nbg1_inc;
-        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
-        if (nbg1_rate == nbg1_min) {
-            fadeDirection = -1; // Switch to fade in
-        }
+    if (transition_out) {
+        transition_out = transitionOut();
     }
-    if (fadeDirection == -1 && g_FadeTimer < transition_time) {
-        g_FadeTimer++;
+    else if (transition_in) {
+        transition_in = transitionIn();
     }
-    if (g_FadeTimer == transition_time && nbg0_rate > -254) {
-        nbg0_rate -= nbg0_inc;
-        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+}
+
+bool transitionOut(void) {
+    if (!fade_out && !mosaic_out && !music_out) {
+        return false;
     }
-    if (g_FadeTimer == transition_time && nbg1_rate > -254) {
-        nbg1_rate -= nbg1_inc;
-        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
+    if (fade_out) {
+        fade_out = fadeOut(fade_out_rate, MINIMUM_FADE);
     }
+    if (mosaic_out) {
+        mosaic_out = mosaicOut();
+    }
+    if (music_out) {
+        music_out = musicOut();
+    }
+    return true;
+}
+
+bool transitionIn(void) {
+    if (!fade_in && !mosaic_in && !music_in && !slow_fade_in) {
+        return false;
+    }
+    if (fade_in) {
+        fade_in = fadeIn(fade_in_rate, NEUTRAL_FADE);
+    }
+    if (slow_fade_in) {
+        slow_fade_in = slowFadeIn(fade_in_rate, NEUTRAL_FADE);
+    }
+    if (mosaic_in) {
+        mosaic_in = mosaicIn();
+    }
+    if (music_in) {
+        music_in = musicIn();
+    }
+    return true;
 }
 
 bool fadeOut(Sint16 rate, Sint16 min) {
@@ -53,10 +91,10 @@ bool fadeOut(Sint16 rate, Sint16 min) {
         }
         slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
         slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
-        return false;
+        return true;
     }
     else {
-        return true;
+        return false;
     }
 }
 
@@ -68,9 +106,129 @@ bool fadeIn(Sint16 rate, Sint16 max) {
         }
         slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
         slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
-        return false;
-    }
-    else {
         return true;
     }
+    else {
+        return false;
+    }
 }
+
+bool slowFadeIn(Sint16 rate, Sint16 max) {
+    if (nbg0_rate < max && frame % 4 == 0) {
+        nbg0_rate += rate;
+        if (nbg0_rate > max) {
+            nbg0_rate = max;
+        }
+        if (!game_options.debug_display) {
+            slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+        }
+        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+// MOSAIC
+void mosaicInit(void) {
+    rand_max = MOSAIC_MAX;
+    mosaic_x = MOSAIC_MAX;
+    mosaic_y = MOSAIC_MAX;
+    slScrMosSize(mosaic_x, mosaic_y);
+    if (!game_options.debug_display) {
+        slScrMosaicOn(NBG0ON | NBG1ON);
+    }
+    else {
+        slScrMosaicOn(NBG1ON);
+    }
+}
+
+bool mosaicOut(void) {
+    if (mosaic_x < MOSAIC_MAX && mosaic_y < MOSAIC_MAX) {
+        if (frame % MOSAIC_FAST_RATE == 0) {
+            mosaic_x++;
+            if (mosaic_x > MOSAIC_MAX)
+                mosaic_x = MOSAIC_MAX;
+            mosaic_y++;
+            if (mosaic_y > MOSAIC_MAX)
+                mosaic_y = MOSAIC_MAX;
+        }
+	slScrMosSize(mosaic_x, mosaic_y);
+	slScrMosaicOn(NBG1ON);
+        return true;
+    }
+    else {
+	slScrMosSize(MOSAIC_MAX, MOSAIC_MAX);
+	slScrMosaicOn(NBG1ON);
+        return false;
+    }
+}
+
+bool mosaicIn(void) {
+    if (mosaic_x > MOSAIC_MIN+1 && mosaic_y > MOSAIC_MIN+1) {
+        if (frame % mosaic_in_rate == 0) {
+            mosaic_x--;
+            if (mosaic_x < MOSAIC_MIN)
+                mosaic_x = MOSAIC_MIN;
+            mosaic_y--;
+            if (mosaic_y < MOSAIC_MIN)
+                mosaic_y = MOSAIC_MIN;
+        }
+	slScrMosSize(mosaic_x, mosaic_y);
+	slScrMosaicOn(NBG1ON | SPRON);
+        return true;
+    }
+    else {
+	slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);
+	slScrMosaicOn(OFF);
+        return false;
+    }
+}
+
+void mosaicRandom(void) {
+    if (frame % MOSAIC_RANDOM_RATE == 0) {
+        mosaic_x = my_random_range(1, rand_max);
+        mosaic_y = my_random_range(1, rand_max);
+	slScrMosSize(mosaic_x, mosaic_y);
+	// every frame??
+        if (!game_options.debug_display) {
+            slScrMosaicOn(NBG0ON | NBG1ON);
+        }
+        else {
+            slScrMosaicOn(NBG1ON);
+        }
+    }
+    if (frame % 80 == 0 && rand_max > 7) {
+	rand_max--;
+    }
+}
+
+bool musicOut(void) {
+    if (volume > MIN_VOLUME) {
+        volume--;
+        if (volume < MIN_VOLUME) {
+            volume = MIN_VOLUME;
+        }
+        jo_audio_set_volume(volume);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+bool musicIn(void) {
+    if (volume < MAX_VOLUME) {
+        volume += 4;
+        if (volume > MAX_VOLUME) {
+            volume = MAX_VOLUME;
+        }
+        jo_audio_set_volume(volume);
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+

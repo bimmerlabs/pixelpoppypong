@@ -40,3 +40,9 @@ Uint8 RandomInRange(Uint8 from, Uint8 to)
   Uint8 number = FastRandom();
   return from + (number % ABS(to - from));
 }
+
+int my_random_range(int min, int max) {
+    int number = jo_random(99999);
+    return min + (number % ABS(max - min) + 1);
+    // return min + jo_random(max - min);
+}

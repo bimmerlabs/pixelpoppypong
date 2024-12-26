@@ -1,26 +1,28 @@
 #include <jo/jo.h>
 
-jo_palette game_palette;
+jo_palette game_palette; // define your palette
 
+// this is your palette handler
 jo_palette      *my_game_palette_handling(void)
 {
     jo_create_palette(&game_palette);
     return (&game_palette);
 }
 
-// consider using VDP1 instead
 void init_font(void) {
     jo_img_8bits    img;
+    // set palette handler
     jo_set_tga_palette_handling(my_game_palette_handling);
     img.data = NULL;
     jo_tga_8bits_loader(&img, JO_ROOT_DIR, "FONT.TGA", 2);
+    // unset palette handler (useful if you are loading multiple assets with the same palette)
     jo_set_tga_palette_handling(JO_NULL);
     
     slCharNbg0(COL_TYPE_256, CHAR_SIZE_1x1);
     jo_vdp2_set_nbg0_8bits_font(&img, " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!?,.:;\"'&()=\%/\\*+-$<>", game_palette.id, false, true);
     jo_free_img(&img);
-    // for (int i = 2; i < 9; i++) {
-            // text_pal.data[i] = JO_COLOR_White;
+    // for (int i = 57; i < 63; i++) {
+            // game_palette.data[i] = JO_COLOR_White;
     // }
     #if defined(MY_TV_704x240)
         slZoomNbg0(toFIXED(0.5), toFIXED(1.0));
