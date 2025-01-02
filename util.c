@@ -22,7 +22,7 @@ void sanitizeValue(int* value, int min, int max)
     {
         *value = max - 1;
     }
-    else if(*value >= max) // why equal?
+    else if(*value >= max)
     {
         *value = min;
     }

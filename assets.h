@@ -151,6 +151,11 @@ extern ASSETS g_Assets;
 extern int paw_blank_id;
 
 // initialize assets
-void loadAssets(void);
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets, int frames, int w, int h, unsigned int spritesPerRow);
-void loadSpriteAssets(void);
+void loadCommonAssets(void);
+
+void loadTitleScreenAssets(void);
+void unloadTitleScreenAssets(void);
+
+void loadGameAssets(void);
+void unloadGameAssets(void);

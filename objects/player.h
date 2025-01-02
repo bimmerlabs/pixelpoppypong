@@ -37,9 +37,6 @@
 #define PLAYER_Y 120
 #define PLAYER_DEPTH 120
 
-// #define EXPLODING_FRAME_COUNT (2 * 30)
-// #define EXPLODE_FRAME_COUNT (4 * 30)
-
 typedef enum _PLAYER_STATE
 {
     PLAYER_STATE_ACTIVE = 0,
@@ -70,11 +67,14 @@ typedef enum _CHARACTER_SELECT
     CHARACTER_MACCHI = 0,
     CHARACTER_JELLY,
     CHARACTER_PENNY,
-    CHARACTER_POPPY, // used for the cursor in the logo
-    CHARACTER_POTTER, // cursors in the background of the title screen
+    CHARACTER_POTTER,
     CHARACTER_SPARTA,
+    CHARACTER_POPPY,
     CHARACTER_TJ,
+    CHARACTER_GEORGE,
     CHARACTER_WUPPY,
+    CHARACTER_WALRUS,
+    CHARACTER_GARF,
     CHARACTER_NONE,
 } CHARACTER_SELECT;
 

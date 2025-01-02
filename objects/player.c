@@ -15,9 +15,7 @@ bool checkDistance(PPLAYER a, PPLAYER b);
 
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
-bool characterAvailable[TOTAL_CHARACTERS] = {
-    true, true, true, true, true, true, true, true
-};
+bool characterAvailable[TOTAL_CHARACTERS] = {0};
 
 void drawPlayerSprite(PPLAYER player);
 void speedLimitPlayer(PPLAYER player);
@@ -28,29 +26,20 @@ void respawnPlayer(PPLAYER player, bool deductLife);
 
 static int getLives(GAME_MODE mode);
 
-// const CHARACTER_ATTRIBUTES characterAttributes[] = {
-   // //s  a  p   // speed, acceleration, power - scale 0-100
-    // {70, 60, 55}, // MACCHI: High speed, medium acceleration, medium power
-    // {55, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
-    // {60, 50, 70}, // PENNY: Medium-high speed, medium acceleration, high power
-    // {60, 45, 80}, // POPPY: Low attributes (for cursors) (was 4 4 4)
-    // {50, 60, 70}, // POTTER: Low attributes (for cursors) (was 4 4 4)
-    // {70, 80, 50}, // SPARTA: High acceleration, high speed, medium power
-    // {65, 65, 65}, // TJ: Balanced attributes
-    // {70, 50, 85}, // WUPPY: High power, medium speed, low acceleration
-    // {60, 60, 60}, // NONE: Medium attributes (for CPU)
-// };
 const CHARACTER_ATTRIBUTES characterAttributes[] = {
-   //s   a   p   // speed, acceleration, power - scale 0-80
-    {56, 48, 44}, // MACCHI: High speed, medium acceleration, medium power
-    {44, 56, 48}, // JELLY: Medium speed, high acceleration, medium-high power
-    {48, 40, 56}, // PENNY: Medium-high speed, medium acceleration, high power
-    {48, 36, 64}, // POPPY: Low attributes (for cursors)
-    {40, 48, 56}, // POTTER: Low attributes (for cursors)
-    {56, 64, 40}, // SPARTA: High acceleration, high speed, medium power
-    {52, 52, 52}, // TJ: Balanced attributes
-    {56, 40, 68}, // WUPPY: High power, medium speed, low acceleration
-    {48, 48, 48}, // NONE: Medium attributes (for CPU)
+   //s  a  p   // speed, acceleration, power - scale 0-100
+    {70, 60, 55}, // MACCHI: High speed, medium acceleration, medium power
+    {55, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
+    {60, 50, 70}, // PENNY: Medium-high speed, medium acceleration, high power
+    {60, 45, 80}, // POPPY: Low attributes (for cursors) (was 4 4 4)
+    {50, 60, 70}, // POTTER: Low attributes (for cursors) (was 4 4 4)
+    {70, 80, 50}, // SPARTA: High acceleration, high speed, medium power
+    {65, 65, 65}, // TJ: Balanced attributes
+    {75, 50, 90}, // GEORGE: He's kinda mean
+    {90, 62, 100}, // WUPPY: High power, medium speed, low acceleration
+    {88, 88, 88}, // THE WALRUS: Above average attributes
+    {99, 99, 99}, // GARFIELD: Ultimate attributes
+    {60, 60, 60}, // NONE: Medium attributes (for CPU)
 };
 
 int teamCount[MAX_TEAMS] = {0};
@@ -95,18 +84,18 @@ static int getLives(GAME_MODE mode)
 
     switch(mode)
     {
-        case GAME_MODE_PRACTICE:
-            numLives = 1000; // basically infinite lives
-            break;
-        case GAME_MODE_NORMAL:
-            numLives = 3;
-            break;
-        case GAME_MODE_HARDCORE:
-            numLives = 1;
-            break;
-        case GAME_MODE_TIME_ATTACK:
-            numLives = 3;
-            break;
+        // case GAME_MODE_PRACTICE:
+            // numLives = 1000; // basically infinite lives
+            // break;
+        // case GAME_MODE_NORMAL:
+            // numLives = 3;
+            // break;
+        // case GAME_MODE_HARDCORE:
+            // numLives = 1;
+            // break;
+        // case GAME_MODE_TIME_ATTACK:
+            // numLives = 3;
+            // break;
         default:
             numLives = 0; // should never get here
             break;
@@ -122,12 +111,7 @@ void initPlayers(void)
 
     memset(g_Players, 0, sizeof(g_Players));
     
-    for (int i = 0; i < TOTAL_CHARACTERS; i++)
-    {
-        characterAvailable[i] = true;
-    }
-    
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         player = &g_Players[i];
         
@@ -178,26 +162,41 @@ void initVsModePlayers(void)
 {
     PPLAYER player = NULL;
 
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         player = &g_Players[i];
         
         g_Players[i]._sprite->spr_id = g_Players[i]._sprite->anim1.asset[0];
         
         // Flip the sprite based on even/odd team
-        if (i == 0) {
+        if (player->team.choice == TEAM_1) {
             player->_sprite->flip = sprNoflip;
-            set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 2) {
+                set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+            }
+            else {
+                set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
         } 
-        else if (i == 1) {
+        else if (player->team.choice  == TEAM_2) {
             player->_sprite->flip = sprHflip;
-            set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
+                set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+            }
+            else {
+                set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
         }
-        else if (i == 2) {
+        else if (player->team.choice  == TEAM_3) {
             player->_sprite->flip = sprNoflip;
-            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            // if (g_Game.numTeams <= 3) {
+                // set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+            // }
+            // else {
+                set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            // }
         }
-        else if (i == 3) {
+        else if (player->team.choice  == TEAM_4) {
             player->_sprite->flip = sprHflip;
             set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
         }
@@ -208,13 +207,29 @@ void initVsModePlayers(void)
 void initDemoPlayers(void)
 {
     PPLAYER player = NULL;
-
-    memset(g_Players, 0, sizeof(g_Players));
-
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    // memset(g_Players, 0, sizeof(g_Players));
+    
+    g_Game.numPlayers = TWO_PLAYER;
+    initPlayers();
+    
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         player = &g_Players[i];
-        
+        if (i == 0) {
+            player->_sprite = &macchi;
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
+            player->_sprite->flip = sprNoflip;
+            // player->_sprite->zmode = _ZmLC;
+            set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+        }
+        else if (i == 1) {
+            player->_sprite = &jelly;
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
+            player->_sprite->flip = sprHflip;
+            // player->_sprite->zmode = _ZmRC;
+            set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+        }
+        boundPlayer(player);        
     }
 }
 
@@ -395,8 +410,8 @@ void drawPlayers(void)
 
 void drawPlayerSprite(PPLAYER player)
 {
-    int playerSprite = 0;
-    int crackSprite = 0;
+    // int playerSprite = 0;
+    // int crackSprite = 0;
 
     // playerSprite = g_Assets.cursors[g_Assets.randomizedColors[player->playerID]];
 
@@ -528,76 +543,76 @@ void boundPlayer(PPLAYER player)
     }
 }
 
-void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion)
-{
-    int rand = 0;
+// void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion)
+// {
+    // int rand = 0;
 
-    player->subState = PLAYER_STATE_EXPLODING;
-    // player->frameCount = EXPLODING_FRAME_COUNT + jo_random(EXPLODING_FRAME_COUNT);
-    player->score.deaths++;
+    // player->subState = PLAYER_STATE_EXPLODING;
+    // // player->frameCount = EXPLODING_FRAME_COUNT + jo_random(EXPLODING_FRAME_COUNT);
+    // player->score.deaths++;
 
-    player->curPos.dx = jo_random(0x40000) - 0x20000;
-    player->curPos.dy = jo_random(0x40000) - 0x20000;
+    // player->curPos.dx = jo_random(0x40000) - 0x20000;
+    // player->curPos.dy = jo_random(0x40000) - 0x20000;
 
-    // player->size = toFIXED(1);
-    // player->ds = toFIXED(.07);
+    // // player->size = toFIXED(1);
+    // // player->ds = toFIXED(.07);
 
-    // player->angle = jo_random(360);
+    // // player->angle = jo_random(360);
 
 
-    // player->da = 45 - jo_random(30);
+    // // player->da = 45 - jo_random(30);
 
-    // 50% chance to flip the direction
-    rand = jo_random(2);
-    if(rand == 1)
-    {
-        // player->da *= -1;
-    }
-
-    // if(showExplosion)
+    // // 50% chance to flip the direction
+    // rand = jo_random(2);
+    // if(rand == 1)
     // {
-        // // draw an explosion on the player
-        // spawnExplosion(player);
+        // // player->da *= -1;
     // }
 
-    // if(spreadExplosion)
-    // {
-        // // spread the explosion to nearby players
-        // explodeNeighbors(player);
-    // }
-}
+    // // if(showExplosion)
+    // // {
+        // // // draw an explosion on the player
+        // // spawnExplosion(player);
+    // // }
 
-void explodeNeighbors(PPLAYER player)
-{
-    bool neighbor = false;
+    // // if(spreadExplosion)
+    // // {
+        // // // spread the explosion to nearby players
+        // // explodeNeighbors(player);
+    // // }
+// }
 
-    // for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
-    // {
-        // PPLAYER victim = &g_Players[i];
+// void explodeNeighbors(PPLAYER player)
+// {
+    // bool neighbor = false;
 
-        // if(victim->objectState != OBJECT_STATE_ACTIVE)
-        // {
-            // continue;
-        // }
+    // // for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    // // {
+        // // PPLAYER victim = &g_Players[i];
 
-        // if(victim->subState != PLAYER_STATE_ACTIVE)
-        // {
-            // continue;
-        // }
+        // // if(victim->objectState != OBJECT_STATE_ACTIVE)
+        // // {
+            // // continue;
+        // // }
 
-        // if(player->playerID == victim->playerID)
-        // {
-            // continue;
-        // }
+        // // if(victim->subState != PLAYER_STATE_ACTIVE)
+        // // {
+            // // continue;
+        // // }
 
-        // // check if player is nearby
-        // neighbor = checkDistance(player, victim);
-        // if(neighbor == true)
-        // {
-            // explodePlayer(victim, false, false);
-        // }
-    // }
-}
+        // // if(player->playerID == victim->playerID)
+        // // {
+            // // continue;
+        // // }
+
+        // // // check if player is nearby
+        // // neighbor = checkDistance(player, victim);
+        // // if(neighbor == true)
+        // // {
+            // // explodePlayer(victim, false, false);
+        // // }
+    // // }
+// }
 
 void respawnPlayer(PPLAYER player, bool deductLife)
 {
@@ -643,18 +658,18 @@ void respawnPlayer(PPLAYER player, bool deductLife)
 // distance formula without the square root
 bool checkDistance(PPLAYER a, PPLAYER b)
 {
-    // int dist = 36*36;
+    int dist = 36*36;
 
-    // int x_dist = toINT(a->curPos.x) - toINT(b->curPos.x);
-    // x_dist = x_dist * x_dist;
+    int x_dist = toINT(a->curPos.x) - toINT(b->curPos.x);
+    x_dist = x_dist * x_dist;
 
-    // int y_dist = toINT(a->curPos.y) - toINT(b->curPos.y);
-    // y_dist = y_dist * y_dist;
+    int y_dist = toINT(a->curPos.y) - toINT(b->curPos.y);
+    y_dist = y_dist * y_dist;
 
-    // if(dist > x_dist + y_dist)
-    // {
-        // return true;
-    // }
+    if(dist > x_dist + y_dist)
+    {
+        return true;
+    }
 
     return false;
 }

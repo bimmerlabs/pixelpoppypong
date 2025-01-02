@@ -29,6 +29,8 @@ void gameplay_init() {
     // jo_memset((void *)JO_VDP2_LAST_REG, 0, 0x40000);
     // jo_memset((void *)JO_VDP2_VRAM, 0, 0x40000);
     // jo_memset((void *)JO_VDP2_CRAM, 0, 0x0800);
+    
+    g_Game.lastState = GAME_STATE_GAMEPLAY;
         if (g_Game.nextState == GAME_STATE_GAMEPLAY)
     {
         // do different inits depending on game mode (demo etc)
@@ -38,10 +40,10 @@ void gameplay_init() {
                 initVsModePlayers();
                 break;
             case GAME_MODE_CLASSIC:
-                initDemoPlayers();
+                initVsModePlayers();
                 break;
             case GAME_MODE_STORY:
-                initDemoPlayers();
+                initVsModePlayers();
                 break;
             default:
                 break;
@@ -59,8 +61,6 @@ void gameplay_init() {
 
 
     set_spr_scale(&pixel_poppy, 1.0, 1.1);
-    // pixel_poppy.scl.x = toFIXED(1.0);
-    // pixel_poppy.scl.y = toFIXED(1.1);
     sprite_frame_reset(&pixel_poppy);
     
     jo_set_default_background_color(JO_COLOR_Black);
@@ -93,9 +93,11 @@ void gameplay_init() {
 }
 
 void demo_init(void) {
+    g_Game.lastState = GAME_STATE_DEMO_LOOP;
+    unloadTitleScreenAssets();
+    loadGameAssets();
     initDemoPlayers();
     g_Game.gameMode = GAME_MODE_BATTLE;
-    // start_timer = true;
 }
 
 void demo_update(void)
@@ -115,7 +117,7 @@ void demo_update(void)
     // check if the frameAnim has expired
     if(g_DemoTimer > DEMO_TIME)
     {
-        transitionState(GAME_STATE_PPP_LOGO);
+        transitionState(GAME_STATE_UNINITIALIZED);
         g_DemoTimer = 0;
     }
 }void game_timer(void)
@@ -195,18 +197,6 @@ void my_palette_update(void)
     }
 }
 
-void load_gameplay_assets(void) {
-    // jo_vdp2_clear_bitmap_nbg1(0);
-    // sprites
-    loadAssets();
-    // init_bg0_img();
-    init_hexagon_img();
-    
-    // jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
-    // jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
-    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-}
-
 static bool isRoundOver(void)
 {
     // int numTeams = 0;
@@ -277,7 +267,7 @@ void gameplay_update(void)
 
 void    demo_input(void)	{
     if (jo_is_pad1_key_down(JO_KEY_START)) {
-        changeState(GAME_STATE_TITLE_SCREEN);
+        transitionState(GAME_STATE_TITLE_SCREEN);
         g_DemoTimer = 0;
     }
 }

@@ -73,19 +73,6 @@ extern Sprite paw_blank;
 extern Sprite boss1;
 extern Sprite boss2;
 
-// #define SET_SPR_POSITION(pos, px, py, pz)
-    // do {
-        // (pos).x = (toFIXED(px));
-        // (pos).y = (toFIXED(py));
-        // (pos).z = (toFIXED(pz));
-    // } while (0)
-
-// #define SET_SPR_SCALE(scl, sx, sy) 
-    // do {                     
-        // (scl).x = (toFIXED(sx));       
-        // (scl).y = (toFIXED(sy));       
-    // } while (0)
-
 static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
     sprite->pos.x = toFIXED(px);
     sprite->pos.y = toFIXED(py);
@@ -96,7 +83,6 @@ static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
     sprite->scl.x = toFIXED(sx);
     sprite->scl.y = toFIXED(sy);
 }
-
 
 // states
 

@@ -110,7 +110,8 @@ void pauseGame(void)
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
-    slColOffsetB(PAUSE_FADE, PAUSE_FADE, PAUSE_FADE);
+    nbg0_rate = PAUSE_FADE;
+    slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
     if (game_options.mosaic_display) {
         mosaic_out = true;
     }
@@ -176,7 +177,7 @@ static void checkForPauseMenu(void)
     // keep pause screen choice in range
     sanitizeValue(&g_PauseChoice, 0, PAUSE_OPTION_MAX);
 
-    if (jo_is_pad1_key_down(JO_KEY_START))
+    if (jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_A) || jo_is_pad1_key_down(JO_KEY_C))
     {
         switch(g_PauseChoice)
         {
@@ -203,11 +204,7 @@ static void checkForPauseMenu(void)
                 break;
 
             case PAUSE_OPTIONS_QUIT:
-                // quits to the title screen
-                // directly to menu instead of restarting the entire game (ABC+START)
-                // need to make sure the game is completely initialized here
-                changeState(GAME_STATE_UNINITIALIZED); // why does this work????
-                // transitionState(GAME_STATE_TITLE_SCREEN); // doesn't work??
+                transitionState(GAME_STATE_UNINITIALIZED);
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
@@ -239,10 +236,10 @@ static void drawPauseMenu(void)
     jo_nbg0_printf(19, 20, "QUIT");
     
     if (game_options.debug_display) {
-        jo_nbg0_printf(19, 22, "DEBUG ON");
+        jo_nbg0_printf(19, 22, "DEBUG:ON");
     }
     else {
-        jo_nbg0_printf(19, 22, "DEBUG OFF");
+        jo_nbg0_printf(19, 22, "DEBUG:OFF");
     }
     
 }

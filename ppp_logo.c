@@ -1,32 +1,61 @@
 #include <jo/jo.h>
 #include "main.h"
-// #include "assets.h"
+#include "assets.h"
 #include "state.h"
 #include "ppp_logo.h"
 #include "screen_transition.h"
 // #include "objects/explosion.h"
-#include "BG_DEF/BG25.h"
+#include "BG_DEF/BG26.h"
 
 unsigned int g_LogoTimer = 0;
 static int transparency_rate = TRANSPARENCY_MAX;
+Uint8 current_background = 3;
 
 // initializations for PPP screen
 void pppLogo_init(void)
 {
-    g_LogoTimer = 0;
-    
-    if (first_load) {
-        // init_bg0_img();
-        init_bg25_img();
-        first_load = false;
+    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY) {
+        unloadGameAssets();
     }
     
-    mosaic_in_rate = MOSAIC_SLOW_RATE;
-    music_in = true;
-    transition_in = true;
+    // this way only until I implement palette adjustments
+    if (game_options.debug_mode) {
+        current_background++;
+        if (current_background > 4) {
+        current_background = 1;
+        }
+    }
+    else {
+        // update based on time of day
+        jo_getdate(&now);
+        // dawn
+        if (now.hour >= 5 && now.hour < 11) {
+            current_background = 1;
+        }
+        // day
+        if (now.hour >= 11 && now.hour < 17) {
+            current_background = 2;
+        }
+        // dusk
+        if (now.hour >= 17 && now.hour < 23) {
+            current_background = 3;
+        }
+        // night
+        if (now.hour >= 23 && now.hour < 5) {
+            current_background = 4;
+        }
+    }
+    init_bg26_img();
+    // if (first_load) {
+        // // init_bg0_img();
+        // init_bg26_img();
+        // first_load = false;
+    // }
+    loadTitleScreenAssets();
     
-    jo_set_default_background_color(JO_COLOR_Black);
-    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
+    g_LogoTimer = 0;
+    
+    g_Game.lastState = GAME_STATE_PPP_LOGO;
     
     slColRAMMode ( CRM16_1024 ); // CRAM mode 0 - required for ngb0 transparency
     if (!game_options.debug_display) {
@@ -48,6 +77,7 @@ void pppLogo_init(void)
     if (!game_options.debug_display) {
         slColOffsetOn(NBG0ON | NBG1ON);
         slColOffsetAUse(NBG0ON);
+        slColOffsetAUse(NBG0ON);
         slColOffsetBUse(NBG1ON);
         slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
@@ -58,6 +88,13 @@ void pppLogo_init(void)
         slColOffsetBUse(NBG1ON);
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     }
+    
+    mosaic_in_rate = MOSAIC_SLOW_RATE;
+    music_in = true;
+    transition_in = true;
+    
+    jo_set_default_background_color(JO_COLOR_Black);
+    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
 }
 
 // update callback routine for PPP logo
@@ -78,6 +115,8 @@ void pppLogo_input(void)
         mosaic_y = MOSAIC_MIN;
 	slScrMosSize(mosaic_x, mosaic_y);
         fade_in_rate = 8;
+        transparency_rate = TRANSPARENCY_MIN;
+        slColRateNbg0 ( transparency_rate );
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }

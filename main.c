@@ -39,8 +39,13 @@
 #include "debug.h"
 #include "objects/player.h"
 
+#define MAX_SPRITE 50
+
 GAME g_Game = {0};
 ASSETS g_Assets = {0};
+
+jo_datetime now;
+
 bool first_load = true;
 Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
@@ -53,12 +58,52 @@ GameOptions game_options = {
     .widescreen = false,
 };
 
+void loading_screen(void)
+{
+    if (!game_options.debug_display) {
+        return;
+    }
+    // currently only works in debug mode (need to work into transitions somehow)
+    if (g_Game.isLoading) {
+        // jo_set_default_background_color(JO_COLOR_DarkGray);
+        jo_set_displayed_screens(JO_NBG0_SCREEN);
+        jo_nbg0_printf(15, 13, "LOADING!");
+        jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+        
+        // loading bar        
+        char dots[MAX_SPRITE]; // Adjust size based on expected max sprites
+        int sprite_count = jo_sprite_count();
+        
+        // Clamp sprite count to prevent overflow
+        if (sprite_count >= MAX_SPRITE) {
+            sprite_count = MAX_SPRITE - 1; // Reserve 1 byte for null-terminator
+        }
+        
+        // Generate dot string
+        for (int i = 0; i < sprite_count; i++) {
+            dots[i] = '.';
+        }
+        dots[sprite_count] = '\0'; // Null-terminate the string
+        
+        // Display dots on screen
+        jo_nbg0_printf(2, 15, "%s", dots);
+        
+        // jo_nbg0_printf(16, 14, ". %i", jo_sprite_count()*2);
+        // doesn't work unless I turn on the Sprite layer duing loading screens
+        // meter.spr_id = meter.anim1.asset[7];
+        // set_spr_scale(&meter, (jo_sprite_count()*4), METER_HEIGHT);
+        // set_spr_position(&meter, 0, 0, 90);
+        // my_sprite_draw(&meter);
+    }
+}
+
 void main_loop(void) {
     frame++; // this controls a lot of logic, drawing, & timing..
     if (frame > 240)
         frame = 1;
     jo_nbg0_clear(); // clear text before every frame is drawn
     debux_text();
+    loading_screen();
 }
 
 void my_input_callback(void) {
@@ -113,12 +158,11 @@ void abcStart_callback(void)
     {        
         return;
     }
-    // if (jo_is_pad1_key_down(JO_KEY_START)
     if ((jo_is_pad1_key_down(JO_KEY_X) || jo_is_pad1_key_down(JO_KEY_START)) // for retrobit controller testing only
         && jo_is_pad1_key_pressed(JO_KEY_A)  
         && jo_is_pad1_key_pressed(JO_KEY_B)  
         && jo_is_pad1_key_pressed(JO_KEY_C)) {
-        changeState(GAME_STATE_UNINITIALIZED);
+        transitionState(GAME_STATE_UNINITIALIZED);
     }
 }
 
@@ -133,8 +177,7 @@ void			jo_main(void)
     slSetSprTVMode(RESOLUTION_HIGH);
     
     init_font(); // this has to happen first (sprites get 1st palette slot)
-    // show loading screen here?
-    load_gameplay_assets();
+    
     
     jo_core_add_callback(screenTransition_update);
     jo_core_add_callback(game_state_update);
@@ -143,15 +186,12 @@ void			jo_main(void)
     jo_core_add_callback(pause_draw);   
  
     jo_core_add_callback(my_input_callback);
-    jo_core_add_callback(abcStart_callback);
     
     jo_core_add_callback(pppLogo_update);
     
     jo_core_add_callback(startScreen_update);
     jo_core_add_callback(titleScreen_update);
     jo_core_add_callback(optionsScreen_update);
-    
-    jo_core_add_callback(demo_update);
     
     jo_core_add_callback(teamSelect_update);
     jo_core_add_callback(teamSelect_draw);
@@ -161,9 +201,12 @@ void			jo_main(void)
     jo_core_add_callback(gameplay_draw);
     jo_core_add_callback(gameplay_update);
     
+    jo_core_add_callback(demo_update);
+    
+    jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);
     
-    changeState(GAME_STATE_PPP_LOGO);
+    changeState(GAME_STATE_UNINITIALIZED);
     
     jo_core_tv_on();
     jo_core_run();

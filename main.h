@@ -5,15 +5,14 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.35"
+#define VERSION "0.40"
 #define MAX_DEBUG_LEVEL 1
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 #define MIN_TEAMS 2
-#define MAX_TEAM_MEMBERS 3
+#define MAX_TEAM_MEMBERS 2
 #define TIMEOUT 99 // seconds - MAYBE MAKE AN OPTION?
-
-extern Uint8 max_players; // replaces MAX_PLAYERS
+extern jo_datetime now;
 extern bool first_load;
 extern Uint8 frame;
 extern Uint8 g_GameTimer;
@@ -29,7 +28,7 @@ typedef struct {
 
 extern GameOptions game_options;
 
-// supported game types
+// 1-4 players
 typedef enum _NUMBER_OF_PLAYERS
 {
     ONE_PLAYER = 0,
@@ -57,7 +56,7 @@ typedef enum _GAME_DIFFICULTY
     GAME_DIFFICULTY_MAX,
 } GAME_DIFFICULTY;
 
-// supported game difficulty
+// game resolutions (for testing)
 typedef enum _GAME_RESOLUTION
 {
     RESOLUTION_NORMAL = TV_352x240,
@@ -70,27 +69,35 @@ typedef struct _GAME
 {
     // current game state
     GAME_STATE gameState;
-    
-    // current game state
     GAME_STATE nextState;
+    GAME_STATE lastState;
 
-    // practice, normal, hardcore, or time attack
+    // number of players
+    NUMBER_OF_PLAYERS minPlayers;
+    NUMBER_OF_PLAYERS maxPlayers;
     NUMBER_OF_PLAYERS numPlayers;
+
+    // number of teams
+    int minTeams;
+    int maxTeams;
+    int numTeams;
     
-    // practice, normal, hardcore, or time attack
+    // classic, story, battle
     GAME_MODE gameMode;
 
     // easy, medium, hard
-    // affects how many mines are in the game
     GAME_DIFFICULTY gameDifficulty;
-
+    
     // debug level
     int debug;
 
     // number of lives (1, 3, 6, 9)
     int numLives;
 
-    // is the game is paused
+    // is the game loading?
+    bool isLoading;
+
+    // is the game is paused?
     bool isPaused;
 
     // is the game finished?

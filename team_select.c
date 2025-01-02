@@ -4,7 +4,7 @@
 #include "assets.h"
 #include "screen_transition.h"
 #include "objects/player.h"
-#include "BG_DEF/BG25.h"
+#include "BG_DEF/BG26.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -13,9 +13,6 @@ bool g_TeamSelectPressedStart = false;
 bool draw_cursor = false;
 bool draw_portrait = false;
 bool all_players_ready = false;
-
-int numTeams = 0;
-static int minTeams = MIN_TEAMS;
 
 const char *characterNames[] = {
     "MACCHI",
@@ -32,27 +29,55 @@ const char *characterNames[] = {
     "CPU"
 };
 
-// initializations for PPP screen
 void teamSelect_init(void)
 {
+    g_Game.lastState = GAME_STATE_TEAM_SELECT;
+    unloadTitleScreenAssets();
+    loadGameAssets();
+    
     initPlayers();
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
-    numTeams = 0;
+    g_Game.numTeams = 0;
     if (game_options.debug_mode == true) {
-        minTeams = 0;
+        g_Game.minTeams = 0;
+        for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+            characterAvailable[i] = true;
+        }
     }
-    mosaic_in = true;
-    music_in = true;
-    fade_in = true;
-    transition_in = true;
+    else {
+        // eventually some will be able to be unlocked based on saved score, playtime, etc
+        characterAvailable[CHARACTER_MACCHI] = true;
+        characterAvailable[CHARACTER_JELLY]  = true;
+        characterAvailable[CHARACTER_PENNY]  = true;
+        characterAvailable[CHARACTER_POTTER] = true;
+        characterAvailable[CHARACTER_SPARTA] = false;
+        characterAvailable[CHARACTER_POPPY]  = false;
+        characterAvailable[CHARACTER_TJ]     = false;
+        characterAvailable[CHARACTER_GEORGE] = false;
+        characterAvailable[CHARACTER_WUPPY]  = false;
+        characterAvailable[CHARACTER_WALRUS] = false;
+        characterAvailable[CHARACTER_GARF]   = false;
+    }
+    
+    for (int i = 0; i < MAX_TEAMS; i++) {
+        teamCount[i] = 0;
+    }
+    
+    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     
     // some assets don't change in scale
     menu_bg1.spr_id = menu_bg1.anim1.asset[4];
     set_spr_scale(&menu_bg1, 46, 46);
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
     set_spr_scale(&menu_bg2, 54, 352); // ONLY HAPPENS ONCE?
+
+        
+    mosaic_in = true;
+    music_in = true;
+    fade_in = true;
+    transition_in = true;
 }
 
 // main logic loop
@@ -94,17 +119,17 @@ void teamSelect_draw(void)
         return;
     }
         
-    if (attrBg250.x_scroll > toFIXED(0)) {
-        attrBg250.x_pos += attrBg250.x_scroll;
-        if (attrBg250.x_pos > toFIXED(512.0))
-            attrBg250.x_pos = toFIXED(0);
+    if (attrBg260.x_scroll > toFIXED(0)) {
+        attrBg260.x_pos += attrBg260.x_scroll;
+        if (attrBg260.x_pos > toFIXED(512.0))
+            attrBg260.x_pos = toFIXED(0);
     }
-    if (attrBg250.y_scroll > toFIXED(0)) {
-        attrBg250.y_pos += attrBg250.y_scroll;
-        if (attrBg250.y_pos > toFIXED(512.0))
-            attrBg250.y_pos= toFIXED(0);
+    if (attrBg260.y_scroll > toFIXED(0)) {
+        attrBg260.y_pos += attrBg260.y_scroll;
+        if (attrBg260.y_pos > toFIXED(512.0))
+            attrBg260.y_pos= toFIXED(0);
     }
-    slScrPosNbg1(attrBg250.x_pos, attrBg250.y_pos);
+    slScrPosNbg1(attrBg260.x_pos, attrBg260.y_pos);
     
     drawCharacterSelectGrid();
 }
@@ -118,6 +143,19 @@ void drawCharacterSelectGrid(void)
     int text_x = 2;
     int text_y = 2;
     
+    if (g_Game.numPlayers == ONE_PLAYER) {
+        portrait_y = -6;
+        text_y = 12;
+    }
+    else if (g_Game.numPlayers == TWO_PLAYER) {
+        portrait_y = -70;
+        text_y = 8;
+    }
+    else if (g_Game.numPlayers == THREE_PLAYER) {
+        portrait_y = -118;
+        text_y = 5;
+    }
+    
     if (frame % 3 == 0) {
         draw_cursor = !draw_cursor;
     }
@@ -125,55 +163,58 @@ void drawCharacterSelectGrid(void)
         draw_portrait = !draw_portrait;
     }
     
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
         
         if (!game_options.debug_display) {
             jo_nbg0_printf(text_x, text_y, "PLAYER %i:", i+1);
-            jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
-            
-            if (player->team.selected) {
+            if (player->character.choice != CHARACTER_NONE || g_Game.numPlayers > ONE_PLAYER) {
+                jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
+            }           
+            if (player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
                 jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y+2, "TEAM %i", player->team.choice);
             }
         }
             
-            if (player->character.selected) {
-                if (player->isReady) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "READY");
-                }
-                else if (player->team.selected && numTeams >= minTeams && !player->isReady && !draw_portrait) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "PRESS");
-                }
-                else if (!player->team.selected) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "TEAM:");
-                }
-                
-                if (player->team.selected && numTeams >= minTeams && !player->isReady && !draw_portrait) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "START");
-                }
-                else if (player->team.selected && numTeams < minTeams) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "WAIT.");
-                }
-                else if (!player->team.selected) {
-                    jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->team.choice);
-                }
+        if (player->character.selected) {
+            if (player->isReady) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "READY");
+            }
+            else if (player->team.selected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "PRESS");
+            }
+            else if (!player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "TEAM:");
             }
 
+            if (player->team.selected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "START");
+            }
+            else if (player->team.selected && g_Game.numTeams < g_Game.minTeams) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "WAIT.");
+            }
+            else if (!player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->team.choice);
+            }
+        }
+
+        // HORIZONTAL STRIPE
         // WARNING: doesn't work on hardware (VDP1 is too slow)
-        // ALTERNATIVES: CREATE NEW BG? DRAW WITH POLYLINES?
-        // // HORIZONTAL STRIPE
-        // // LEFT
-        // player->_bg->spr_id = player->_bg->anim1.asset[i];
-        // set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
-        // set_spr_scale(player->_bg, 90, 52);
-        // player->_bg->zmode = _ZmLC;
-        // my_sprite_draw(player->_bg);
-        // // RIGHT
-        // set_spr_position(player->_bg, 352, portrait_y, PLAYER_BG2_DEPTH);
-        // set_spr_scale(player->_bg, 210, 52);
-        // player->_bg->zmode = _ZmRC;
-        // my_sprite_draw(player->_bg);
+        // alternatives: create new bg? use second bg layer?
+        // LEFT
+        if (g_Game.numPlayers < THREE_PLAYER) { // only draw for up to 2 players
+            player->_bg->spr_id = player->_bg->anim1.asset[i];
+            set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
+            set_spr_scale(player->_bg, 90, 52);
+            player->_bg->zmode = _ZmLC;
+            my_sprite_draw(player->_bg);
+            // RIGHT
+            set_spr_position(player->_bg, 352, portrait_y, PLAYER_BG2_DEPTH);
+            set_spr_scale(player->_bg, 210, 52);
+            player->_bg->zmode = _ZmRC;
+            my_sprite_draw(player->_bg);
+        }
 
         // VERTICAL STRIPE
         menu_bg2.zmode = _ZmCB;
@@ -228,7 +269,13 @@ void drawCharacterSelectGrid(void)
         
         // CHARACTER METER
         if (player->startSelection) {
-            jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
+            
+            if (game_options.debug_mode) {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
+            }
+            else {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED");
+            }
             // yellow
             meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->maxSpeed), METER_HEIGHT);
@@ -240,7 +287,12 @@ void drawCharacterSelectGrid(void)
             set_spr_position(&meter, (METER_X+(2*player->maxSpeed)), portrait_y-METER_Y1, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             
-            jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", player->acceleration); 
+            if (game_options.debug_mode) {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", player->acceleration); 
+            }
+            else {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL."); 
+            }
             // yellow       
             meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->acceleration), METER_HEIGHT);
@@ -252,7 +304,12 @@ void drawCharacterSelectGrid(void)
             set_spr_position(&meter, (METER_X+(2*player->acceleration)), portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             
-            jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
+            if (game_options.debug_mode) {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
+            }
+            else {
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER");
+            }
             // yellow
             meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, (player->power), METER_HEIGHT);
@@ -275,10 +332,11 @@ void characterSelect_input(void)
     // ONLY PLAYER 1 CAN EXIT TO TITLE SCREEN
     if (jo_is_pad1_key_down(JO_KEY_B) && g_Players[0].startSelection == false && g_Players[0].pressedB == false)
     {
+        g_Game.lastState = GAME_STATE_TEAM_SELECT;
         transitionState(GAME_STATE_TITLE_SCREEN);
     }
     
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
       
@@ -367,13 +425,13 @@ void characterSelect_input(void)
                     player->_sprite = &jelly;
                     break;
                  case CHARACTER_WUPPY:
-                    player->_sprite = &jelly;
+                    player->_sprite = &macchi;
                     break;
                  case CHARACTER_WALRUS:
                     player->_sprite = &jelly;
                     break;
                  case CHARACTER_GARF:
-                    player->_sprite = &jelly;
+                    player->_sprite = &macchi;
                     break;
                  default:
                     break;
@@ -426,19 +484,24 @@ void teamSelect_input(void)
         return;
     }
 
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
         
         player->pressedB = false; // button press expires
         
         if (player->team.selected == false && player->character.selected) {
+            if (g_Game.numPlayers == ONE_PLAYER) {
+                // default team
+                player->team.choice = TEAM_1;
+                g_Game.numTeams++;
+            }
             // CHOOSE A TEAM
-            if (jo_is_input_key_down(player->playerID, JO_KEY_LEFT)) {
+            if (jo_is_input_key_down(player->playerID, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
                     player->team.choice--;
                     if (player->team.choice < TEAM_1) {
-                        player->team.choice = TEAM_4;
+                        player->team.choice = g_Game.maxTeams;
                     }
                 } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
 
@@ -451,10 +514,10 @@ void teamSelect_input(void)
 
                 return;
             }
-            if (jo_is_input_key_down(player->playerID, JO_KEY_RIGHT)) {
+            if (jo_is_input_key_down(player->playerID, JO_KEY_RIGHT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
                     player->team.choice++;
-                    if (player->team.choice > TEAM_4) {
+                    if (player->team.choice > g_Game.maxTeams) {
                         player->team.choice = TEAM_1;
                     }
                 } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
@@ -485,7 +548,7 @@ void teamSelect_input(void)
                 assign_team(player->team.oldTeam, player->team.choice);
                 player->team.oldTeam = player->team.choice;
                 player->team.selected = true;
-                numTeams++;
+                g_Game.numTeams++;
                 return;
             }
         }
@@ -504,7 +567,7 @@ void teamSelect_input(void)
                 bool result;
                 result = validateTeams();
                 if(!result)
-                {   // this works!
+                {
                     // todo: play bad noise
                     // jo_audio_play_sound(&g_Assets.crackPCM);
                     return;
@@ -522,7 +585,7 @@ void teamSelect_input(void)
                 player->team.selected = false;
                 player->team.oldTeam = TEAM_CPU;
                 player->pressedB = true;
-                numTeams--;
+                g_Game.numTeams--;
                 return;
             }
         }
@@ -531,7 +594,7 @@ void teamSelect_input(void)
 
 // DON'T START GAME UNTIL EVERONE IS READY
 bool playerReadyState(void) {
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
 
@@ -546,7 +609,7 @@ bool playerReadyState(void) {
 }
 
 void resetReadyState(void) {
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
         player->isReady = false;
@@ -566,12 +629,12 @@ void assign_team(int oldTeam, int newTeam) {
 // AT LEAST 2 TEAMS ARE REQUIRED
 bool validateTeams(void)
 {
-    if(numTeams < minTeams)
+    if(g_Game.numTeams < g_Game.minTeams)
     {
         return false;
     }
     
-    for(int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         PPLAYER player = &g_Players[i];
 

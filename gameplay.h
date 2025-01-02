@@ -18,7 +18,6 @@ void demo_update(void);
 void game_timer(void);
 void gameplay_draw(void);
 void my_color_calc(void);void my_palette_update(void);
-void load_gameplay_assets(void);
 void gameplay_init(void);
 void demo_init(void);
 void gameplay_update(void);

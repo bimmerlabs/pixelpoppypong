@@ -1,5 +1,6 @@
 #include "main.h"
 #include "state.h"
+#include "assets.h"
 #include "gameplay.h"
 #include "ppp_logo.h"
 #include "title_screen.h"
@@ -18,33 +19,32 @@ void changeState(GAME_STATE newState)
     switch(newState)
     {
         case GAME_STATE_PPP_LOGO:
-        {
+        {        
             pppLogo_init();
             volume = MAX_VOLUME;
             jo_audio_set_volume(volume);
             playCDTrack(LOGO_TRACK, false);
             g_Game.gameState = GAME_STATE_PPP_LOGO;
+            jo_core_tv_on();
             break;
         }
         case GAME_STATE_TITLE_SCREEN:
         {
-            // if (g_Game.gameState != GAME_STATE_TITLE_MENU) { // I think it sounds better to restart the title track when exiting the menu
-                reset_audio(HALF_VOLUME);
-                playCDTrack(TITLE_TRACK, true);
-            // }
             g_Game.nextState = GAME_STATE_TITLE_SCREEN;
             titleScreen_init();
+            reset_audio(HALF_VOLUME);
+            playCDTrack(TITLE_TRACK, true);
             g_Game.gameState = g_Game.nextState;
             break;
         }
         case GAME_STATE_TITLE_MENU:
         {
+            titleMenu_init();
+            g_Game.nextState = GAME_STATE_TITLE_MENU;
             if (g_Game.gameState == GAME_STATE_GAMEPLAY || g_Game.gameState == GAME_STATE_TEAM_SELECT) {
                 reset_audio(HALF_VOLUME);
                 playCDTrack(TITLE_TRACK, true);
             }
-            titleMenu_init();
-            g_Game.nextState = GAME_STATE_TITLE_MENU;
             g_Game.gameState = g_Game.nextState;
             break;
         }
@@ -70,8 +70,8 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_TEAM_SELECT:
         {
             reset_audio(HALF_VOLUME);
-            playCDTrack(SELECT_TRACK, true);
             teamSelect_init();
+            playCDTrack(SELECT_TRACK, true);
             g_Game.gameState = GAME_STATE_TEAM_SELECT;
             break;
         }
@@ -90,11 +90,14 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_UNINITIALIZED:
         {
             jo_core_tv_off();
+            // jo_set_default_background_color(JO_COLOR_Black);
+            // jo_set_displayed_screens(JO_BACK_SCREEN);
+            jo_sprite_free_all();
+            g_Game.isLoading = true;
+            loadCommonAssets();
             frame = 1;
             reset_audio(MAX_VOLUME);
-            slColOffsetOn(OFF);
-            jo_set_default_background_color(JO_COLOR_Black);
-            jo_set_displayed_screens(JO_BACK_SCREEN);
+            // slColOffsetOn(OFF);
             mosaic_in_rate = MOSAIC_SLOW_RATE;
             mosaic_in = false;
             fade_in = false;
@@ -104,9 +107,9 @@ void changeState(GAME_STATE newState)
             transition_out = false;
             music_out = false;
             music_in = false;
-            g_Game.nextState = GAME_STATE_UNINITIALIZED;
-            changeState(GAME_STATE_PPP_LOGO);
-            jo_core_tv_on();
+            g_Game.lastState = GAME_STATE_UNINITIALIZED;
+            g_Game.nextState = GAME_STATE_PPP_LOGO;
+            changeState(g_Game.nextState);
             break;
         }
         default:

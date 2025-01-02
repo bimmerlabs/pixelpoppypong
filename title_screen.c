@@ -5,7 +5,7 @@
 #include "title_screen.h"
 #include "screen_transition.h"
 // #include "objects/player.h"
-#include "BG_DEF/BG25.h"
+#include "BG_DEF/BG26.h"
 
 // globals for menu options
 int g_TitleScreenChoice = 0;
@@ -35,25 +35,24 @@ FIXED pos_x = 0; // for the background - should use the attribute instead
 FIXED pos_y = 0;
 Uint16 cursor_angle = 0;
 
-// // use the players as moving elements in the background
-// extern PLAYER g_Players[MAX_PLAYERS];
-
 //
 // TITLE SCREEN
 //
 
 void titleScreen_init(void)
 {
+    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY) {
+        unloadGameAssets();
+        loadTitleScreenAssets();
+    }
+    
+    g_Game.lastState = GAME_STATE_TITLE_SCREEN;
     // if (first_load) {
         // // init_bg0_img();
         // init_bg25_img();
         // first_load = false;
     // }
     
-    mosaic_in = true;
-    music_in = true;
-    fade_in = true;
-    transition_in = true;
     
     g_TitleTimer = 0;
     
@@ -77,18 +76,30 @@ void titleScreen_init(void)
     slColOffsetAUse(NBG0ON);
     slColOffsetBUse(NBG1ON | SPRON);
     
-    jo_set_default_background_color(JO_COLOR_DarkGray);
+    jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
-    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN); // not really being used..
     // init menu options
     g_TitleScreenChoice = 0;
     g_OptionScreenChoice = 0;
     g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
 
     // Defaults
-    g_Game.gameMode = GAME_MODE_BATTLE;
+    g_Game.gameMode = GAME_MODE_CLASSIC;
+    g_Game.minTeams = 1;
+    g_Game.maxTeams = 1;
+    g_Game.numTeams = 0;
+    g_Game.minPlayers = 0;
+    g_Game.maxPlayers = 2;
+    g_Game.numPlayers = 0;
     g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
-    g_Game.numPlayers = FOUR_PLAYERS;
+    g_Game.numPlayers = ONE_PLAYER;
+    
+    
+    mosaic_in = true;
+    music_in = true;
+    fade_in = true;
+    transition_in = true;
 }
 
 // handles input for the title screen
@@ -129,13 +140,13 @@ void titleScreen_update(void)
         return;
     }
     
-    if (attrBg250.x_scroll > toFIXED(0)) {
-        pos_x += attrBg250.x_scroll;
+    if (attrBg260.x_scroll > toFIXED(0)) {
+        pos_x += attrBg260.x_scroll;
         if (pos_x > toFIXED(512.0))
             pos_x = toFIXED(0);
     }
-    if (attrBg250.y_scroll > toFIXED(0)) {
-        pos_y += attrBg250.y_scroll;
+    if (attrBg260.y_scroll > toFIXED(0)) {
+        pos_y += attrBg260.y_scroll;
         if (pos_y > toFIXED(512.0))
             pos_y = toFIXED(0);
     }
@@ -246,6 +257,8 @@ void drawTitle(void)
 
 void titleMenu_init(void)
 {
+    
+    g_Game.lastState = GAME_STATE_TITLE_MENU;
     random_sprite_animation(&pixel_poppy, 0, 3);
     // static_sprite_animation(&pixel_poppy);
     jo_set_default_background_color(JO_COLOR_Black);
@@ -295,8 +308,6 @@ void menuScreen_input(void)
                 g_TitleScreenChoice = g_TitleScreenLastChoice;
                 break;
         }
-                
-            // g_TitleScreenChoice++;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
@@ -326,8 +337,6 @@ void menuScreen_input(void)
                 g_TitleScreenChoice = g_TitleScreenLastChoice;
                 break;
         }
-                
-            // g_TitleScreenChoice--;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_LEFT))
@@ -337,11 +346,48 @@ void menuScreen_input(void)
             case TITLE_OPTION_GAME_MODE:
                 g_Game.gameMode--;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
+                if (g_Game.gameMode == GAME_MODE_STORY) {
+                    g_Game.minPlayers = 0;
+                    g_Game.maxPlayers = 1;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else if (g_Game.gameMode == GAME_MODE_CLASSIC) {
+                    g_Game.minPlayers = 0;
+                    g_Game.maxPlayers = 2;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else {
+                    g_Game.minPlayers = 1;
+                    g_Game.maxPlayers = GAME_PLAYERS_MAX;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 2;
+                }
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
                 g_Game.numPlayers--;
-                sanitizeValue((int*)&g_Game.numPlayers, 0, GAME_PLAYERS_MAX);
+                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, g_Game.maxPlayers);
+                if (g_Game.numPlayers == ONE_PLAYER) {
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else if (g_Game.numPlayers == TWO_PLAYER) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 2;
+                }
+                else if (g_Game.numPlayers == THREE_PLAYER) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 3;
+                }
+                else if (g_Game.numPlayers == FOUR_PLAYERS) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 4;
+                }
                 break;
 
             case TITLE_OPTION_GAME_DIFFICULTY:
@@ -361,11 +407,48 @@ void menuScreen_input(void)
             case TITLE_OPTION_GAME_MODE:
                 g_Game.gameMode++;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
+                if (g_Game.gameMode == GAME_MODE_STORY) {
+                    g_Game.minPlayers = 0;
+                    g_Game.maxPlayers = 1;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else if (g_Game.gameMode == GAME_MODE_CLASSIC) {
+                    g_Game.minPlayers = 0;
+                    g_Game.maxPlayers = 2;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else {
+                    g_Game.minPlayers = 1;
+                    g_Game.maxPlayers = GAME_PLAYERS_MAX;
+                    g_Game.numPlayers = g_Game.minPlayers;
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 2;
+                }
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
                 g_Game.numPlayers++;
-                sanitizeValue((int*)&g_Game.numPlayers, 0, GAME_PLAYERS_MAX);
+                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, g_Game.maxPlayers);
+                if (g_Game.numPlayers == ONE_PLAYER) {
+                    g_Game.minTeams = 1;
+                    g_Game.maxTeams = 1;
+                }
+                else if (g_Game.numPlayers == TWO_PLAYER) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 2;
+                }
+                else if (g_Game.numPlayers == THREE_PLAYER) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 3;
+                }
+                else if (g_Game.numPlayers == FOUR_PLAYERS) {
+                    g_Game.minTeams = 2;
+                    g_Game.maxTeams = 4;
+                }
                 break;
             
             case TITLE_OPTION_GAME_DIFFICULTY:
@@ -611,6 +694,8 @@ void drawMenu(void)
 
 void optionsScreen_init(void)
 {    
+    
+    g_Game.lastState = GAME_STATE_TITLE_OPTIONS;
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
@@ -696,13 +781,13 @@ void optionsScreen_update(void)
         return;
     }
     
-    if (attrBg250.x_scroll > toFIXED(0)) {
-        pos_x += attrBg250.x_scroll;
+    if (attrBg260.x_scroll > toFIXED(0)) {
+        pos_x += attrBg260.x_scroll;
         if (pos_x > toFIXED(512.0))
             pos_x = toFIXED(0);
     }
-    if (attrBg250.y_scroll > toFIXED(0)) {
-        pos_y += attrBg250.y_scroll;
+    if (attrBg260.y_scroll > toFIXED(0)) {
+        pos_y += attrBg260.y_scroll;
         if (pos_y > toFIXED(512.0))
             pos_y = toFIXED(0);
     }
@@ -710,7 +795,6 @@ void optionsScreen_update(void)
     
     drawOptions();
     drawOptionsCursor();
-    // drawTitle();
 }
 
 void drawOptions(void)
@@ -798,7 +882,6 @@ void drawMenuCursor(void)
     
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
     cursor.pos.x = toFIXED(-130) + offset;
-    // cursor.pos.y = toFIXED(200 + (g_TitleScreenChoice * -30)); // vertical position varies based on selection
     if (g_TitleScreenChoice == TITLE_OPTION_GAME_OPTIONS) {
         cursor.pos.y = toFIXED(MENU_Y);
     }
