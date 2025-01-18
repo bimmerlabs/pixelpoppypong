@@ -61,7 +61,7 @@ typedef struct {
     Uint8 max_lum_id;
 } ImageAttr;
 
-extern ImageAttr attrBg250;
+extern ImageAttr attrBg260;
 
 #define SET_BG_POSITION(pos, x, y) \
     do {                           \

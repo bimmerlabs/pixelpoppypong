@@ -63,6 +63,9 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
         sprite->anim1.asset = asset;
         sprite->anim1.max = frames-1;
         sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        sprite->pos.r = h;
+        // sprite->bbox.width = toFIXED(w*1.5);
+        // sprite->bbox.height = toFIXED(h*1.5);
 }
 
 void loadCommonAssets(void)
@@ -125,6 +128,9 @@ void loadGameAssets(void)
       
     loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, COUNTOF(timer_tileset), NUM_TIMER_SPRITES, 16, 16, 1);
     timer_num10.anim1.asset = g_Assets.timer;
+
+    goal1.spr_id = jo_sprite_add_tga(NULL, "GOAL.TGA", palette_transparent_index);
+    goal2.spr_id = goal1.spr_id;
     
     loadSprite(&character_portrait, g_Assets.characters, "PORTRAIT.TGA", character_tileset, COUNTOF(character_tileset), NUM_CHARACTER_SPRITES, 48, 48, 1);
     

@@ -1,5 +1,6 @@
 #include <jo/jo.h>
 #include "main.h"
+#include "input.h"
 #include "team_select.h"
 #include "assets.h"
 #include "screen_transition.h"
@@ -7,6 +8,7 @@
 #include "BG_DEF/BG26.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
+// extern INPUT g_Inputs[MAX_INPUTS];
 
 int g_StartGameFrames = 0;
 bool g_TeamSelectPressedStart = false;
@@ -108,7 +110,7 @@ void teamSelect_update(void)
         }
     }
 
-    updatePlayers();
+    // updatePlayers();
 }
 
 // main draw routine
@@ -256,6 +258,7 @@ void drawCharacterSelectGrid(void)
         my_sprite_draw(player->_cursor);
         
         // PORTRAIT
+        set_spr_scale(player->_portrait, 2, 2);
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         set_spr_position(player->_portrait, portrait_x, portrait_y, PORTRAIT_DEPTH);
         if (player->character.choice == CHARACTER_NONE) {
@@ -342,7 +345,7 @@ void characterSelect_input(void)
       
         if (player->startSelection && !player->character.selected) {
             // CHOOSE CHARACTER
-            if (jo_is_input_key_down(player->playerID, JO_KEY_LEFT))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT))
             {
                 do
                 {
@@ -353,7 +356,7 @@ void characterSelect_input(void)
                     }
                 } while (!characterAvailable[player->character.choice]);
             }
-            if (jo_is_input_key_down(player->playerID, JO_KEY_RIGHT))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_RIGHT))
             {
                 do
                 {
@@ -370,9 +373,10 @@ void characterSelect_input(void)
             player->power = characterAttributes[player->character.choice].power;
             
             // GO BACK
-            if (jo_is_input_key_down(player->playerID, JO_KEY_B) && player->pressedB == false)
+            if (jo_is_input_key_down(player->input->id, JO_KEY_B) && player->pressedB == false)
             {
                 player->startSelection = false;
+                player->input->isSelected = false;
                 characterAvailable[player->character.choice] = true;
                 player->_sprite = &paw_blank;
                 player->character.choice = CHARACTER_NONE;
@@ -383,8 +387,9 @@ void characterSelect_input(void)
             }
             
             // SELECT CHARACTER
-            if (jo_is_input_key_down(player->playerID, JO_KEY_A) ||
-                jo_is_input_key_down(player->playerID, JO_KEY_C))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_START) ||
+                jo_is_input_key_down(player->input->id, JO_KEY_A) ||
+                jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
                 // assign to a default team (left vs right)
                 if (i %2 == 0) {
@@ -441,20 +446,45 @@ void characterSelect_input(void)
         }
         // BEGIN CHARACTER SELECTION
         if (!player->startSelection) {
-            if (jo_is_input_key_down(player->playerID, JO_KEY_START))
+            for(unsigned int ip = 0; ip < COUNTOF(g_Inputs); ip++)
             {
-                player->startSelection = true;
-                player->character.choice = CHARACTER_MACCHI;
-                // only select available characters // maybe use for a random selection
-                while (!characterAvailable[player->character.choice]) {
-                        player->character.choice++;
-                        if (player->character.choice > TOTAL_CHARACTERS)
-                        {
-                            player->character.choice = CHARACTER_MACCHI;
-                        }
-               }
-               return;
+                // Once a player starts selection, they shouldn't be able to assign a new id
+                if (g_Inputs[ip].isSelected) {
+                    continue;
+                }
+                if (jo_is_input_key_down(ip, JO_KEY_START))
+                {
+                    player->input = &g_Inputs[ip];
+                    player->input->id = ip;
+                    player->input->isSelected = true;
+                    
+                    player->startSelection = true;
+                    player->character.choice = CHARACTER_MACCHI;
+                    // only select available characters // maybe use for a random selection
+                    while (!characterAvailable[player->character.choice]) {
+                            player->character.choice++;
+                            if (player->character.choice > TOTAL_CHARACTERS)
+                            {
+                                player->character.choice = CHARACTER_MACCHI;
+                            }
+                   }
+                   return;
+                }
             }
+            // if (jo_is_input_key_down(player->input->id, JO_KEY_START))
+            // {
+                // player->startSelection = true;
+                // player->character.choice = CHARACTER_MACCHI;
+                // // only select available characters // maybe use for a random selection
+                // while (!characterAvailable[player->character.choice]) {
+                        // player->character.choice++;
+                        // if (player->character.choice > TOTAL_CHARACTERS)
+                        // {
+                            // player->character.choice = CHARACTER_MACCHI;
+                        // }
+               // }
+               // return;
+            // }
         }
         // DEFAULT CHARACTER SETUP
         if (!player->character.selected) {
@@ -497,7 +527,7 @@ void teamSelect_input(void)
                 g_Game.numTeams++;
             }
             // CHOOSE A TEAM
-            if (jo_is_input_key_down(player->playerID, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
+            if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
                     player->team.choice--;
                     if (player->team.choice < TEAM_1) {
@@ -514,7 +544,7 @@ void teamSelect_input(void)
 
                 return;
             }
-            if (jo_is_input_key_down(player->playerID, JO_KEY_RIGHT) && g_Game.numPlayers != ONE_PLAYER) {
+            if (jo_is_input_key_down(player->input->id, JO_KEY_RIGHT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
                     player->team.choice++;
                     if (player->team.choice > g_Game.maxTeams) {
@@ -533,17 +563,19 @@ void teamSelect_input(void)
             }
 
             // GO BACK
-            if (jo_is_input_key_down(player->playerID, JO_KEY_B))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_B))
             {
                 player->pressedB = true;
+                player->input->isSelected = false;
                 characterAvailable[player->character.choice] = true;
                 player->character.selected = false;
                 return;
             }
             
             // SELECT TEAM
-            if (jo_is_input_key_down(player->playerID, JO_KEY_A) ||
-                jo_is_input_key_down(player->playerID, JO_KEY_C))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_START) ||
+                jo_is_input_key_down(player->input->id, JO_KEY_A) ||
+                jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
                 assign_team(player->team.oldTeam, player->team.choice);
                 player->team.oldTeam = player->team.choice;
@@ -562,7 +594,7 @@ void teamSelect_input(void)
             }
             
             // PRESS START TO BE "READY"
-            if (jo_is_input_key_down(player->playerID, JO_KEY_START))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_START))
             {
                 bool result;
                 result = validateTeams();
@@ -577,7 +609,7 @@ void teamSelect_input(void)
             }
             
             // GO BACK
-            if (jo_is_input_key_down(player->playerID, JO_KEY_B))
+            if (jo_is_input_key_down(player->input->id, JO_KEY_B))
             {   
                 resetReadyState();
                 all_players_ready = false;

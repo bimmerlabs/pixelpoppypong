@@ -2,6 +2,8 @@
 
 #define MINIMUM_FADE -254
 #define HALF_FADE -127
+#define QUARTER_FADE -63
+#define EIGTH_FADE -31
 #define NEUTRAL_FADE 0
 #define MAXIMUM_FADE 254
 #define PAUSE_FADE -75

@@ -27,3 +27,12 @@ void sanitizeValue(int* value, int min, int max)
         *value = min;
     }
 }
+
+int minmumValue(int min, int value)
+{
+    if(value < min)
+    {
+        value = min;
+    }
+    return value;
+}

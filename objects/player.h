@@ -1,41 +1,28 @@
 #pragma once
 #include "../sprites.h"
+#include "../input.h"
 #include "object.h"
 
 #define NOT_PLAYING 0
 #define PLAYING 1
 
-#define X_SPEED_INC toFIXED(0.5)
-#define Y_SPEED_INC toFIXED(4.0)
+#define X_SPEED_INC toFIXED(1.5)
+#define Y_SPEED_INC toFIXED(5.0)
 // #define X_FRICTION_SPEED toFIXED(0.375)
 
-#define MAX_Y_SPEED               toFIXED(8.0)  // don't fall faster than this
-#define MAX_Y_SPEED2              toFIXED(-8.0)
-#define MAX_X_SPEED               toFIXED(7.0)  // don't move faster than this
-#define MAX_X_SPEED2              toFIXED(-7.0) // don't move faster than this
-
-// #define MAX_X_SPEED3               toFIXED(4.5)  // don't move faster than this
-// #define MAX_Y_SPEED3              toFIXED(-5.0)
-
+#define MAX_Y_SPEED               toFIXED(15.0)  // don't fall faster than this
+// #define MAX_Y_SPEED2              toFIXED(-14.0)
+#define MAX_X_SPEED               toFIXED(10.0)  // don't move faster than this
+// #define MAX_X_SPEED2              toFIXED(-12.0) // don't move faster than this
+#define AI_X_SPEED                toFIXED(10.0)  // don't move faster than this
 
 #define PLAYER_HEIGHT toFIXED(20)
-#define PLAYER_WIDTH toFIXED(32)
-
-#define SCREEN_RIGHT  toFIXED(352.0)
-#define SCREEN_LEFT  toFIXED(-352.0)
-#define SCREEN_MIDDLE  toFIXED(0)
-#define SCREEN_WIDTH  toFIXED(704.0)
-
-#define SCREEN_TOP toFIXED(-240.0)
-#define SCREEN_BOTTOM toFIXED(240.0)
-
-#define SCREEN_OFFSET toFIXED(100)
-#define GAMEPLAY_ABOVE_SCREEN (SCREEN_TOP - SCREEN_OFFSET)
-#define GAMEPLAY_BELOW_SCREEN (SCREEN_BOTTOM + SCREEN_OFFSET)
+#define PLAYER_WIDTH toFIXED(40)
 
 #define PLAYER_X 350
 #define PLAYER_Y 120
 #define PLAYER_DEPTH 120
+#define PLAYER_RADIUS toFIXED(26)
 
 typedef enum _PLAYER_STATE
 {
@@ -120,7 +107,8 @@ typedef struct _PLAYER
     CHARACTER character;
     TEAM team;
     
-    // 0-11, controller ID
+    // 0-11, controller ID (replace with actual inputs)
+    PINPUT input;
     int playerID;
 
     // player
@@ -129,13 +117,16 @@ typedef struct _PLAYER
     bool pressedB;
     bool pressedStart;
     bool isPlaying;
+    bool onLeftSide;
+    bool scored;
+    bool isAI;
     
     int numLives;
     
     // Attributes from the selected character
-    int maxSpeed;
-    int acceleration;
-    int power;
+    FIXED maxSpeed;
+    FIXED acceleration;
+    FIXED power;
     
     // timers (in frames)
     int invulnerabilityFrames; // how long player in invulerable
@@ -153,6 +144,11 @@ typedef struct _PLAYER
     Sprite *_portrait;
 
 } PLAYER, *PPLAYER;
+
+void drawPlayerSprite(PPLAYER player);
+void speedLimitPlayer(PPLAYER player);
+void boundPlayer(PPLAYER player);
+void explodeNeighbors(PPLAYER player);
 
 void getPlayersInput(void);
 void updatePlayers(void);

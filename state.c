@@ -107,6 +107,7 @@ void changeState(GAME_STATE newState)
             transition_out = false;
             music_out = false;
             music_in = false;
+            reset_inputs();
             g_Game.lastState = GAME_STATE_UNINITIALIZED;
             g_Game.nextState = GAME_STATE_PPP_LOGO;
             changeState(g_Game.nextState);

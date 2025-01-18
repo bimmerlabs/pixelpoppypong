@@ -72,7 +72,7 @@ bool transitionIn(void) {
         fade_in = fadeIn(fade_in_rate, NEUTRAL_FADE);
     }
     if (slow_fade_in) {
-        slow_fade_in = slowFadeIn(fade_in_rate, NEUTRAL_FADE);
+        slow_fade_in = slowFadeIn(fade_in_rate, QUARTER_FADE);
     }
     if (mosaic_in) {
         mosaic_in = mosaicIn();

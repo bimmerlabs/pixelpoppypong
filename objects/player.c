@@ -8,6 +8,7 @@
 // #include "../team_select.h"
 #include "../sprites.h"
 #include "../gameplay.h"
+#include "../physics.h"
 #include "../util.h"
 
 // distance formula without the square root
@@ -16,11 +17,6 @@ bool checkDistance(PPLAYER a, PPLAYER b);
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
 bool characterAvailable[TOTAL_CHARACTERS] = {0};
-
-void drawPlayerSprite(PPLAYER player);
-void speedLimitPlayer(PPLAYER player);
-void boundPlayer(PPLAYER player);
-void explodeNeighbors(PPLAYER player);
 
 void respawnPlayer(PPLAYER player, bool deductLife);
 
@@ -116,7 +112,8 @@ void initPlayers(void)
         player = &g_Players[i];
         
         player->objectState = OBJECT_STATE_ACTIVE;
-        player->playerID = i;
+        player->input->id = 0;
+        player->input->isSelected = false;
         
         player->score.deaths = 0;
         player->score.points = 0;
@@ -127,6 +124,8 @@ void initPlayers(void)
         player->isReady = false;
         player->pressedB = false; // get rid of this?
         player->isPlaying = false; // get rid of this?
+        player->scored = false;
+        player->isAI = false;
         
         // GAMEPLAY
         player->numLives = 9;
@@ -152,9 +151,17 @@ void initPlayers(void)
         player->_bg = &player_bg;
         player->_sprite = &paw_blank;
         player->_sprite->spr_id = paw_blank_id; // not sure why this changes
-        // character portrait
+        
+        // this should be set on team_select
+        // // character portrait
         player->_portrait = &character_portrait;
-        player->_portrait->spr_id = player->_portrait->anim1.asset[0];
+        // player->_portrait->spr_id = player->_portrait->anim1.asset[0];    
+        // if (player->onLeftSide == true) {
+            // set_spr_position(player->_portrait, -300, -200, 90); // PORTRAIT_DEPTH
+        // }
+        // else {
+            // set_spr_position(player->_portrait, 300, -200, 90); // PORTRAIT_DEPTH
+        // }
     }
 }
 
@@ -166,11 +173,13 @@ void initVsModePlayers(void)
     {
         player = &g_Players[i];
         
-        g_Players[i]._sprite->spr_id = g_Players[i]._sprite->anim1.asset[0];
+        player->_sprite->spr_id = player->_sprite->anim1.asset[0];
         
+        // add_sprite_to_sweep_and_prune(player->_sprite);
         // Flip the sprite based on even/odd team
         if (player->team.choice == TEAM_1) {
             player->_sprite->flip = sprNoflip;
+            player->onLeftSide = true;
             if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 2) {
                 set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
             }
@@ -180,6 +189,7 @@ void initVsModePlayers(void)
         } 
         else if (player->team.choice  == TEAM_2) {
             player->_sprite->flip = sprHflip;
+            player->onLeftSide = false;
             if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
                 set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
             }
@@ -189,6 +199,7 @@ void initVsModePlayers(void)
         }
         else if (player->team.choice  == TEAM_3) {
             player->_sprite->flip = sprNoflip;
+            player->onLeftSide = true;
             // if (g_Game.numTeams <= 3) {
                 // set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
             // }
@@ -198,9 +209,11 @@ void initVsModePlayers(void)
         }
         else if (player->team.choice  == TEAM_4) {
             player->_sprite->flip = sprHflip;
+            player->onLeftSide = false;
             set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
         }
         
+        player->_sprite->isColliding = false;
     }
 }
 
@@ -215,20 +228,37 @@ void initDemoPlayers(void)
     for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
     {
         player = &g_Players[i];
+        // add_sprite_to_sweep_and_prune(player->_sprite);
         if (i == 0) {
             player->_sprite = &macchi;
-            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
             player->_sprite->flip = sprNoflip;
+            player->onLeftSide = true;
+            player->objectState = OBJECT_STATE_ACTIVE;
+            player->scored = false;
+            player->isAI = true;
             // player->_sprite->zmode = _ZmLC;
             set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+            player->character.choice = i;
+            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
+            set_spr_scale(player->_portrait, 1, 1);
         }
         else if (i == 1) {
             player->_sprite = &jelly;
-            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
             player->_sprite->flip = sprHflip;
+            player->onLeftSide = false;
+            player->objectState = OBJECT_STATE_ACTIVE;
+            player->scored = false;
+            player->isAI = true;
             // player->_sprite->zmode = _ZmRC;
             set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+            player->character.choice = i;
+            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
+            set_spr_scale(player->_portrait, 1, 1);
         }
+        
+        player->_sprite->isColliding = false;
         boundPlayer(player);        
     }
 }
@@ -291,50 +321,60 @@ void getPlayersInput(void)
             continue;
         }
         */
-
-        player->moveHorizontal = false;
-        if (jo_is_input_key_pressed(player->playerID, JO_KEY_LEFT))
-        {
+        
+        if (player->input->isAnalog) {
+            player->curPos.dx = player->input->axis_x;
+            player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
+            player->moveHorizontal = true;
+            player->moveVertical = true;
+        }
+        else {
+            player->moveHorizontal = false;
+            player->moveVertical = false;
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_LEFT))
+            {
                 player->curPos.dx -= X_SPEED_INC;
                 player->moveHorizontal = true;
-        }
-
-        if (jo_is_input_key_pressed(player->playerID, JO_KEY_RIGHT))
-        {
+            }
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_RIGHT))
+            {
                 player->curPos.dx += X_SPEED_INC;
                 player->moveHorizontal = true;
+            }
+
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_UP))
+            {
+                player->curPos.dy -= X_SPEED_INC;
+                player->moveVertical = true;
+            }
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_DOWN))
+            {
+                player->curPos.dy += X_SPEED_INC;
+                player->moveVertical = true;
+            }
         }
+        
         if(player->moveHorizontal == false)
         {
             player->curPos.dx = 0;
-        }
-
-        player->moveVertical = false;
-        if (jo_is_input_key_pressed(player->playerID, JO_KEY_UP))
-        {
-                player->curPos.dy -= X_SPEED_INC;
-                player->moveVertical = true;
-        }
-        if (jo_is_input_key_pressed(player->playerID, JO_KEY_DOWN))
-        {
-                player->curPos.dy += X_SPEED_INC;
-                player->moveVertical = true;
+            player->_sprite->vel.x = 0;
         }
         if(player->moveVertical == false)
         {
             player->curPos.dy = 0;
+            player->_sprite->vel.y = 0;
         }
 
         // did the player click
-        if (jo_is_input_key_down(player->playerID, JO_KEY_A) ||
-            jo_is_input_key_down(player->playerID, JO_KEY_C))
+        if (jo_is_input_key_down(player->input->id, JO_KEY_A) ||
+            jo_is_input_key_down(player->input->id, JO_KEY_C))
         {
             start_timer = !start_timer;
 
         }
         
         // did the player plant a flag
-        if (jo_is_input_key_down(player->playerID, JO_KEY_B))
+        if (jo_is_input_key_down(player->input->id, JO_KEY_B))
         {
             start_timer = !start_timer;
         }
@@ -387,9 +427,10 @@ void updatePlayers(void)
         // move the player
         player->_sprite->pos.y += player->curPos.dy;
         player->_sprite->pos.x += player->curPos.dx;
-        // player->size += player->ds;
-        // player->angle += player->da;
-
+        player->_sprite->vel.x += player->curPos.dx;
+        player->_sprite->vel.y += player->curPos.dy;
+        // update_bounding_box(player->_sprite);
+        detect_player_ball_collision(&pixel_poppy, player);
         boundPlayer(player);
     }
 }
@@ -413,7 +454,7 @@ void drawPlayerSprite(PPLAYER player)
     // int playerSprite = 0;
     // int crackSprite = 0;
 
-    // playerSprite = g_Assets.cursors[g_Assets.randomizedColors[player->playerID]];
+    // playerSprite = g_Assets.cursors[g_Assets.randomizedColors[player->input->id]];
 
     // don't draw dead players
     if(player->subState == PLAYER_STATE_DEAD)
@@ -450,7 +491,22 @@ void drawPlayerSprite(PPLAYER player)
 void speedLimitPlayer(PPLAYER player)
 {
     jo_fixed bonusSpeed = 0;
-
+    FIXED y_up_speed;
+    FIXED y_dn_speed;
+    FIXED x_l_speed;
+    FIXED x_r_speed;
+    if (player->isAI == true) {
+        y_up_speed = AI_X_SPEED;
+        y_dn_speed = -AI_X_SPEED;
+        x_l_speed  = MAX_X_SPEED;
+        x_r_speed  = -MAX_X_SPEED;
+    }
+    else {
+        y_up_speed = MAX_Y_SPEED;
+        y_dn_speed = -MAX_Y_SPEED;
+        x_l_speed  = MAX_X_SPEED;
+        x_r_speed  = -MAX_X_SPEED;
+    }
     /*
     if(player->exceedLimitTimer > 0)
     {
@@ -460,24 +516,24 @@ void speedLimitPlayer(PPLAYER player)
     */
 
     // validate speeds
-    if(player->curPos.dx > MAX_X_SPEED + bonusSpeed)
+    if(player->curPos.dx > x_l_speed + bonusSpeed)
     {
-        player->curPos.dx = MAX_X_SPEED + bonusSpeed;
+        player->curPos.dx = x_l_speed + bonusSpeed;
     }
 
-    if(player->curPos.dx < MAX_X_SPEED2 - bonusSpeed)
+    if(player->curPos.dx < x_r_speed - bonusSpeed)
     {
-        player->curPos.dx = MAX_X_SPEED2 - bonusSpeed;
+        player->curPos.dx = x_r_speed - bonusSpeed;
     }
 
-    if(player->curPos.dy > MAX_Y_SPEED + bonusSpeed)
+    if(player->curPos.dy > y_up_speed + bonusSpeed)
     {
-        player->curPos.dy = MAX_Y_SPEED + bonusSpeed;
+        player->curPos.dy = y_up_speed + bonusSpeed;
     }
 
-    if(player->curPos.dy < MAX_Y_SPEED2 - bonusSpeed)
+    if(player->curPos.dy < y_dn_speed - bonusSpeed)
     {
-        player->curPos.dy = MAX_Y_SPEED2 - bonusSpeed;
+        player->curPos.dy = y_dn_speed - bonusSpeed;
     }
 }
 
@@ -518,18 +574,33 @@ void boundPlayer(PPLAYER player)
 
     // screen boundaries
     // will need to differentiate between left/right side of the screen
-    // if(player->_sprite->pos.x > SCREEN_MIDDLE - PLAYER_WIDTH)
-    // {
-        // player->_sprite->pos.x = SCREEN_MIDDLE - PLAYER_WIDTH;
-    // }
-    if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
-    {
-        player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
+    if (player->onLeftSide == true) {
+        if (game_options.debug_mode) {
+            if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
+            {
+                player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
+            }
+        }
+        else {
+            if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
+            {
+                player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
+            }
+        }
+        if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
+        }
     }
-
-    if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
-    {
-        player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
+    else {
+        if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
+        }
+        if(player->_sprite->pos.x < SCREEN_QUARTER + PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_QUARTER + PLAYER_WIDTH;
+        }
     }
 
     if(player->_sprite->pos.y > SCREEN_BOTTOM - PLAYER_HEIGHT)
@@ -600,7 +671,7 @@ void boundPlayer(PPLAYER player)
             // // continue;
         // // }
 
-        // // if(player->playerID == victim->playerID)
+        // // if(player->input->id == victim->playerID)
         // // {
             // // continue;
         // // }

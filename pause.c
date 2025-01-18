@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "main.h"
+#include "input.h"
 #include "assets.h"
 #include "util.h"
 #include "screen_transition.h"
@@ -21,6 +22,7 @@ typedef enum _PAUSE_OPTIONS
     PAUSE_OPTIONS_RESTART = 1,
     PAUSE_OPTIONS_QUIT = 2,
     PAUSE_OPTIONS_DEBUG = 3,
+    PAUSE_OPTIONS_ANALOG = 4,
     PAUSE_OPTION_MAX,
 } PAUSE_OPTIONS;
 
@@ -29,7 +31,7 @@ typedef enum _PAUSE_OPTIONS
 // static void validateScores(void);
 
 static void drawPauseMenuCursor(void);
-static void drawPauseMenu(void);
+static void drawPauseMenu(int options_y);
 
 static void checkForPausePress(void);
 static void checkForPauseMenu(void);
@@ -71,6 +73,9 @@ void pause_input(void)
     {
         // only check for pause menu presses if the game is paused
         checkForPauseMenu();
+        if (g_PauseChoice == PAUSE_OPTIONS_ANALOG) {
+            analogAdjustmentScreen_input();
+        }
     }
     if (mosaic_out) {
         mosaic_out = mosaicOut();
@@ -90,13 +95,15 @@ void pause_draw(void)
 
     if(g_Game.isPaused == true)
     {
-        jo_nbg0_printf(19, 12, "PAWSED");
+        int options_y = 6;
+        jo_nbg0_printf(19, options_y, "PAWSED");
+        options_y += 6;
         //
         // score
         //
 
         // drawPauseScore();
-        drawPauseMenu();
+        drawPauseMenu(options_y);
         drawPauseMenuCursor();
     }
 }
@@ -148,8 +155,8 @@ static void checkForPauseMenu(void)
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
             g_PauseChoice++;
-    }
-    
+    } 
+     
     if (jo_is_pad1_key_down(JO_KEY_LEFT))
     {
         switch(g_PauseChoice)
@@ -161,8 +168,7 @@ static void checkForPauseMenu(void)
                 break;
         }
     }
-
-    if (jo_is_pad1_key_down(JO_KEY_RIGHT))
+    else if (jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
         switch(g_PauseChoice)
         {
@@ -173,7 +179,7 @@ static void checkForPauseMenu(void)
                 break;
         }
     }
-
+    
     // keep pause screen choice in range
     sanitizeValue(&g_PauseChoice, 0, PAUSE_OPTION_MAX);
 
@@ -209,7 +215,17 @@ static void checkForPauseMenu(void)
 
             case PAUSE_OPTIONS_DEBUG:
                 // simply unpause
-                
+                mosaic_in_rate = MOSAIC_FAST_RATE;
+                if (game_options.mosaic_display) {
+                    mosaic_in = true;
+                }
+                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
+                g_Game.isPaused = false;
+                volume = MAX_VOLUME;
+                jo_audio_set_volume(volume);
+                break;
+            case PAUSE_OPTIONS_ANALOG:
+                // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (game_options.mosaic_display) {
                     mosaic_in = true;
@@ -224,31 +240,47 @@ static void checkForPauseMenu(void)
                 break;
         }
     }
+    else if (jo_is_pad1_key_down(JO_KEY_B))
+    {
+        // simply unpause
+        mosaic_in_rate = MOSAIC_FAST_RATE;
+        if (game_options.mosaic_display) {
+        mosaic_in = true;
+        }
+        slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
+        g_Game.isPaused = false;
+        volume = MAX_VOLUME;
+        jo_audio_set_volume(volume);
+    }
 }
 
 // Options menu + values
-static void drawPauseMenu(void)
+static void drawPauseMenu(int options_y)
 {
-    jo_nbg0_printf(19, 16, "RESUME");
-
-    jo_nbg0_printf(19, 18, "RESTART");
-
-    jo_nbg0_printf(19, 20, "QUIT");
-    
+    int options_x = 15;
+    jo_nbg0_printf(options_x, options_y, "RESUME");
+    options_y += 2;
+    jo_nbg0_printf(options_x, options_y, "RESTART");
+    options_y += 2;
+    jo_nbg0_printf(options_x, options_y, "QUIT");
+    options_y += 2;
     if (game_options.debug_display) {
-        jo_nbg0_printf(19, 22, "DEBUG:ON");
+        jo_nbg0_printf(options_x, options_y, "DEBUG:ON");
     }
     else {
-        jo_nbg0_printf(19, 22, "DEBUG:OFF");
+        jo_nbg0_printf(options_x, options_y, "DEBUG:OFF");
     }
-    
+    options_y += 2;
+    jo_nbg0_printf(options_x, options_y, "ANALOG ADJUSTMENT:");
+    options_y += 2;
+    analogAdjustmentScreen_draw(options_x, options_y);    
 }
 
 static void drawPauseMenuCursor(void)
 {
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
-    cursor.pos.x = toFIXED(-80) + offset;
-    cursor.pos.y = toFIXED(32 + (g_PauseChoice * 32)); // vertical position varies based on selection
+    cursor.pos.x = toFIXED(-124) + offset;
+    cursor.pos.y = toFIXED(-32 + (g_PauseChoice * 32)); // vertical position varies based on selection
     my_sprite_draw(&cursor);
     cursor_angle += 8;
     if (cursor_angle > 360) {

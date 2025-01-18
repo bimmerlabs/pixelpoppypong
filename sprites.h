@@ -5,9 +5,11 @@
 #include "math.h"
 
 #define FRAMERATE 4 // for animation speed
+#define BALL_RADIUS toFIXED(24)
 
 typedef struct {
     FIXED x, y, z;
+    FIXED r;
 } Position;
 
 typedef struct {
@@ -15,7 +17,7 @@ typedef struct {
 } Scale;
 
 typedef struct {
-    Uint16 x, y, z;
+    int x, y, z;
 } Rotation;
 
 typedef struct {
@@ -24,7 +26,15 @@ typedef struct {
 
 typedef struct {
     FIXED x, y;
+    int z;
 } Velocity;
+
+typedef struct _BoundingBox
+{
+    FIXED min_x, min_y;
+    FIXED max_x, max_y;
+    FIXED width, height;
+} BoundingBox;
 
 typedef struct {
     int*  asset;
@@ -38,6 +48,9 @@ typedef struct {
     Rotation rot;
     Vector   vec2;
     Velocity vel;
+    BoundingBox bbox;
+    FIXED mass;
+    bool isColliding;
     Uint8    spr_id;
     bool   visible;
     int    pal_id;
@@ -62,6 +75,8 @@ extern Sprite player_cursor;
 extern Sprite timer_num1;
 extern Sprite timer_num10;
 extern Sprite meter;
+extern Sprite goal1;
+extern Sprite goal2;
 extern Sprite pixel_poppy;
 extern Sprite macchi;
 extern Sprite jelly;
@@ -72,6 +87,18 @@ extern Sprite poppy; // player can make their own pet
 extern Sprite paw_blank;
 extern Sprite boss1;
 extern Sprite boss2;
+
+// add options input (difficulty, game mode, etc)
+static inline void reset_ball(Sprite *sprite) {
+    sprite->pos.x = toFIXED(0);
+    sprite->pos.y = toFIXED(0);
+    sprite->vel.x = toFIXED(0);
+    sprite->vel.y = toFIXED(0);
+    sprite->vel.z = 0;
+    sprite->scl.x = toFIXED(1.0);
+    sprite->scl.y = toFIXED(1.1);
+    sprite->pos.r = BALL_RADIUS;
+}
 
 static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
     sprite->pos.x = toFIXED(px);

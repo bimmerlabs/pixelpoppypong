@@ -1,9 +1,12 @@
 #include <jo/jo.h>
 #include "main.h"
+#include "input.h"
 #include "gameplay.h"
+#include "physics.h"
 #include "assets.h"
 #include "screen_transition.h"
 #include "objects/player.h"
+#include "AI.h"
 // background images
 // #include "BG_DEF/BG25.h"
 // #include "palettetools.h"
@@ -14,9 +17,13 @@ extern PLAYER g_Players[MAX_PLAYERS];
 
 unsigned int g_DemoTimer = 0;
 bool start_timer = false;
+bool round_start = false;
 bool g_RoundOver = false;
 Uint16 g_GameBeginTimer = 0;
 Uint16 g_RoundOverTimer = 0;
+
+int player1_score = 0;
+int player2_score = 0;
 
 static bool draw_demo_text = true;
 static bool times_up = false;
@@ -58,15 +65,25 @@ void gameplay_init() {
     transition_in = true;
 
     resetPlayerScores();
+    
+    // collision detection    sprite_count = 0;
 
-
-    set_spr_scale(&pixel_poppy, 1.0, 1.1);
+    // debug only
+    reset_ball(&pixel_poppy);
+    
+    // set_spr_position(&pixel_poppy, 0, 0, 100);
+    // set_spr_scale(&pixel_poppy, 1.0, 1.1);
     sprite_frame_reset(&pixel_poppy);
+    pixel_poppy.isColliding = false;
+    // add_sprite_to_sweep_and_prune(&pixel_poppy);
+    // update_bounding_box(&pixel_poppy);
+    // add_sprite_to_sweep_and_prune(&macchi);
+    // add_sprite_to_sweep_and_prune(&jelly);
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
-    slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
     
     // FOR PALETTES
     do_update = true;
@@ -79,17 +96,21 @@ void gameplay_init() {
     start_timer = false;
     g_GameBeginTimer = 0;
     times_up = false;
-    
+    round_start = false;
     g_RoundOver = false;
     
     slScrPosNbg0(toFIXED(0), toFIXED(0));
     
     menu_bg1.spr_id = menu_bg1.anim1.asset[4];
-    set_spr_position(&menu_bg1, 0, -200, 85);
+    set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
+    
+    // temporary - to be removed
+    player1_score = 0;
+    player2_score = 0;
 }
 
 void demo_init(void) {
@@ -113,7 +134,11 @@ void demo_update(void)
         jo_nbg0_printf(20, 26, "DEMO!");
     }
     g_DemoTimer++;
-
+    if (!round_start) {
+        playerAI(&pixel_poppy);
+        // sweep_and_prune();
+        // updatePlayers();
+    }
     // check if the frameAnim has expired
     if(g_DemoTimer > DEMO_TIME)
     {
@@ -128,8 +153,17 @@ void demo_update(void)
     }
     if (!start_timer) {
         g_GameBeginTimer++;
+        round_start = true;
         return;
     }
+    
+    // start round    if (round_start) {
+        // if (game_options.debug_display) {
+            start_ball_movement(&pixel_poppy);
+        // }
+        round_start = false;
+    }
+    
     // game timer
     Uint8 ones = g_GameTimer % 10; // Extracts the ones place
     Uint8 tens = g_GameTimer / 10; // Extracts the tens place
@@ -157,15 +191,37 @@ void demo_update(void)
         my_sprite_draw(&timer_num10); // tens
         my_sprite_draw(&timer_num1);  // ones
         my_sprite_draw(&menu_bg1);     // shadow
+                // field
+        my_sprite_draw(&goal1);
+        my_sprite_draw(&goal2);
                 drawPlayers();
+        
+        update_ball(&pixel_poppy);
         my_sprite_draw(&pixel_poppy);
         
         // move to a physics module
-        pixel_poppy.rot.z++;
+        // pixel_poppy.rot.z++;
         
-        // // move to an animation module
-        my_sprite_animation(&macchi);
-        my_sprite_animation(&jelly);
+        jo_nbg0_printf(8, 2, "%09d", player1_score);
+        jo_nbg0_printf(27, 2, "%09d", player2_score);
+        
+          
+        for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+        {
+            PPLAYER player = &g_Players[i];
+            // move to an animation module
+            my_sprite_animation(player->_sprite);
+            
+            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];    
+            set_spr_scale(player->_portrait, 1, 1);
+            if (player->onLeftSide == true) {
+                set_spr_position(player->_portrait, -300, -190, 90); // PORTRAIT_DEPTH
+            }
+            else {
+                set_spr_position(player->_portrait, 300, -190, 90); // PORTRAIT_DEPTH
+            }
+            my_sprite_draw(player->_portrait);
+        }
     }
     else if (!g_Game.isPaused && times_up) {
         jo_nbg0_printf(17, 14, "TIME OUT");
@@ -240,7 +296,8 @@ void gameplay_update(void)
     }
 
     updatePlayers();
-
+    // sweep_and_prune();
+    
     if(g_RoundOver == true)
     {
         g_RoundOverTimer--;
@@ -257,16 +314,17 @@ void gameplay_update(void)
 }
 void gameplay_input(void)
 {
-    if(g_Game.isPaused == true)
+    if(g_Game.isPaused == true || start_timer == false)
     {
         return;
     }
-
+    check_inputs();
     getPlayersInput();
 }
 
 void    demo_input(void)	{
     if (jo_is_pad1_key_down(JO_KEY_START)) {
+        g_Game.lastState = GAME_STATE_DEMO_LOOP;
         transitionState(GAME_STATE_TITLE_SCREEN);
         g_DemoTimer = 0;
     }

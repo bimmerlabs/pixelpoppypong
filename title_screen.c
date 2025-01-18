@@ -1,6 +1,6 @@
 #include <jo/jo.h>
 #include "main.h"
-#include "main.h"
+#include "input.h"
 #include "assets.h"
 #include "title_screen.h"
 #include "screen_transition.h"
@@ -41,7 +41,7 @@ Uint16 cursor_angle = 0;
 
 void titleScreen_init(void)
 {
-    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY) {
+    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY || g_Game.lastState == GAME_STATE_DEMO_LOOP) {
         unloadGameAssets();
         loadTitleScreenAssets();
     }
@@ -70,6 +70,7 @@ void titleScreen_init(void)
     poppy_velocity = 0.0;
     set_spr_scale(&pixel_poppy, poppy_scale, poppy_scale);
     pixel_poppy.rot.z = 0;
+    set_spr_position(&pixel_poppy, 0, 0, 100);
     sprite_frame_reset(&pixel_poppy);
     
     slColOffsetOn(NBG0ON | NBG1ON | SPRON);
@@ -553,6 +554,29 @@ void drawMenu(void)
         poppy_animation = true;
         poppy_animation_frame += 1;
     }
+        
+    // giggle
+    else if (pixel_poppy.spr_id == pixel_poppy.anim1.asset[1]) 
+    {
+        bool giggle = true;
+        if (poppy_animation && poppy_animation_frame % 40 == 0)
+        {
+            pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
+            set_spr_position(&pixel_poppy, 0, 0, 100);
+            poppy_animation = false;
+            poppy_animation_frame = 0;
+        }
+        poppy_animation = true;
+        poppy_animation_frame += 1;
+        if (giggle && poppy_animation_frame % 10 == 0) {
+            set_spr_position(&pixel_poppy, 0, 2, 100);
+            giggle = false;
+        }
+        else if (poppy_animation_frame % 5 == 0) {
+            set_spr_position(&pixel_poppy, 0, -2, 100);
+            giggle = true;
+        }
+    }
     
     // make sure poppy continues to scale up if user presses start too fast
     if (poppy_scale < POPPY_MAX_SCALE) {
@@ -709,7 +733,7 @@ void optionsScreen_init(void)
     }
     menu_bg2.zmode = _ZmCT;
     set_spr_position(&menu_bg2, 0, -120, 95);
-    set_spr_scale(&menu_bg2, 200, 96);
+    set_spr_scale(&menu_bg2, 200, OPTION_MAX*16);
 }
 
 void optionsScreen_input(void)
@@ -724,6 +748,13 @@ void optionsScreen_input(void)
             g_OptionScreenChoice++;
     }
 
+    // if (g_OptionScreenChoice == OPTION_ANALOG) {
+        // if (jo_is_pad1_key_pressed(JO_KEY_LEFT) && g_Inputs[0].sensitivity > ANALOG_MIN)
+            // g_Inputs[0].sensitivity -= toFIXED(0.01);
+        // if (jo_is_pad1_key_pressed(JO_KEY_RIGHT) && g_Inputs[0].sensitivity < ANALOG_MAX)
+            // g_Inputs[0].sensitivity += toFIXED(0.01);
+    // }    
+    // else 
     if (jo_is_pad1_key_down(JO_KEY_LEFT) || jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
         switch(g_OptionScreenChoice)
@@ -740,9 +771,12 @@ void optionsScreen_input(void)
             case OPTION_DRAWMOSAIC:
                 game_options.mosaic_display = !game_options.mosaic_display;
                 break;
-            case OPTION_WIDESCREEN:
-                game_options.widescreen = !game_options.widescreen;
+            case OPTION_USE_RTC:
+                game_options.use_rtc = !game_options.use_rtc;
                 break;
+            // case OPTION_WIDESCREEN:
+                // game_options.widescreen = !game_options.widescreen;
+                // break;
             default:
                 break;
         }
@@ -853,13 +887,17 @@ void drawOptions(void)
     }
     
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "SCREEN MODE:");
-    if (game_options.widescreen) {
-        jo_nbg0_printf(options_x, options_y, "WIDE");
+    jo_nbg0_printf(10, options_y, "USE RTC:");
+    if (game_options.use_rtc) {
+        jo_nbg0_printf(options_x, options_y, "YES");
     }
     else {
-        jo_nbg0_printf(options_x, options_y, "NORMAL");
+        jo_nbg0_printf(options_x, options_y, "NO");
     }
+    
+    // options_y += 2;
+    // jo_nbg0_printf(10, options_y, "ANALOG:");
+    // jo_nbg0_printf(options_x, options_y, "%d", toINT(jo_fixed_mult(g_Inputs[0].sensitivity, toFIXED(100))));
     
     options_y += 2;
     jo_nbg0_printf(10, options_y, "EXIT");

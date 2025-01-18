@@ -30,6 +30,7 @@
 #include "main.h"
 #include "font.h"
 #include "gameplay.h"
+#include "input.h"
 #include "pause.h"
 #include "assets.h"
 #include "screen_transition.h"
@@ -51,11 +52,12 @@ Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
 
 GameOptions game_options = {
-    .debug_mode = true,
+    .debug_mode = false,
     .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
-    .widescreen = false,
+    .use_rtc = true,
+    // .widescreen = false,
 };
 
 void loading_screen(void)
@@ -107,6 +109,7 @@ void main_loop(void) {
 }
 
 void my_input_callback(void) {
+    // check_inputs();
     switch (g_Game.gameState) {
         case GAME_STATE_PPP_LOGO:
             pppLogo_input();
@@ -177,8 +180,8 @@ void			jo_main(void)
     slSetSprTVMode(RESOLUTION_HIGH);
     
     init_font(); // this has to happen first (sprites get 1st palette slot)
-    
-    
+    init_inputs();
+            
     jo_core_add_callback(screenTransition_update);
     jo_core_add_callback(game_state_update);
     
@@ -198,6 +201,7 @@ void			jo_main(void)
     
     jo_core_add_callback(my_color_calc);
     jo_core_add_vblank_callback(my_palette_update);
+    
     jo_core_add_callback(gameplay_draw);
     jo_core_add_callback(gameplay_update);
     

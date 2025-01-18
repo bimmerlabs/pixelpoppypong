@@ -7,8 +7,22 @@ extern unsigned int g_LogoTimer;
 #define PPP_NBG1_INC 1
 #define PPP_NBG1_MIN 0
 
+#define T_DAWN 5
+#define T_DAY 11
+#define T_DUSK 17
+#define T_NIGHT 23
+
 #define TRANSPARENCY_MIN    CLRate31_1
 #define TRANSPARENCY_MAX    CLRate8_24
+
+// time of day
+typedef enum _BG_TIME
+{
+    BG_DAWN  = 1,
+    BG_DAY   = 2,
+    BG_DUSK  = 3,
+    BG_NIGHT = 4,
+} BG_TIME;
 
 void pppLogo_init(void);
 void pppLogo_input(void);

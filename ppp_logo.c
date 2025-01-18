@@ -9,7 +9,7 @@
 
 unsigned int g_LogoTimer = 0;
 static int transparency_rate = TRANSPARENCY_MAX;
-Uint8 current_background = 3;
+Uint8 current_background = BG_NIGHT;
 
 // initializations for PPP screen
 void pppLogo_init(void)
@@ -19,30 +19,31 @@ void pppLogo_init(void)
     }
     
     // this way only until I implement palette adjustments
-    if (game_options.debug_mode) {
+    if (game_options.debug_mode || !game_options.use_rtc) {
+    // if (game_options.debug_mode) {
         current_background++;
         if (current_background > 4) {
-        current_background = 1;
+            current_background = 1;
         }
     }
     else {
         // update based on time of day
         jo_getdate(&now);
         // dawn
-        if (now.hour >= 5 && now.hour < 11) {
-            current_background = 1;
+        if (now.hour >= T_DAWN && now.hour < T_DAY) {
+            current_background = BG_DAWN;
         }
         // day
-        if (now.hour >= 11 && now.hour < 17) {
-            current_background = 2;
+        if (now.hour >= T_DAY && now.hour < T_DUSK) {
+            current_background = BG_DAY;
         }
         // dusk
-        if (now.hour >= 17 && now.hour < 23) {
-            current_background = 3;
+        if (now.hour >= T_DUSK && now.hour < T_NIGHT) {
+            current_background = BG_DUSK;
         }
         // night
-        if (now.hour >= 23 && now.hour < 5) {
-            current_background = 4;
+        if (now.hour >= T_NIGHT && now.hour < T_DAWN) {
+            current_background = BG_NIGHT;
         }
     }
     init_bg26_img();
@@ -155,9 +156,9 @@ void pppLogo_update(void)
             transparency_rate--;
             slColRateNbg0 ( transparency_rate );
         }
-        else if (transparency_rate <= TRANSPARENCY_MIN){
-            slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-        }
+        // else if (transparency_rate <= TRANSPARENCY_MIN){
+            // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
+        // }
     }
     else if (game_options.mosaic_display) {
         mosaicRandom();

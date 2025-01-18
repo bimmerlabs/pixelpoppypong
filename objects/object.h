@@ -8,10 +8,10 @@ typedef enum _OBJECT_STATE
 
 typedef struct _FIXED_POSITION
 {
-    jo_fixed x;
-    jo_fixed y;
-    jo_fixed dx;
-    jo_fixed dy;
+    FIXED x;
+    FIXED y;
+    FIXED dx;
+    FIXED dy;
 
 } FIXED_POSITION, *PFIXED_POSITION;
 

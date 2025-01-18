@@ -1,6 +1,6 @@
 #pragma once
 
-#define TITLE_TIMER (30 * 60)
+#define TITLE_TIMER (3 * 60)
 #define MODE_ID 1       // sprite index offset for mode text
 #define MODE_OFFSET 2   // sprite index offset for mode select
 #define PLAYER_ID 2     // sprite index offset for player text
@@ -48,7 +48,9 @@ typedef enum _OPTIONS
     OPTION_DEBUG_TEXT,
     OPTION_DRAWMESH,
     OPTION_DRAWMOSAIC,
-    OPTION_WIDESCREEN,
+    OPTION_USE_RTC,
+    // OPTION_ANALOG,
+    // OPTION_WIDESCREEN,
     OPTION_EXIT,
     OPTION_MAX,
 } OPTIONS;

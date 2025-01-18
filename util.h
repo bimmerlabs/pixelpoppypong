@@ -6,3 +6,5 @@
 
 void sanitizeValue(int* value, int min, int max);
 void shuffleArray(unsigned int* array, unsigned int size);
+
+int minmumValue(int min, int value);

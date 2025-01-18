@@ -5,25 +5,41 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.40"
+#define VERSION "0.42"
 #define MAX_DEBUG_LEVEL 1
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 #define MIN_TEAMS 2
 #define MAX_TEAM_MEMBERS 2
 #define TIMEOUT 99 // seconds - MAYBE MAKE AN OPTION?
+
+// Screen position
+#define SCREEN_RIGHT  toFIXED(352.0)
+#define SCREEN_LEFT  toFIXED(-352.0)
+#define SCREEN_MIDDLE  toFIXED(0)
+#define SCREEN_QUARTER  toFIXED(100.0)
+#define SCREEN_WIDTH  toFIXED(704.0)
+#define SCREEN_HEIGHT  toFIXED(480.0)
+#define SCREEN_TOP toFIXED(-240.0)
+#define SCREEN_BOTTOM toFIXED(240.0)
+
 extern jo_datetime now;
 extern bool first_load;
 extern Uint8 frame;
 extern Uint8 g_GameTimer;
 extern Uint16 cursor_angle; // for title & pawsed menus
 
+// temporary - to be removed
+extern int player1_score;
+extern int player2_score;
+
 typedef struct {
     bool debug_mode;
     bool debug_display;
     bool mesh_display;
     bool mosaic_display;
-    bool widescreen;
+    bool use_rtc;
+    // bool widescreen;
 } GameOptions;
 
 extern GameOptions game_options;
