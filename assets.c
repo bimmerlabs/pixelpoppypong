@@ -70,6 +70,7 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
 
 void loadCommonAssets(void)
 {
+    jo_sprite_free_all();
     // pixel poppy
     loadSprite(&pixel_poppy, g_Assets.pixel_poppy1, "POPPY.TGA", pixel_poppy1_tileset, COUNTOF(pixel_poppy1_tileset), NUM_POPPY_SPRITES, 64, 50, 1);
     
@@ -99,7 +100,6 @@ void unloadTitleScreenAssets(void)
 {
     g_Game.isLoading = true;    
     // unloads everything after this point
-    // jo_sprite_free_all();
     jo_sprite_free_from(logo1.spr_id);
 }
 
@@ -143,7 +143,6 @@ void unloadGameAssets(void)
 {
     g_Game.isLoading = true;
     // unloads everything after this point
-    // jo_sprite_free_all();
     jo_sprite_free_from(macchi.anim1.asset[0]);
     
 }

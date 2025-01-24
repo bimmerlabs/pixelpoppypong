@@ -152,16 +152,7 @@ void initPlayers(void)
         player->_sprite = &paw_blank;
         player->_sprite->spr_id = paw_blank_id; // not sure why this changes
         
-        // this should be set on team_select
-        // // character portrait
         player->_portrait = &character_portrait;
-        // player->_portrait->spr_id = player->_portrait->anim1.asset[0];    
-        // if (player->onLeftSide == true) {
-            // set_spr_position(player->_portrait, -300, -200, 90); // PORTRAIT_DEPTH
-        // }
-        // else {
-            // set_spr_position(player->_portrait, 300, -200, 90); // PORTRAIT_DEPTH
-        // }
     }
 }
 
@@ -237,7 +228,6 @@ void initDemoPlayers(void)
             player->objectState = OBJECT_STATE_ACTIVE;
             player->scored = false;
             player->isAI = true;
-            // player->_sprite->zmode = _ZmLC;
             set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
             player->character.choice = i;
             player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
@@ -251,7 +241,6 @@ void initDemoPlayers(void)
             player->objectState = OBJECT_STATE_ACTIVE;
             player->scored = false;
             player->isAI = true;
-            // player->_sprite->zmode = _ZmRC;
             set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
             player->character.choice = i;
             player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];

@@ -1,11 +1,13 @@
 #include <jo/jo.h>
 #include "main.h"
+#include "backup.h"
 #include "input.h"
 #include "assets.h"
+// #include "ppp_logo.h"
 #include "title_screen.h"
 #include "screen_transition.h"
 // #include "objects/player.h"
-#include "BG_DEF/BG26.h"
+#include "BG_DEF/nbg0.h"
 
 // globals for menu options
 int g_TitleScreenChoice = 0;
@@ -46,13 +48,7 @@ void titleScreen_init(void)
         loadTitleScreenAssets();
     }
     
-    g_Game.lastState = GAME_STATE_TITLE_SCREEN;
-    // if (first_load) {
-        // // init_bg0_img();
-        // init_bg25_img();
-        // first_load = false;
-    // }
-    
+    g_Game.lastState = GAME_STATE_TITLE_SCREEN;    
     
     g_TitleTimer = 0;
     
@@ -141,13 +137,13 @@ void titleScreen_update(void)
         return;
     }
     
-    if (attrBg260.x_scroll > toFIXED(0)) {
-        pos_x += attrBg260.x_scroll;
+    if (attrNbg0.x_scroll > toFIXED(0)) {
+        pos_x += attrNbg0.x_scroll;
         if (pos_x > toFIXED(512.0))
             pos_x = toFIXED(0);
     }
-    if (attrBg260.y_scroll > toFIXED(0)) {
-        pos_y += attrBg260.y_scroll;
+    if (attrNbg0.y_scroll > toFIXED(0)) {
+        pos_y += attrNbg0.y_scroll;
         if (pos_y > toFIXED(512.0))
             pos_y = toFIXED(0);
     }
@@ -723,7 +719,7 @@ void optionsScreen_init(void)
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
-    slColOffsetB(PAUSE_FADE, PAUSE_FADE, PAUSE_FADE);
+    slColOffsetB(QUARTER_FADE, QUARTER_FADE, QUARTER_FADE);
     
     if (game_options.mesh_display) {
         menu_bg2.mesh = MESHon;
@@ -731,9 +727,13 @@ void optionsScreen_init(void)
     else {
         menu_bg2.mesh = MESHoff;
     }
+    menu_bg2.spr_id = menu_bg2.anim1.asset[4];
     menu_bg2.zmode = _ZmCT;
     set_spr_position(&menu_bg2, 0, -120, 95);
-    set_spr_scale(&menu_bg2, 200, OPTION_MAX*16);
+    set_spr_scale(&menu_bg2, 230, OPTION_MAX*16);
+    
+    // current_background = BG_CNTRL;
+    // init_bg26_img();
 }
 
 void optionsScreen_input(void)
@@ -774,6 +774,17 @@ void optionsScreen_input(void)
             case OPTION_USE_RTC:
                 game_options.use_rtc = !game_options.use_rtc;
                 break;
+            // case OPTION_BUP_DEV:
+                // if (!is_cart_mem_available()) {
+                    // game_options.bup_device = JoInternalMemoryBackup;
+                // }
+                // else {
+                    // game_options.bup_device += 1;
+                    // if (game_options.bup_device > JoCartridgeMemoryBackup) {
+                        // game_options.bup_device = JoInternalMemoryBackup;
+                    // }
+                // }
+                // break;
             // case OPTION_WIDESCREEN:
                 // game_options.widescreen = !game_options.widescreen;
                 // break;
@@ -793,6 +804,7 @@ void optionsScreen_input(void)
         switch(g_OptionScreenChoice)
         {
             case OPTION_EXIT:
+                save_game_backup();
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 changeState(GAME_STATE_TITLE_MENU);
                 break;
@@ -803,6 +815,7 @@ void optionsScreen_input(void)
     }
     if (jo_is_pad1_key_down(JO_KEY_B) )
     {
+        save_game_backup();
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
         changeState(GAME_STATE_TITLE_MENU);
     }
@@ -815,13 +828,13 @@ void optionsScreen_update(void)
         return;
     }
     
-    if (attrBg260.x_scroll > toFIXED(0)) {
-        pos_x += attrBg260.x_scroll;
+    if (attrNbg0.x_scroll > toFIXED(0)) {
+        pos_x += attrNbg0.x_scroll;
         if (pos_x > toFIXED(512.0))
             pos_x = toFIXED(0);
     }
-    if (attrBg260.y_scroll > toFIXED(0)) {
-        pos_y += attrBg260.y_scroll;
+    if (attrNbg0.y_scroll > toFIXED(0)) {
+        pos_y += attrNbg0.y_scroll;
         if (pos_y > toFIXED(512.0))
             pos_y = toFIXED(0);
     }
@@ -837,13 +850,14 @@ void drawOptions(void)
     {
         return;
     }
-    int options_x = 28;
+    int title_x = 8;
+    int options_x = 27;
     int options_y = 4;
     
     jo_nbg0_printf(18, options_y, "OPTIONS");
     
     options_y += 4;
-    jo_nbg0_printf(10, options_y, "DEBUG MODE:");
+    jo_nbg0_printf(title_x, options_y, "DEBUG MODE:");
     if (game_options.debug_mode) {
         jo_nbg0_printf(options_x, options_y, "ON");
     }
@@ -852,7 +866,7 @@ void drawOptions(void)
     }
     
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "DEBUG DISPLAY:");
+    jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
     if (game_options.debug_display) {
         jo_nbg0_printf(options_x, options_y, "ON");
     }
@@ -861,7 +875,7 @@ void drawOptions(void)
     }
 
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "MESH TRANSPARENCY:");
+    jo_nbg0_printf(title_x, options_y, "MESH TRANSPARENCY:");
     if (game_options.mesh_display) {
         menu_bg1.mesh = MESHon; // good enough for now
         menu_bg2.mesh = MESHon;
@@ -874,7 +888,7 @@ void drawOptions(void)
     }
 
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "MOSAIC EFFECT:");
+    jo_nbg0_printf(title_x, options_y, "MOSAIC EFFECT:");
     if (game_options.mosaic_display) {
 	slScrMosSize(MOSAIC_MAX, MOSAIC_MAX);
 	slScrMosaicOn(NBG1ON);
@@ -887,7 +901,7 @@ void drawOptions(void)
     }
     
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "USE RTC:");
+    jo_nbg0_printf(title_x, options_y, "USE RTC:");
     if (game_options.use_rtc) {
         jo_nbg0_printf(options_x, options_y, "YES");
     }
@@ -896,11 +910,20 @@ void drawOptions(void)
     }
     
     // options_y += 2;
+    // jo_nbg0_printf(title_x, options_y, "BACKUP DEVICE:");
+    // if (game_options.bup_device == 0) {
+        // jo_nbg0_printf(options_x, options_y, "INTERNAL");
+    // }
+    // else {
+        // jo_nbg0_printf(options_x, options_y, "CARTRIDGE");
+    // }
+    
+    // options_y += 2;
     // jo_nbg0_printf(10, options_y, "ANALOG:");
     // jo_nbg0_printf(options_x, options_y, "%d", toINT(jo_fixed_mult(g_Inputs[0].sensitivity, toFIXED(100))));
     
     options_y += 2;
-    jo_nbg0_printf(10, options_y, "EXIT");
+    jo_nbg0_printf(title_x, options_y, "EXIT");
     
     my_sprite_draw(&menu_bg2); // shadow
 
@@ -942,7 +965,7 @@ void drawOptionsCursor(void)
         return;
     }
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
-    cursor.pos.x = toFIXED(-200) + offset;
+    cursor.pos.x = toFIXED(-230) + offset;
     cursor.pos.y = toFIXED(-96 + (g_OptionScreenChoice * 32)); // vertical position varies based on selection
     my_sprite_draw(&cursor);
     cursor_angle += 8;

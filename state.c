@@ -1,5 +1,6 @@
 #include "main.h"
 #include "state.h"
+#include "backup.h"
 #include "assets.h"
 #include "gameplay.h"
 #include "ppp_logo.h"
@@ -90,14 +91,10 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_UNINITIALIZED:
         {
             jo_core_tv_off();
-            // jo_set_default_background_color(JO_COLOR_Black);
-            // jo_set_displayed_screens(JO_BACK_SCREEN);
-            jo_sprite_free_all();
             g_Game.isLoading = true;
             loadCommonAssets();
             frame = 1;
             reset_audio(MAX_VOLUME);
-            // slColOffsetOn(OFF);
             mosaic_in_rate = MOSAIC_SLOW_RATE;
             mosaic_in = false;
             fade_in = false;

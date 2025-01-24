@@ -1,5 +1,6 @@
 #include <jo/jo.h>
 #include "main.h"
+#include "backup.h"
 #include "screen_transition.h"
 #include "ppp_logo.h"
 #include "title_screen.h"
@@ -9,7 +10,7 @@
 #include "assets.h"
 #include "physics.h"
 #include "objects/player.h"
-#include "BG_DEF/bg26.h"
+#include "BG_DEF/nbg0.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -22,6 +23,7 @@ void debux_text(void)
         jo_nbg0_printf(2, 2, "GAME_STATE:%i", g_Game.gameState);
         jo_nbg0_printf(2, 3, "FRAME:%i", frame);
         jo_nbg0_printf(2, 4, "VOLUME:%i,%i", volume, g_StartGameFrames);
+        jo_nbg0_printf(20, 25, "MEMORY_ACCESS:%i", memory_access);
         jo_nbg0_printf(20, 2, "GAME MODE:%i", g_Game.gameMode);
         jo_nbg0_printf(20, 3, "PLAYERS:%i", g_Game.numPlayers);
         jo_nbg0_printf(20, 4, "DIFFICULTY:%i", g_Game.gameDifficulty);

@@ -5,22 +5,21 @@
 #include "ppp_logo.h"
 #include "screen_transition.h"
 // #include "objects/explosion.h"
-#include "BG_DEF/BG26.h"
+#include "BG_DEF/nbg0.h"
 
 unsigned int g_LogoTimer = 0;
-static int transparency_rate = TRANSPARENCY_MAX;
+int transparency_rate = TRANSPARENCY_MAX;
 Uint8 current_background = BG_NIGHT;
 
 // initializations for PPP screen
 void pppLogo_init(void)
 {
-    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY) {
+    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY || g_Game.lastState == GAME_STATE_DEMO_LOOP) {
         unloadGameAssets();
     }
     
     // this way only until I implement palette adjustments
     if (game_options.debug_mode || !game_options.use_rtc) {
-    // if (game_options.debug_mode) {
         current_background++;
         if (current_background > 4) {
             current_background = 1;
@@ -46,12 +45,7 @@ void pppLogo_init(void)
             current_background = BG_NIGHT;
         }
     }
-    init_bg26_img();
-    // if (first_load) {
-        // // init_bg0_img();
-        // init_bg26_img();
-        // first_load = false;
-    // }
+    update_nbg0_palette();
     loadTitleScreenAssets();
     
     g_LogoTimer = 0;
@@ -70,12 +64,14 @@ void pppLogo_init(void)
     
     screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
     
+    
     if (game_options.mosaic_display) {
         mosaicInit();
     }
-    fade_in_rate = 2;
+    fade_in_rate = 1;
     
     if (!game_options.debug_display) {
+        jo_set_displayed_screens(JO_NBG1_SCREEN);
         slColOffsetOn(NBG0ON | NBG1ON);
         slColOffsetAUse(NBG0ON);
         slColOffsetAUse(NBG0ON);
@@ -84,6 +80,7 @@ void pppLogo_init(void)
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     }
     else {
+        jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         slColOffsetOn(NBG1ON);
         slColOffsetAUse(OFF);
         slColOffsetBUse(NBG1ON);
@@ -95,7 +92,6 @@ void pppLogo_init(void)
     transition_in = true;
     
     jo_set_default_background_color(JO_COLOR_Black);
-    jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
 }
 
 // update callback routine for PPP logo
@@ -139,16 +135,17 @@ void pppLogo_update(void)
     {
         slow_fade_in = true;
         transition_in = true;
-        if (frame % 60 == 0 && transparency_rate > TRANSPARENCY_MIN+16 && !fade_out) {
-            transparency_rate--;
-            slColRateNbg0 ( transparency_rate );
-        }
+        // if (frame % 60 == 0 && transparency_rate > TRANSPARENCY_MIN+16 && !fade_out) {
+            // transparency_rate--;
+            // slColRateNbg0 ( transparency_rate );
+        // }
     }    
     // transition mosaic in
     if(g_LogoTimer > PPP_MOSAIC_TIMER)
     {
         mosaic_in = true;
         transition_in = true;
+        jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         if (fade_out) {
             fade_out = fadeOut(1, NEUTRAL_FADE);
         }
@@ -156,9 +153,6 @@ void pppLogo_update(void)
             transparency_rate--;
             slColRateNbg0 ( transparency_rate );
         }
-        // else if (transparency_rate <= TRANSPARENCY_MIN){
-            // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
-        // }
     }
     else if (game_options.mosaic_display) {
         mosaicRandom();
@@ -173,6 +167,9 @@ void pppLogo_update(void)
         }
         slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
         
+        if (!game_options.mosaic_display) {
+            jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
+        }
         transparency_rate = TRANSPARENCY_MAX;
         slColRateNbg0 ( transparency_rate );
     }
@@ -187,8 +184,7 @@ void pppLogo_update(void)
 
 void pppLogo_draw(void)
 {
-    // jo_nbg0_printf(5, 14, "PIXEL POPPY PRODUCTIONS PRESENTS...");
-    jo_nbg0_printf(11, 13, "PIXEL POPPY PRODUCTIONS");
-    jo_nbg0_printf(19, 15, "PRESENTS...");
+    jo_nbg0_printf(11, 9, "PIXEL POPPY PRODUCTIONS");
+    jo_nbg0_printf(19, 11, "PRESENTS...");
 }
 

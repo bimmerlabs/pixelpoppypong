@@ -28,6 +28,7 @@
 
 #include <jo/jo.h>
 #include "main.h"
+#include "backup.h"
 #include "font.h"
 #include "gameplay.h"
 #include "input.h"
@@ -39,6 +40,7 @@
 #include "team_select.h"
 #include "debug.h"
 #include "objects/player.h"
+#include "BG_DEF/nbg0.h"
 
 #define MAX_SPRITE 50
 
@@ -47,29 +49,35 @@ ASSETS g_Assets = {0};
 
 jo_datetime now;
 
-bool first_load = true;
 Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
+int run_once_callback = 0;
 
 GameOptions game_options = {
     .debug_mode = false,
-    .debug_display = false,
+    .debug_display = true,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
+    // .bup_device = JoInternalMemoryBackup, // JoCartridgeMemoryBackup and JoExternalDeviceBackup
     // .widescreen = false,
 };
 
 void loading_screen(void)
 {
-    if (!game_options.debug_display) {
+    if (g_Game.gameState == !GAME_STATE_TRANSITION) {
         return;
     }
     // currently only works in debug mode (need to work into transitions somehow)
-    if (g_Game.isLoading) {
-        // jo_set_default_background_color(JO_COLOR_DarkGray);
+    if (!g_Game.isLoading) {
+        slColRateNbg0 (transparency_rate);
+    }
+    else {
+        slColOffsetOn(NBG0ON | NBG1ON);
         jo_set_displayed_screens(JO_NBG0_SCREEN);
-        jo_nbg0_printf(15, 13, "LOADING!");
+        slColRateNbg0 (TRANSPARENCY_MIN);
+        slColOffsetOn(NBG1ON);
+        jo_nbg0_printf(16, 12, "LOADING!");
         jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
         
         // loading bar        
@@ -89,13 +97,6 @@ void loading_screen(void)
         
         // Display dots on screen
         jo_nbg0_printf(2, 15, "%s", dots);
-        
-        // jo_nbg0_printf(16, 14, ". %i", jo_sprite_count()*2);
-        // doesn't work unless I turn on the Sprite layer duing loading screens
-        // meter.spr_id = meter.anim1.asset[7];
-        // set_spr_scale(&meter, (jo_sprite_count()*4), METER_HEIGHT);
-        // set_spr_position(&meter, 0, 0, 90);
-        // my_sprite_draw(&meter);
     }
 }
 
@@ -109,7 +110,6 @@ void main_loop(void) {
 }
 
 void my_input_callback(void) {
-    // check_inputs();
     switch (g_Game.gameState) {
         case GAME_STATE_PPP_LOGO:
             pppLogo_input();
@@ -169,6 +169,13 @@ void abcStart_callback(void)
     }
 }
 
+void run_once(void) {
+    load_game_backup();
+    // loadCommonAssets();
+    jo_core_remove_callback(run_once_callback);
+    changeState(GAME_STATE_UNINITIALIZED);
+}
+
 void			jo_main(void)
 {
     jo_core_init(JO_COLOR_Black);
@@ -180,8 +187,11 @@ void			jo_main(void)
     slSetSprTVMode(RESOLUTION_HIGH);
     
     init_font(); // this has to happen first (sprites get 1st palette slot)
+    init_nbg0_img();
     init_inputs();
             
+    run_once_callback = jo_core_add_callback(run_once);
+    
     jo_core_add_callback(screenTransition_update);
     jo_core_add_callback(game_state_update);
     
@@ -199,8 +209,8 @@ void			jo_main(void)
     jo_core_add_callback(teamSelect_update);
     jo_core_add_callback(teamSelect_draw);
     
-    jo_core_add_callback(my_color_calc);
-    jo_core_add_vblank_callback(my_palette_update);
+    // jo_core_add_callback(my_color_calc);
+    // jo_core_add_vblank_callback(my_palette_update);
     
     jo_core_add_callback(gameplay_draw);
     jo_core_add_callback(gameplay_update);
@@ -209,10 +219,8 @@ void			jo_main(void)
     
     jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);
-    
-    changeState(GAME_STATE_UNINITIALIZED);
-    
-    jo_core_tv_on();
+            
+    // jo_core_tv_on();
     jo_core_run();
 }
 

@@ -11,7 +11,7 @@
 // #include "BG_DEF/BG25.h"
 // #include "palettetools.h"
 // #include "BG_DEF/bg0.h"
-#include "BG_DEF/hexagon.h" // normal map
+// #include "BG_DEF/hexagon.h" // normal map
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -86,7 +86,7 @@ void gameplay_init() {
     // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
     
     // FOR PALETTES
-    do_update = true;
+    // do_update = true;
     
     g_Game.isPaused = false;
     g_GameTimer = TIMEOUT;
@@ -228,30 +228,30 @@ void demo_update(void)
     }
 }
 
-void my_color_calc(void)
-{
-    if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
-    {
-        return;
-    }
-    if (do_update) {
-        update_hexagon_color();
-        do_update = false;
-        update_palette = true;
-    }
-}
-void my_palette_update(void)
-{
-    if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
-    {
-        return;
-    }
-    if (update_palette) {
-        // need to reference the game state here
-        update_hexagon_palette();
-        // update_bg25_palette();
-    }
-}
+// void my_color_calc(void)
+// {
+    // if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
+    // {
+        // return;
+    // }
+    // if (do_update) {
+        // update_hexagon_color();
+        // do_update = false;
+        // update_palette = true;
+    // }
+// }
+// void my_palette_update(void)
+// {
+    // if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
+    // {
+        // return;
+    // }
+    // if (update_palette) {
+        // // need to reference the game state here
+        // update_hexagon_palette();
+        // // update_bg25_palette();
+    // }
+// }
 
 static bool isRoundOver(void)
 {

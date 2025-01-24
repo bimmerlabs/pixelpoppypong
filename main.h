@@ -24,7 +24,6 @@
 #define SCREEN_BOTTOM toFIXED(240.0)
 
 extern jo_datetime now;
-extern bool first_load;
 extern Uint8 frame;
 extern Uint8 g_GameTimer;
 extern Uint16 cursor_angle; // for title & pawsed menus
@@ -39,6 +38,7 @@ typedef struct {
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
+    // jo_backup_device bup_device;
     // bool widescreen;
 } GameOptions;
 
@@ -126,4 +126,3 @@ typedef struct _GAME
 
 // globals
 extern GAME g_Game;
-

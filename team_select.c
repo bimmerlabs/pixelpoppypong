@@ -1,14 +1,12 @@
 #include <jo/jo.h>
 #include "main.h"
-#include "input.h"
 #include "team_select.h"
 #include "assets.h"
 #include "screen_transition.h"
 #include "objects/player.h"
-#include "BG_DEF/BG26.h"
+#include "BG_DEF/nbg0.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
-// extern INPUT g_Inputs[MAX_INPUTS];
 
 int g_StartGameFrames = 0;
 bool g_TeamSelectPressedStart = false;
@@ -72,6 +70,7 @@ void teamSelect_init(void)
     // some assets don't change in scale
     menu_bg1.spr_id = menu_bg1.anim1.asset[4];
     set_spr_scale(&menu_bg1, 46, 46);
+    menu_bg2.spr_id = menu_bg2.anim1.asset[5];
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
     set_spr_scale(&menu_bg2, 54, 352); // ONLY HAPPENS ONCE?
 
@@ -121,17 +120,17 @@ void teamSelect_draw(void)
         return;
     }
         
-    if (attrBg260.x_scroll > toFIXED(0)) {
-        attrBg260.x_pos += attrBg260.x_scroll;
-        if (attrBg260.x_pos > toFIXED(512.0))
-            attrBg260.x_pos = toFIXED(0);
+    if (attrNbg0.x_scroll > toFIXED(0)) {
+        attrNbg0.x_pos += attrNbg0.x_scroll;
+        if (attrNbg0.x_pos > toFIXED(512.0))
+            attrNbg0.x_pos = toFIXED(0);
     }
-    if (attrBg260.y_scroll > toFIXED(0)) {
-        attrBg260.y_pos += attrBg260.y_scroll;
-        if (attrBg260.y_pos > toFIXED(512.0))
-            attrBg260.y_pos= toFIXED(0);
+    if (attrNbg0.y_scroll > toFIXED(0)) {
+        attrNbg0.y_pos += attrNbg0.y_scroll;
+        if (attrNbg0.y_pos > toFIXED(512.0))
+            attrNbg0.y_pos= toFIXED(0);
     }
-    slScrPosNbg1(attrBg260.x_pos, attrBg260.y_pos);
+    slScrPosNbg1(attrNbg0.x_pos, attrNbg0.y_pos);
     
     drawCharacterSelectGrid();
 }
@@ -471,20 +470,6 @@ void characterSelect_input(void)
                    return;
                 }
             }
-            // if (jo_is_input_key_down(player->input->id, JO_KEY_START))
-            // {
-                // player->startSelection = true;
-                // player->character.choice = CHARACTER_MACCHI;
-                // // only select available characters // maybe use for a random selection
-                // while (!characterAvailable[player->character.choice]) {
-                        // player->character.choice++;
-                        // if (player->character.choice > TOTAL_CHARACTERS)
-                        // {
-                            // player->character.choice = CHARACTER_MACCHI;
-                        // }
-               // }
-               // return;
-            // }
         }
         // DEFAULT CHARACTER SETUP
         if (!player->character.selected) {
