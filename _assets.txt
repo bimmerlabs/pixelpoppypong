@@ -1,0 +1,73 @@
+sprites: 8 banks, 32 colors each
+
+bank1: nbg0, sprites
+bank2: nbg1
+bank3: nbg2
+
+core assets:
+	font (nbg0) - palette created (8)
+	bg0 (nbg1) - palette created
+
+common assets:
+	poppy1 - palette created (16)
+	cursor (share with macchi sprite)
+	menu_bg (8) (currently 9?)
+
+title screen:
+	logo1 - palette created (8)
+	logo2 - palette created
+	menu4 (tmenu) - palette created (4)
+
+options:
+	controllers? (8)
+	menu? (4) - share with menu4
+
+gameplay:
+	ui:
+		portrait - palette created (simplify font?) (16)
+		pcursor (character select) (share with menubg or logo)
+		paw0 (blank paw) (share with font)
+		num1x1 (counter) (share with font)
+	players:
+		paw1 macchi (8)
+		paw2 jelly (8)
+		paw3 penny (8)
+		paw3 potter (8)
+		paw3 sparta (8)
+		paw3 poppy (8)
+		paw3 george (8)
+		paw3 tj (8)
+		paw3 wuppy (8)
+		paw3 walrus (8)
+		paw3 garf (8)
+	boss:
+		poppy2 (8)
+		boss1 (8)
+		boss2 (8)
+		wuppy (8)
+		walrus (8)
+		garf (8)
+		
+	background:
+		goal (share with font)
+	power-ups:  (52)
+		mushroom
+		star
+		lightning
+		fish
+		bomb
+		garfield
+		walrus
+		rat?
+		odie?		
+story:
+	portrait transitions (nbg1)
+	
+ending:
+	credits roll? (use any color bank)
+	normal map? (nbg2)
+
+optional: (share with power ups?)
+	kittens 
+	puppies
+	"bricks" (tile based gameplay)

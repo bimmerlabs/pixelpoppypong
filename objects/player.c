@@ -234,7 +234,14 @@ void initDemoPlayers(void)
             set_spr_scale(player->_portrait, 1, 1);
         }
         else if (i == 1) {
-            player->_sprite = &jelly;
+            if (jo_random(999) % 2) {
+                player->_sprite = &jelly;
+                player->character.choice = 1;
+            }
+            else {
+                player->_sprite = &sparta;
+                player->character.choice = 4;
+            }
             player->_sprite->spr_id = player->_sprite->anim1.asset[i];
             player->_sprite->flip = sprHflip;
             player->onLeftSide = false;
@@ -242,7 +249,7 @@ void initDemoPlayers(void)
             player->scored = false;
             player->isAI = true;
             set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
-            player->character.choice = i;
+            // player->character.choice = i;
             player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
             set_spr_scale(player->_portrait, 1, 1);
         }

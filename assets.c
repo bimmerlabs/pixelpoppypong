@@ -2,6 +2,7 @@
 #include "assets.h"
 #include "sprites.h"
 #include "util.h"
+#include "pcmsys.h"
 
 // I haven't made any of my assets so this file is a mess
 // NOTE: Palette is loaded with the font and shared with all other sprites.
@@ -12,6 +13,7 @@ int paw_blank_id = 0;
 // tilesets
 jo_tile paw1_tileset[NUM_PAW_SPRITES] = {0};
 jo_tile paw2_tileset[NUM_PAW_SPRITES] = {0};
+jo_tile paw5_tileset[NUM_PAW_SPRITES] = {0};
 jo_tile pixel_poppy1_tileset[NUM_POPPY_SPRITES] = {0};
 // jo_tile pixel_poppy2_tileset[NUM_POPPY_SPRITES] = {0};
 
@@ -68,6 +70,19 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
         // sprite->bbox.height = toFIXED(h*1.5);
 }
 
+void loadSoundAssets(void)
+{
+    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+    g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
+    g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"A.PCM", 15360);
+    #else
+    jo_audio_load_pcm("GMOVR8.PCM", JoSoundStereo8Bit, &g_Assets.gameOverPcm8);
+    g_Assets.gameOverPcm8.sample_rate = 32000;
+    jo_audio_load_pcm("A.PCM", JoSoundMono16Bit, &g_Assets.bumpPcm16);
+    g_Assets.bumpPcm16.sample_rate = 32000;
+    #endif
+}
+
 void loadCommonAssets(void)
 {
     jo_sprite_free_all();
@@ -91,7 +106,7 @@ void loadTitleScreenAssets(void)
 {        
     logo1.spr_id = jo_sprite_add_tga(NULL, "LOGO1.TGA", palette_transparent_index);
     logo2.spr_id = jo_sprite_add_tga(NULL, "LOGO2.TGA", palette_transparent_index);
-    loadSprite(&menu_text, g_Assets.menu, "MENU4.TGA", menu_text_tileset, COUNTOF(menu_text_tileset), NUM_TITLE_MENU_TEXT, 240, 22, 1);    
+    loadSprite(&menu_text, g_Assets.menu, "TMENU.TGA", menu_text_tileset, COUNTOF(menu_text_tileset), NUM_TITLE_MENU_TEXT, 240, 22, 1);    
     
     g_Game.isLoading = false;
 }
@@ -107,13 +122,11 @@ void loadGameAssets(void)
 {
     loadSprite(&macchi, g_Assets.paw1, "PAW1.TGA", paw1_tileset, COUNTOF(paw1_tileset), NUM_PAW_SPRITES, 32, 32, NUM_PAW_SPRITES);
     loadSprite(&jelly, g_Assets.paw2, "PAW2.TGA", paw2_tileset, COUNTOF(paw2_tileset), NUM_PAW_SPRITES, 32, 32, NUM_PAW_SPRITES);
+    loadSprite(&sparta, g_Assets.paw5, "PAW4.TGA", paw2_tileset, COUNTOF(paw2_tileset), NUM_PAW_SPRITES, 32, 32, NUM_PAW_SPRITES);
         penny.anim1.asset = g_Assets.paw1;
         penny.anim1.max = NUM_PAW_SPRITES-1;
         potter.anim1.asset = g_Assets.paw2;
         potter.anim1.max = NUM_PAW_SPRITES-1;
-        
-        sparta.anim1.asset = g_Assets.paw1;
-        sparta.anim1.max = NUM_PAW_SPRITES-1;
         poppy.anim1.asset = g_Assets.paw2;
         poppy.anim1.max = NUM_PAW_SPRITES-1;
         
@@ -134,7 +147,7 @@ void loadGameAssets(void)
     
     loadSprite(&character_portrait, g_Assets.characters, "PORTRAIT.TGA", character_tileset, COUNTOF(character_tileset), NUM_CHARACTER_SPRITES, 48, 48, 1);
     
-    loadSprite(&player_cursor, g_Assets.pcursor, "PCURSOR.TGA", pcursor_tileset, COUNTOF(pcursor_tileset), NUM_PCURSOR_SPRITES, 24, 24, 2);
+    loadSprite(&player_cursor, g_Assets.pcursor, "SELECT.TGA", pcursor_tileset, COUNTOF(pcursor_tileset), NUM_PCURSOR_SPRITES, 24, 24, 2);
         
     g_Game.isLoading = false;
 }

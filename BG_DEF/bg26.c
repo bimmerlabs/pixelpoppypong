@@ -71,7 +71,7 @@
 
 // Uint8 bg26_spr_id = 0;
 
-static jo_palette nbg0_palette;
+static jo_palette nbg1_palette;
 
 // Helper Functions
 
@@ -85,10 +85,10 @@ void init_bg26_img(void) {
     jo_img_8bits    img;
     // jo_set_tga_palette_handling(my_bg26_palette_handling);
     if (first_load) {
-        jo_create_palette(&nbg0_palette);
+        jo_create_palette(&nbg1_palette);
         first_load = false;
     }
-    jo_set_tga_default_palette(&nbg0_palette);
+    jo_set_tga_default_palette(&nbg1_palette);
     img.data = JO_NULL;
     
     switch (current_background) {
@@ -114,7 +114,7 @@ void init_bg26_img(void) {
 	}
     }
     // jo_tga_8bits_loader(&img, JO_ROOT_DIR, "BG04.TGA", 0);
-    jo_vdp2_set_nbg1_8bits_image(&img, nbg0_palette.id, false);
+    jo_vdp2_set_nbg1_8bits_image(&img, nbg1_palette.id, false);
     jo_free_img(&img);
     // jo_set_tga_palette_handling(JO_NULL);
     jo_set_tga_default_palette(JO_NULL);

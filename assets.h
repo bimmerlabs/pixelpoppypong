@@ -95,6 +95,7 @@ typedef struct _assets
     // players sprites
     int paw1[NUM_PAW_SPRITES];
     int paw2[NUM_PAW_SPRITES];    
+    int paw5[NUM_PAW_SPRITES];    
     
     // players sprites
     int pixel_poppy1[NUM_POPPY_SPRITES];
@@ -142,6 +143,13 @@ typedef struct _assets
     // int vertical_line;
 
     // // audio assets
+    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+    short gameOverPcm8;
+    short bumpPcm16;
+    #else
+    jo_sound gameOverPcm8;
+    jo_sound bumpPcm16;
+    #endif
     // jo_sound crackPCM;
     // jo_sound explodePCM;
 
@@ -152,6 +160,7 @@ extern int paw_blank_id;
 
 // initialize assets
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets, int frames, int w, int h, unsigned int spritesPerRow);
+void loadSoundAssets(void);
 void loadCommonAssets(void);
 
 void loadTitleScreenAssets(void);

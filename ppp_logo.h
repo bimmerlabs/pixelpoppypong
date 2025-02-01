@@ -14,7 +14,8 @@ extern int transparency_rate;
 #define T_NIGHT 23
 
 #define TRANSPARENCY_MIN    CLRate31_1
-#define TRANSPARENCY_MAX    CLRate8_24
+// #define TRANSPARENCY_MAX    CLRate8_24
+#define TRANSPARENCY_MAX    CLRate0_32
 
 // time of day
 typedef enum _BG_TIME

@@ -10,7 +10,8 @@
 #include "assets.h"
 #include "physics.h"
 #include "objects/player.h"
-#include "BG_DEF/nbg0.h"
+#include "BG_DEF/nbg1.h"
+#include "credits.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -39,7 +40,8 @@ void debux_text(void)
         // if (game_options.mosaic_display) {
         // jo_nbg0_printf(20, 2, "MOSAIC_X/Y:%i,%i", mosaic_x, mosaic_y);
         // }
-        // jo_nbg0_printf(20, 3, "PLAYING CD:%i", cd_is_playing);
+        jo_nbg0_printf(2, 26, "PLAYING CD:%i", cd_is_playing);
+        jo_nbg0_printf(2, 27, "VOLUME:%i", volume);
         // jo_nbg0_printf(20, 4, "TRANS_IN/OUT:%i, %i", transition_in, transition_out);
         // jo_nbg0_printf(20, 5, "FADE_IN/OUT:%i, %i", fade_in, fade_out);
         // jo_nbg0_printf(20, 6, "MOSAIC_IN/OUT:%i, %i", mosaic_in, mosaic_out);
@@ -158,6 +160,10 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 12, "SPR1 ACTIVE:%i", sprite_list[1].active);
                 // jo_nbg0_printf(2, 10, "PLAYER 1 ACTIVE:%i",  g_Players[0].isPlaying);
                 // jo_nbg0_printf(20, 10, "P1 TEAM CHOICE:%i", g_Players[0].team.choice);
+                break;
+                
+            case GAME_STATE_CREDITS: // transition
+                jo_nbg0_printf(2, 5, "CREDITSTIMER:%i", g_CreditsTimer/60);
                 break;
                 
             case GAME_STATE_TRANSITION: // transition

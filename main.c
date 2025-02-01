@@ -40,7 +40,8 @@
 #include "team_select.h"
 #include "debug.h"
 #include "objects/player.h"
-#include "BG_DEF/nbg0.h"
+#include "BG_DEF/nbg1.h"
+#include "credits.h"
 
 #define MAX_SPRITE 50
 
@@ -55,7 +56,7 @@ int run_once_callback = 0;
 
 GameOptions game_options = {
     .debug_mode = false,
-    .debug_display = true,
+    .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
@@ -70,15 +71,18 @@ void loading_screen(void)
     }
     // currently only works in debug mode (need to work into transitions somehow)
     if (!g_Game.isLoading) {
-        slColRateNbg0 (transparency_rate);
+        // slColRateNbg1 (transparency_rate);
     }
     else {
         slColOffsetOn(NBG0ON | NBG1ON);
         jo_set_displayed_screens(JO_NBG0_SCREEN);
-        slColRateNbg0 (TRANSPARENCY_MIN);
+        // slColRateNbg1 (TRANSPARENCY_MIN);
         slColOffsetOn(NBG1ON);
-        jo_nbg0_printf(16, 12, "LOADING!");
-        jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+        jo_nbg0_printf(17, 12, "LOADING!");
+        
+        if (game_options.debug_display) {
+            jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+        }
         
         // loading bar        
         char dots[MAX_SPRITE]; // Adjust size based on expected max sprites
@@ -120,6 +124,9 @@ void my_input_callback(void) {
         case GAME_STATE_DEMO_LOOP:
             demo_input();
             break;
+        case GAME_STATE_CREDITS:
+            credits_input();
+            break;
         case GAME_STATE_TITLE_MENU:
             menuScreen_input();
             break;
@@ -157,21 +164,26 @@ void abcStart_callback(void)
             changeState(g_Game.nextState);
         }
     }
-    if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_PPP_LOGO)
+    if(g_Game.gameState == GAME_STATE_UNINITIALIZED)
     {        
         return;
     }
-    if ((jo_is_pad1_key_down(JO_KEY_X) || jo_is_pad1_key_down(JO_KEY_START)) // for retrobit controller testing only
+    if ((jo_is_pad1_key_down(JO_KEY_X) || jo_is_pad1_key_down(JO_KEY_START)) // X for retrobit controller testing only
         && jo_is_pad1_key_pressed(JO_KEY_A)  
         && jo_is_pad1_key_pressed(JO_KEY_B)  
         && jo_is_pad1_key_pressed(JO_KEY_C)) {
-        transitionState(GAME_STATE_UNINITIALIZED);
+        if(g_Game.gameState == GAME_STATE_PPP_LOGO)
+        {
+            jo_goto_boot_menu();
+        }
+        else {
+            transitionState(GAME_STATE_UNINITIALIZED);
+        }
     }
 }
 
 void run_once(void) {
     load_game_backup();
-    // loadCommonAssets();
     jo_core_remove_callback(run_once_callback);
     changeState(GAME_STATE_UNINITIALIZED);
 }
@@ -179,17 +191,33 @@ void run_once(void) {
 void			jo_main(void)
 {
     jo_core_init(JO_COLOR_Black);
+    
+    
+    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        // pone-sound
+        load_drv(ADX_MASTER_2304);
+        jo_core_add_vblank_callback(sdrv_vblank_rq);
+    #endif
+
     #ifndef JO_COMPILE_WITH_3D_SUPPORT
         slZdspLevel(3); // if not using jo_3d (JO_COMPILE_WITH_3D_MODULE = 0)
     #endif
     jo_core_tv_off();
     
     slSetSprTVMode(RESOLUTION_HIGH);
+    // CRAM mode 0 - required for ngb0 transparency in high-res
+    slColRAMMode ( CRM16_1024 ); // must be set before loading any palettes
     
-    init_font(); // this has to happen first (sprites get 1st palette slot)
-    init_nbg0_img();
+    slColorCalc(CC_RATE | CC_TOP | NBG0ON | NBG1ON);
+    slColorCalcOn(NBG0ON);
+    
+    // base assets
+    init_font(); // this has to happen first (sprites require 1st palette slot)
+    init_nbg1_img();
+    loadSoundAssets();
+    
     init_inputs();
-            
+    
     run_once_callback = jo_core_add_callback(run_once);
     
     jo_core_add_callback(screenTransition_update);
@@ -216,6 +244,8 @@ void			jo_main(void)
     jo_core_add_callback(gameplay_update);
     
     jo_core_add_callback(demo_update);
+    
+    jo_core_add_callback(display_credits);
     
     jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);

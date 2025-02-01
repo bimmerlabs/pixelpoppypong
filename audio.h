@@ -1,23 +1,38 @@
 #pragma once
 #include "main.h"
+#include "pcmsys.h"
 
 // CD sound tracks
 #define LOGO_TRACK                2
 #define TITLE_TRACK               3
 #define SELECT_TRACK              4
-#define BEGIN_GAME_TRACK          6
+#define BEGIN_GAME_TRACK          5
+#define CREDITS_TRACK             4
 // #define GAME_TRACK                5
 // #define PAUSE_TRACK               6
 // #define VICTORY_TRACK             7
 // #define DEATH_TRACK               8
 
 #define AUDIO_FADE_TIMER (3 * 60)
+
+#ifdef JO_COMPILE_WITH_AUDIO_SUPPORT
 #define INITIAL_STATE_VOLUME 32
 #define MAX_VOLUME 127
 #define LOWER_VOLUME 100
 #define HALF_VOLUME 64
 #define QUARTER_VOLUME 32
 #define MIN_VOLUME 0
+
+#else
+
+#define INITIAL_STATE_VOLUME 32
+#define MAX_VOLUME 127
+#define LOWER_VOLUME 100
+#define HALF_VOLUME 64
+#define QUARTER_VOLUME 32
+#define MIN_VOLUME 0
+
+#endif
 
 extern bool cd_is_playing;
 extern int volume;

@@ -1,5 +1,6 @@
 #include <jo/jo.h>
 #include "physics.h"
+#include "audio.h"
 #include "objects/player.h"
 #include "main.h"
 #include "math.h"
@@ -153,21 +154,43 @@ void update_ball(Sprite *ball) {
     // BOUND WITHIN SCREEN
     if(ball->pos.x > SCREEN_RIGHT - ball->pos.r)
     {
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        pcm_parameter_change(g_Assets.bumpPcm16, 6, PCM_PAN_RIGHT);
+        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 6);
+        #else
+        jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 6);
+        #endif
         ball->pos.x = SCREEN_RIGHT - ball->pos.r;
     }
 
     if(ball->pos.x < SCREEN_LEFT + ball->pos.r)
     {
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        pcm_parameter_change(g_Assets.bumpPcm16, 6, PCM_PAN_LEFT);
+        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 6);
+        #else
+        jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 6);
+        #endif
         ball->pos.x = SCREEN_LEFT + ball->pos.r;
     }
 
     if(ball->pos.y > SCREEN_BOTTOM - ball->pos.r)
     {
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 5);
+        #else
+        jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 5);
+        #endif
         ball->pos.y = SCREEN_BOTTOM - ball->pos.r;
     }
 
     if(ball->pos.y < SCREEN_TOP + ball->pos.r)
     {
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 5);
+        #else
+        jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 5);
+        #endif
         ball->pos.y = SCREEN_TOP + ball->pos.r;
     }
     

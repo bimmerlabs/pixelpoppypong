@@ -9,6 +9,7 @@
 #include "team_select.h"
 #include "objects/player.h"
 #include "audio.h"
+#include "credits.h"
 // #include "gameplay.h"
 
 Uint16 state_fade_timer = STATE_FADE_TIMER;
@@ -23,7 +24,11 @@ void changeState(GAME_STATE newState)
         {        
             pppLogo_init();
             volume = MAX_VOLUME;
+            #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+            CDDA_SetVolume(volume);
+            #else
             jo_audio_set_volume(volume);
+            #endif
             playCDTrack(LOGO_TRACK, false);
             g_Game.gameState = GAME_STATE_PPP_LOGO;
             jo_core_tv_on();
@@ -85,7 +90,9 @@ void changeState(GAME_STATE newState)
         }
         case GAME_STATE_CREDITS:
         {
-            changeState(GAME_STATE_UNINITIALIZED);
+            g_Game.nextState = GAME_STATE_CREDITS;
+            init_credits();
+            g_Game.gameState = g_Game.nextState;
             break;
         }
         case GAME_STATE_UNINITIALIZED:
@@ -105,6 +112,8 @@ void changeState(GAME_STATE newState)
             music_out = false;
             music_in = false;
             reset_inputs();
+            slColorCalcOn(OFF);
+            slColRateNbg0 ( TRANSPARENCY_MIN );
             g_Game.lastState = GAME_STATE_UNINITIALIZED;
             g_Game.nextState = GAME_STATE_PPP_LOGO;
             changeState(g_Game.nextState);
@@ -143,7 +152,7 @@ void transitionState(GAME_STATE newState)
         slColOffsetOn(NBG0ON | NBG1ON | SPRON);
         slColOffsetAUse(NBG0ON);
         slColOffsetBUse(NBG1ON | SPRON);
-        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
     }
     else {
         slColOffsetOn(NBG1ON | SPRON);

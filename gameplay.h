@@ -6,6 +6,7 @@
 
 #define GAME_BEGIN_TIME (3 * 60)
 #define DEMO_TIME (30 * 60)
+#define TIMEOUT 99 // seconds - MAYBE MAKE AN OPTION?
 
 #define GOAL_TOP toFIXED(-100.0)
 #define GOAL_BOTTOM toFIXED(100.0)
