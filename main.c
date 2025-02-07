@@ -41,6 +41,7 @@
 #include "debug.h"
 #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
+#include "BG_DEF/sprites.h"
 #include "credits.h"
 
 #define MAX_SPRITE 50
@@ -60,8 +61,6 @@ GameOptions game_options = {
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
-    // .bup_device = JoInternalMemoryBackup, // JoCartridgeMemoryBackup and JoExternalDeviceBackup
-    // .widescreen = false,
 };
 
 void loading_screen(void)
@@ -70,23 +69,20 @@ void loading_screen(void)
         return;
     }
     // currently only works in debug mode (need to work into transitions somehow)
-    if (!g_Game.isLoading) {
-        // slColRateNbg1 (transparency_rate);
-    }
-    else {
+    if (g_Game.isLoading) {
         slColOffsetOn(NBG0ON | NBG1ON);
         jo_set_displayed_screens(JO_NBG0_SCREEN);
         // slColRateNbg1 (TRANSPARENCY_MIN);
         slColOffsetOn(NBG1ON);
         jo_nbg0_printf(17, 12, "LOADING!");
         
-        if (game_options.debug_display) {
+        if (game_options.debug_mode) {
             jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
         }
         
         // loading bar        
         char dots[MAX_SPRITE]; // Adjust size based on expected max sprites
-        int sprite_count = jo_sprite_count();
+        int sprite_count = jo_sprite_count()/2;
         
         // Clamp sprite count to prevent overflow
         if (sprite_count >= MAX_SPRITE) {
@@ -100,7 +96,7 @@ void loading_screen(void)
         dots[sprite_count] = '\0'; // Null-terminate the string
         
         // Display dots on screen
-        jo_nbg0_printf(2, 15, "%s", dots);
+        jo_nbg0_printf(0, 15, "%s", dots);
     }
 }
 
@@ -164,11 +160,11 @@ void abcStart_callback(void)
             changeState(g_Game.nextState);
         }
     }
-    if(g_Game.gameState == GAME_STATE_UNINITIALIZED)
+    if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
     {        
         return;
     }
-    if ((jo_is_pad1_key_down(JO_KEY_X) || jo_is_pad1_key_down(JO_KEY_START)) // X for retrobit controller testing only
+    if ((jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_X)) // X for retrobit controller testing only
         && jo_is_pad1_key_pressed(JO_KEY_A)  
         && jo_is_pad1_key_pressed(JO_KEY_B)  
         && jo_is_pad1_key_pressed(JO_KEY_C)) {
@@ -179,6 +175,49 @@ void abcStart_callback(void)
         else {
             transitionState(GAME_STATE_UNINITIALIZED);
         }
+    }
+}
+
+// cycle through HSL colors
+void my_color_calc(void)
+{
+    if (do_update_logo1) {
+        update_palette_logo1 = update_sprites_color(&p_rangeLogo);
+        do_update_logo1 = false;
+    }
+    if (do_update_menu1) {
+        update_palette_menu1 = update_sprites_color(&p_rangeMenu1);
+        do_update_menu1 = false;
+    }
+    if (do_update_menu2) {
+        update_palette_menu2 = update_sprites_color(&p_rangeMenu2);
+        do_update_menu2 = false;
+    }
+    if (do_update_menu3) {
+        update_palette_menu3 = update_sprites_color(&p_rangeMenu3);
+        do_update_menu3 = false;
+    }
+    if (do_update_menu4) {
+        update_palette_menu4 = update_sprites_color(&p_rangeMenu4);
+        do_update_menu4 = false;
+    }
+}
+void my_palette_update(void)
+{
+    if (update_palette_logo1) {
+        update_palette_logo1 = update_sprites_palette(&p_rangeLogo);
+    }
+    if (update_palette_menu1) {
+        update_palette_menu1 = update_sprites_palette(&p_rangeMenu1);
+    }
+    if (update_palette_menu2) {
+        update_palette_menu2 = update_sprites_palette(&p_rangeMenu2);
+    }
+    if (update_palette_menu3) {
+        update_palette_menu3 = update_sprites_palette(&p_rangeMenu3);
+    }
+    if (update_palette_menu4) {
+        update_palette_menu4 = update_sprites_palette(&p_rangeMenu4);
     }
 }
 
@@ -215,6 +254,7 @@ void			jo_main(void)
     init_font(); // this has to happen first (sprites require 1st palette slot)
     init_nbg1_img();
     loadSoundAssets();
+    init_sprites_img();
     
     init_inputs();
     
@@ -230,15 +270,15 @@ void			jo_main(void)
     
     jo_core_add_callback(pppLogo_update);
     
+    jo_core_add_callback(my_color_calc);
+    jo_core_add_vblank_callback(my_palette_update);
+    
     jo_core_add_callback(startScreen_update);
     jo_core_add_callback(titleScreen_update);
     jo_core_add_callback(optionsScreen_update);
     
     jo_core_add_callback(teamSelect_update);
     jo_core_add_callback(teamSelect_draw);
-    
-    // jo_core_add_callback(my_color_calc);
-    // jo_core_add_vblank_callback(my_palette_update);
     
     jo_core_add_callback(gameplay_draw);
     jo_core_add_callback(gameplay_update);
@@ -250,7 +290,6 @@ void			jo_main(void)
     jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);
             
-    // jo_core_tv_on();
     jo_core_run();
 }
 

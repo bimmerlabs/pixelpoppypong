@@ -361,3 +361,35 @@ Sprite boss2 = {
     .mesh = MESHoff,
     .zmode = _ZmRC
 };
+
+// CHARACTER ELEMENTS
+Sprite bomb = {
+    .isColliding = false,
+    .pos = {toFIXED(-100), toFIXED(-100), toFIXED(100)},     // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2.0), toFIXED(2.0)},               // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,       
+    .pal_id = 1,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCC
+};
+
+// CHARACTER ELEMENTS
+Sprite fishtank = {
+    .isColliding = false,
+    .pos = {toFIXED(-100), toFIXED(100), toFIXED(100)},     // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2.0), toFIXED(2.0)},               // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,       
+    .pal_id = 2,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCC
+};

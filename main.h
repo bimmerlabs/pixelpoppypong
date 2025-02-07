@@ -5,13 +5,12 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.42"
+#define VERSION "0.44"
 #define MAX_DEBUG_LEVEL 1
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 #define MIN_TEAMS 2
 #define MAX_TEAM_MEMBERS 2
-#define TIMEOUT 99 // seconds - MAYBE MAKE AN OPTION?
 
 // Screen position
 #define SCREEN_RIGHT  toFIXED(352.0)
@@ -38,8 +37,6 @@ typedef struct {
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
-    // jo_backup_device bup_device;
-    // bool widescreen;
 } GameOptions;
 
 extern GameOptions game_options;
@@ -118,6 +115,9 @@ typedef struct _GAME
 
     // is the game finished?
     bool isGameOver;
+    
+    // is the game playing?
+    bool isActive;
 
     // how many frames since all players were dead
     int gameOverFrames;

@@ -1,6 +1,9 @@
 #pragma once
+#include "BG_DEF/sprites.h"
 
 #define TITLE_TIMER (30 * 60)
+#define LOGO_TIMER (25 * 60)
+#define LOGO_TIMER2 (24 * 60)
 #define MODE_ID 1       // sprite index offset for mode text
 #define MODE_OFFSET 2   // sprite index offset for mode select
 #define PLAYER_ID 2     // sprite index offset for player text
@@ -20,8 +23,6 @@
 
 #define POPPY_MAX_SCALE 6
 
-extern FIXED pos_x;
-extern FIXED pos_y;
 extern unsigned int g_TitleTimer;
 extern int g_TitleScreenChoice;
 extern int g_OptionScreenChoice;
@@ -31,6 +32,9 @@ extern int logo2_pos;
 extern int logo_velocity;
 extern bool logo_falling;
 extern bool logo_bounce;
+
+extern bool increasing;
+extern int h_value;
 
 typedef enum _MENU_OPTIONS
 {
@@ -49,12 +53,37 @@ typedef enum _OPTIONS
     OPTION_DRAWMESH,
     OPTION_DRAWMOSAIC,
     OPTION_USE_RTC,
-    // OPTION_BUP_DEV,
-    // OPTION_ANALOG,
-    // OPTION_WIDESCREEN,
     OPTION_EXIT,
     OPTION_MAX,
 } OPTIONS;
+
+static inline void animateMenuColor(bool *_do_update) {
+    if (increasing) {
+        if (h_value < 27) {
+            h_value += 1;
+            hsl_incSprites.h = -2;
+            hsl_incSprites.l = 3;
+            hsl_incSprites.s = -3;
+        } 
+        else {
+            increasing = false;
+        }
+    } 
+    else {
+        if (h_value > 0) {
+            h_value -= 1;
+            hsl_incSprites.h = 2;
+            hsl_incSprites.l = -3;
+            hsl_incSprites.s = +3;
+        } 
+        else {
+            increasing = true;
+        }
+    }
+    *_do_update = true;
+    // jo_nbg0_printf(2, 7, "INCREASING:%i", increasing);
+    // jo_nbg0_printf(2, 8, "H_VALUE:%i", h_value);
+}
 
 void titleScreen_init(void);
 void titleMenu_init(void);

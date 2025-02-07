@@ -3,11 +3,12 @@
 #include "backup.h"
 #include "input.h"
 #include "assets.h"
-// #include "ppp_logo.h"
+#include "font.h"
 #include "title_screen.h"
 #include "screen_transition.h"
 // #include "objects/player.h"
-#include "BG_DEF/nbg0.h"
+#include "BG_DEF/nbg1.h"
+#include "BG_DEF/sprites.h"
 
 // globals for menu options
 int g_TitleScreenChoice = 0;
@@ -25,6 +26,7 @@ static bool draw_option_options  = true;
 
 static bool poppy_animation = false;
 static int poppy_animation_frame = 0;
+static int poppy_animation_id = 0;
 int logo1_pos;
 int logo2_pos;
 int logo_velocity = 0;
@@ -33,8 +35,9 @@ bool logo_bounce = false;
 static float poppy_scale = 0.1;
 static float poppy_velocity = 0.0;
 
-FIXED pos_x = 0; // for the background - should use the attribute instead
-FIXED pos_y = 0;
+bool increasing = true;
+int h_value = 0;
+
 Uint16 cursor_angle = 0;
 
 //
@@ -43,7 +46,10 @@ Uint16 cursor_angle = 0;
 
 void titleScreen_init(void)
 {
-    if (g_Game.lastState == GAME_STATE_TEAM_SELECT || g_Game.lastState == GAME_STATE_GAMEPLAY || g_Game.lastState == GAME_STATE_DEMO_LOOP) {
+    if (g_Game.lastState == GAME_STATE_TEAM_SELECT 
+     || g_Game.lastState == GAME_STATE_GAMEPLAY 
+     || g_Game.lastState == GAME_STATE_DEMO_LOOP 
+     || g_Game.lastState == GAME_STATE_CREDITS) {
         unloadGameAssets();
         loadTitleScreenAssets();
     }
@@ -51,6 +57,13 @@ void titleScreen_init(void)
     g_Game.lastState = GAME_STATE_TITLE_SCREEN;    
     
     g_TitleTimer = 0;
+    
+    // reset hsl colors
+    // reset_logo1();
+    reset_sprites();
+    do_update_logo1 = true;
+    do_update_menu3 = true;
+    do_update_menu4 = true;
     
     logo1_pos = -400;
     logo2_pos = 400;
@@ -68,6 +81,8 @@ void titleScreen_init(void)
     pixel_poppy.rot.z = 0;
     set_spr_position(&pixel_poppy, 0, 0, 100);
     sprite_frame_reset(&pixel_poppy);
+    poppy_animation_frame = 0;
+    poppy_animation_id = 0;
     
     slColOffsetOn(NBG0ON | NBG1ON | SPRON);
     slColOffsetAUse(NBG0ON);
@@ -76,8 +91,9 @@ void titleScreen_init(void)
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN); // not really being used..
+    
     // init menu options
-    g_TitleScreenChoice = 0;
+    g_TitleScreenChoice = TITLE_OPTION_GAME_MODE;
     g_OptionScreenChoice = 0;
     g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
 
@@ -121,7 +137,24 @@ void startScreen_update(void)
         return;
     }
     g_TitleTimer++;
-    
+    poppy_animation_id = my_random_range(0, 4);
+    if (!logo_bounce && !logo_falling) {
+        if (g_TitleTimer == LOGO_TIMER) {
+            // reset_logo1();
+            reset_sprites();
+            h_value = 0;
+            do_update_logo1 = true;
+        }
+        else if (g_TitleTimer >= LOGO_TIMER2 && g_TitleTimer < LOGO_TIMER) {
+            hsl_incSprites.h -= 8;
+            do_update_logo1 = true;
+        }
+        else if (frame % 5 == 0 && g_TitleTimer < LOGO_TIMER) { // modulus
+            hsl_incSprites.h -= 20;
+            do_update_logo1 = true;
+        }
+        pixel_poppy.spr_id = pixel_poppy.anim1.asset[1];
+    }
     // check if the frameAnim has expired
     if(g_TitleTimer > TITLE_TIMER)
     {
@@ -137,17 +170,12 @@ void titleScreen_update(void)
         return;
     }
     
-    if (attrNbg0.x_scroll > toFIXED(0)) {
-        pos_x += attrNbg0.x_scroll;
-        if (pos_x > toFIXED(512.0))
-            pos_x = toFIXED(0);
+    if (attrNbg1.x_scroll > toFIXED(0)) {
+        attrNbg1.x_pos += attrNbg1.x_scroll;
+        if (attrNbg1.x_pos > toFIXED(512.0))
+            attrNbg1.x_pos = toFIXED(0);
     }
-    if (attrNbg0.y_scroll > toFIXED(0)) {
-        pos_y += attrNbg0.y_scroll;
-        if (pos_y > toFIXED(512.0))
-            pos_y = toFIXED(0);
-    }
-    slScrPosNbg1(pos_x, pos_y);
+    slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
     drawMenu();
     drawMenuCursor();
@@ -157,6 +185,7 @@ void titleScreen_update(void)
 // draws title image + version number
 void drawTitle(void)
 {
+    
     my_sprite_draw(&pixel_poppy);
     my_sprite_draw(&logo1);
     my_sprite_draw(&logo2);
@@ -167,7 +196,8 @@ void drawTitle(void)
     }
     // title graphic
     // jo_nbg0_printf(14, 23, "GAME LOGO HERE!");
-    if (frame % 15 == 0) {
+    if (frame % 10 == 0) { // modulus
+        // replace with palette calculation
         draw_start_text = !draw_start_text;
     }
     if (draw_start_text) {
@@ -190,7 +220,7 @@ void drawTitle(void)
     // logo is falling
     if (logo_falling && !logo_bounce) {
         if (logo_velocity < LOGO_VELOCITY) {
-            if (frame % 2 == 0) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
                 logo_velocity++;
             }
         }
@@ -211,7 +241,7 @@ void drawTitle(void)
     else if (logo_bounce && !logo_falling) {
         // bounce
         if (logo_velocity < LOGO_VELOCITY) {
-            if (frame % 2 == 0) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
                 logo_velocity++;
             }
         }
@@ -256,8 +286,6 @@ void titleMenu_init(void)
 {
     
     g_Game.lastState = GAME_STATE_TITLE_MENU;
-    random_sprite_animation(&pixel_poppy, 0, 3);
-    // static_sprite_animation(&pixel_poppy);
     jo_set_default_background_color(JO_COLOR_Black);
     if (game_options.mesh_display) {
         menu_bg1.mesh = MESHon;
@@ -268,8 +296,10 @@ void titleMenu_init(void)
     menu_bg1.spr_id = menu_bg1.anim1.asset[6];
     set_spr_position(&menu_bg1, 0, MENU_Y+5, 95);
     set_spr_scale(&menu_bg1, 0, 0);
-    // for debug
-    // mosaic_in = true;
+
+    game_palette.data[28] = JO_COLOR_White;
+    h_value = 0;
+    
     music_in = true;
     fade_in = true;
     transition_in = true;
@@ -280,6 +310,10 @@ void menuScreen_input(void)
 {
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
+        h_value = 0;
+        reset_sprites();
+        do_update_menu3 = true;
+        do_update_menu4 = true;
         switch (g_TitleScreenChoice) {
             case TITLE_OPTION_GAME_MODE:
                 g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
@@ -309,6 +343,10 @@ void menuScreen_input(void)
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
+        h_value = 0;
+        reset_sprites();
+        do_update_menu3 = true;
+        do_update_menu4 = true;
         switch (g_TitleScreenChoice) {
             case TITLE_OPTION_GAME_MODE:
                 g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
@@ -484,7 +522,6 @@ void menuScreen_input(void)
                 break;
                 
             case TITLE_OPTION_GAME_START:
-                static_sprite_animation(&pixel_poppy);
                 transitionState(GAME_STATE_TEAM_SELECT);
                 break;
                 
@@ -522,6 +559,8 @@ void menuScreen_input(void)
                 break;
                 
             case TITLE_OPTION_GAME_OPTIONS:
+                h_value = 0;
+                game_palette.data[28] = JO_COLOR_White;
                 g_TitleScreenChoice = g_TitleScreenLastChoice;
                 break;
                 
@@ -537,42 +576,81 @@ void drawMenu(void)
     {
         return;
     }
-    
-    // wink
-    if (pixel_poppy.spr_id == pixel_poppy.anim1.asset[3]) 
+
+    // GASP
+    if (poppy_animation_id == 1) 
     {
-        if (poppy_animation && poppy_animation_frame % 20 == 0)
-        {
-            pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
-            poppy_animation = false;
-            poppy_animation_frame = 0;
-        }
+        // PLAY SOUND EFFECT
         poppy_animation = true;
         poppy_animation_frame += 1;
+        // pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
+        if (poppy_animation && poppy_animation_frame % 20 == 0) // modulus
+        {
+            // PLAY SOUND EFFECT
+            pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
+            poppy_animation = false;
+            poppy_animation_frame = 0;
+            poppy_animation_id = 0;
+        }
+    }
+    
+    // wink
+    else if (poppy_animation_id == 2) 
+    {
+        // PLAY SOUND EFFECT
+        poppy_animation = true;
+        poppy_animation_frame += 1;
+        pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
+        if (poppy_animation && poppy_animation_frame % 22 == 0) // modulus
+        {
+            pixel_poppy.spr_id = pixel_poppy.anim1.asset[1];
+            poppy_animation = false;
+            poppy_animation_frame = 0;
+            poppy_animation_id = 0;
+        }
     }
         
     // giggle
-    else if (pixel_poppy.spr_id == pixel_poppy.anim1.asset[1]) 
+    else if (poppy_animation_id == 3) 
     {
+        // PLAY SOUND EFFECT
         bool giggle = true;
-        if (poppy_animation && poppy_animation_frame % 40 == 0)
+        poppy_animation = true;
+        poppy_animation_frame += 1;
+        pixel_poppy.spr_id = pixel_poppy.anim1.asset[3];
+        if (poppy_animation && poppy_animation_frame % 40 == 0) // modulus
         {
-            pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
+            pixel_poppy.spr_id = pixel_poppy.anim1.asset[4];
             set_spr_position(&pixel_poppy, 0, 0, 100);
             poppy_animation = false;
             poppy_animation_frame = 0;
+            poppy_animation_id = 0;
         }
-        poppy_animation = true;
-        poppy_animation_frame += 1;
-        if (giggle && poppy_animation_frame % 10 == 0) {
+        if (giggle && poppy_animation_frame % 10 == 0) { // modulus
             set_spr_position(&pixel_poppy, 0, 2, 100);
             giggle = false;
         }
-        else if (poppy_animation_frame % 5 == 0) {
+        else if (poppy_animation_frame % 5 == 0) { // modulus
             set_spr_position(&pixel_poppy, 0, -2, 100);
             giggle = true;
         }
     }
+    
+    // // eyeroll
+    // else if (poppy_animation_id == 4) 
+    // {
+        // // PLAY SOUND EFFECT
+        // poppy_animation = true;
+        // poppy_animation_frame += 1;
+        // // pixel_poppy.spr_id = pixel_poppy.anim1.asset[6];
+        // if (poppy_animation && poppy_animation_frame % 10 == 0) // modulus
+        // {
+            // pixel_poppy.spr_id = pixel_poppy.anim1.asset[6];
+            // poppy_animation = false;
+            // poppy_animation_frame = 0;
+            // poppy_animation_id = 0;
+        // }
+    // }
     
     // make sure poppy continues to scale up if user presses start too fast
     if (poppy_scale < POPPY_MAX_SCALE) {
@@ -610,9 +688,9 @@ void drawMenu(void)
 
     switch (g_TitleScreenChoice) {
         case TITLE_OPTION_GAME_MODE:
-            if (frame % 10 == 0) {
-                draw_option_mode = !draw_option_mode;
-            }
+                game_palette.data[28] = JO_COLOR_White;
+                animateMenuColor(&do_update_menu4);
+                draw_option_mode = true;
                 draw_option_players = false;
                 draw_option_difficulty = false;
                 draw_option_start = false;
@@ -620,38 +698,41 @@ void drawMenu(void)
             break;
             
         case TITLE_OPTION_GAME_PLAYERS:
-            if (frame % 10 == 0) {
-                draw_option_players = !draw_option_players;
-            }
+                game_palette.data[28] = JO_COLOR_White;
+                animateMenuColor(&do_update_menu4);
                 draw_option_mode = false;
+                draw_option_players = true;
                 draw_option_difficulty = false;
                 draw_option_start = false;
                 draw_option_options = true;
             break;
 
         case TITLE_OPTION_GAME_DIFFICULTY:
-            if (frame % 10 == 0) {
-                draw_option_difficulty = !draw_option_difficulty;
-            }
+                game_palette.data[28] = JO_COLOR_White;
+                animateMenuColor(&do_update_menu4);
                 draw_option_mode = false;
                 draw_option_players = false;
+                draw_option_difficulty = true;
                 draw_option_start = false;
                 draw_option_options = true;
             break;
 
         case TITLE_OPTION_GAME_START:
-            if (frame % 10 == 0) {
-                draw_option_start = !draw_option_start;
-            }
+                game_palette.data[28] = JO_COLOR_White;
+                animateMenuColor(&do_update_menu4);
                 draw_option_difficulty = false;
                 draw_option_mode = false;
                 draw_option_players = false;
+                draw_option_start = true;
                 draw_option_options = true;
             // Start!
                 
             break;
             
         case TITLE_OPTION_GAME_OPTIONS:
+                game_palette.data[31] = JO_COLOR_White;
+            animateMenuColor(&do_update_menu3);
+            draw_option_options = true;
             switch (g_TitleScreenLastChoice) {
                 case TITLE_OPTION_GAME_MODE:
                     draw_option_mode = true;
@@ -667,9 +748,6 @@ void drawMenu(void)
                     break;
                 default:
                     break;
-            }
-            if (frame % 10 == 0) {
-                draw_option_options = !draw_option_options;
             }
             break;
 
@@ -716,6 +794,8 @@ void optionsScreen_init(void)
 {    
     
     g_Game.lastState = GAME_STATE_TITLE_OPTIONS;
+    g_TitleScreenChoice     = TITLE_OPTION_GAME_MODE;
+    g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
@@ -731,9 +811,6 @@ void optionsScreen_init(void)
     menu_bg2.zmode = _ZmCT;
     set_spr_position(&menu_bg2, 0, -120, 95);
     set_spr_scale(&menu_bg2, 230, OPTION_MAX*16);
-    
-    // current_background = BG_CNTRL;
-    // init_bg26_img();
 }
 
 void optionsScreen_input(void)
@@ -748,13 +825,6 @@ void optionsScreen_input(void)
             g_OptionScreenChoice++;
     }
 
-    // if (g_OptionScreenChoice == OPTION_ANALOG) {
-        // if (jo_is_pad1_key_pressed(JO_KEY_LEFT) && g_Inputs[0].sensitivity > ANALOG_MIN)
-            // g_Inputs[0].sensitivity -= toFIXED(0.01);
-        // if (jo_is_pad1_key_pressed(JO_KEY_RIGHT) && g_Inputs[0].sensitivity < ANALOG_MAX)
-            // g_Inputs[0].sensitivity += toFIXED(0.01);
-    // }    
-    // else 
     if (jo_is_pad1_key_down(JO_KEY_LEFT) || jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
         switch(g_OptionScreenChoice)
@@ -774,20 +844,6 @@ void optionsScreen_input(void)
             case OPTION_USE_RTC:
                 game_options.use_rtc = !game_options.use_rtc;
                 break;
-            // case OPTION_BUP_DEV:
-                // if (!is_cart_mem_available()) {
-                    // game_options.bup_device = JoInternalMemoryBackup;
-                // }
-                // else {
-                    // game_options.bup_device += 1;
-                    // if (game_options.bup_device > JoCartridgeMemoryBackup) {
-                        // game_options.bup_device = JoInternalMemoryBackup;
-                    // }
-                // }
-                // break;
-            // case OPTION_WIDESCREEN:
-                // game_options.widescreen = !game_options.widescreen;
-                // break;
             default:
                 break;
         }
@@ -828,17 +884,17 @@ void optionsScreen_update(void)
         return;
     }
     
-    if (attrNbg0.x_scroll > toFIXED(0)) {
-        pos_x += attrNbg0.x_scroll;
-        if (pos_x > toFIXED(512.0))
-            pos_x = toFIXED(0);
+    if (attrNbg1.x_scroll > toFIXED(0)) {
+        attrNbg1.x_pos += attrNbg1.x_scroll;
+        if (attrNbg1.x_pos > toFIXED(512.0))
+            attrNbg1.x_pos = toFIXED(0);
     }
-    if (attrNbg0.y_scroll > toFIXED(0)) {
-        pos_y += attrNbg0.y_scroll;
-        if (pos_y > toFIXED(512.0))
-            pos_y = toFIXED(0);
+    if (attrNbg1.y_scroll > toFIXED(0)) {
+        attrNbg1.y_pos += attrNbg1.y_scroll;
+        if (attrNbg1.y_pos > toFIXED(512.0))
+            attrNbg1.y_pos = toFIXED(0);
     }
-    slScrPosNbg1(pos_x, pos_y);
+    slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
     drawOptions();
     drawOptionsCursor();
@@ -908,19 +964,6 @@ void drawOptions(void)
     else {
         jo_nbg0_printf(options_x, options_y, "NO");
     }
-    
-    // options_y += 2;
-    // jo_nbg0_printf(title_x, options_y, "BACKUP DEVICE:");
-    // if (game_options.bup_device == 0) {
-        // jo_nbg0_printf(options_x, options_y, "INTERNAL");
-    // }
-    // else {
-        // jo_nbg0_printf(options_x, options_y, "CARTRIDGE");
-    // }
-    
-    // options_y += 2;
-    // jo_nbg0_printf(10, options_y, "ANALOG:");
-    // jo_nbg0_printf(options_x, options_y, "%d", toINT(jo_fixed_mult(g_Inputs[0].sensitivity, toFIXED(100))));
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "EXIT");

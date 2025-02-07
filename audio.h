@@ -7,7 +7,7 @@
 #define TITLE_TRACK               3
 #define SELECT_TRACK              4
 #define BEGIN_GAME_TRACK          5
-#define CREDITS_TRACK             4
+#define CREDITS_TRACK             6
 // #define GAME_TRACK                5
 // #define PAUSE_TRACK               6
 // #define VICTORY_TRACK             7

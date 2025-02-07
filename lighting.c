@@ -106,7 +106,7 @@ void NormalMapLighting2d(
 
         hslPal->color[i].l = MAX(0, (255 - distance) + (JO_FIXED_TO_INT(_light->z) - 255)) + _light->ambient;
         
-        update_colors(&hslPal->color[i], hsl_increment, &color);
+        ColorHelpers_HSLToRGB(&hslPal->color[i], hsl_increment, &color);
         bufferPal->color[i]  = JO_COLOR_RGB(color.r,  color.g,  color.b);
     }
     hsl_increment->h = 0;
@@ -158,7 +158,7 @@ void NormalMapLighting3d(
         Sint16 luminance = MAX(0, 255 - distance);
 
         hslPal->color[i].l = luminance;
-        update_colors(&hslPal->color[i], hsl_increment, &color);
+        ColorHelpers_HSLToRGB(&hslPal->color[i], hsl_increment, &color);
         bufferPal->color[i]  = JO_COLOR_RGB(color.r,  color.g,  color.b);
     }
     hsl_increment->h = 0;

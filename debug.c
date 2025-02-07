@@ -24,6 +24,7 @@ void debux_text(void)
         jo_nbg0_printf(2, 2, "GAME_STATE:%i", g_Game.gameState);
         jo_nbg0_printf(2, 3, "FRAME:%i", frame);
         jo_nbg0_printf(2, 4, "VOLUME:%i,%i", volume, g_StartGameFrames);
+        jo_nbg0_printf(20, 24, "BACKUP_DEVICE:%i", backup_device);
         jo_nbg0_printf(20, 25, "MEMORY_ACCESS:%i", memory_access);
         jo_nbg0_printf(20, 2, "GAME MODE:%i", g_Game.gameMode);
         jo_nbg0_printf(20, 3, "PLAYERS:%i", g_Game.numPlayers);

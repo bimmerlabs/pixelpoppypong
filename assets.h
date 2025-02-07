@@ -7,7 +7,7 @@
 // I haven't made any of my assets so this file is a mess
 
 #define NUM_PAW_SPRITES 5
-#define NUM_POPPY_SPRITES 4
+#define NUM_POPPY_SPRITES 6
 
 // #define NUM_CURSORS_SPRITES 12
 // #define NUM_FLAGS_SPRITES 12
@@ -31,7 +31,10 @@
 #define NUM_MENUBG_SPRITES 9
 // #define NUM_SHADOW_TITLE_TEXT_SPRITES 10
 // #define NUM_PAUSE_TEXT_SPRITES 3
-// #define NUM_EXPLOSION_SPRITES 6
+
+#define NUM_BOMB_SPRITES 4
+#define NUM_EXPLOD_SPRITES 6
+#define NUM_FISH_SPRITES 4
     
 // // sprites Z-depth
 // // lower numbers are closer to the screen
@@ -100,6 +103,11 @@ typedef struct _assets
     // players sprites
     int pixel_poppy1[NUM_POPPY_SPRITES];
     int pixel_poppy2[NUM_POPPY_SPRITES];
+    
+    // items
+    int bomb[NUM_BOMB_SPRITES];
+    int explosion[NUM_EXPLOD_SPRITES];
+    int fishtank[NUM_FISH_SPRITES];
 
     // // screen cracks
     // int cracks[4];
@@ -159,12 +167,13 @@ extern ASSETS g_Assets;
 extern int paw_blank_id;
 
 // initialize assets
-void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets, int frames, int w, int h, unsigned int spritesPerRow);
+void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets, int frames, int w, int h, unsigned int spritesPerRow, bool animation1or2);
 void loadSoundAssets(void);
 void loadCommonAssets(void);
 
 void loadTitleScreenAssets(void);
 void unloadTitleScreenAssets(void);
 
+void loadCharacterAssets(void);
 void loadGameAssets(void);
 void unloadGameAssets(void);

@@ -4,7 +4,7 @@
 #include "assets.h"
 #include "screen_transition.h"
 #include "objects/player.h"
-#include "BG_DEF/nbg0.h"
+#include "BG_DEF/nbg1.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -33,7 +33,7 @@ void teamSelect_init(void)
 {
     g_Game.lastState = GAME_STATE_TEAM_SELECT;
     unloadTitleScreenAssets();
-    loadGameAssets();
+    loadCharacterAssets();
     
     initPlayers();
     all_players_ready = false;
@@ -120,17 +120,17 @@ void teamSelect_draw(void)
         return;
     }
         
-    if (attrNbg0.x_scroll > toFIXED(0)) {
-        attrNbg0.x_pos += attrNbg0.x_scroll;
-        if (attrNbg0.x_pos > toFIXED(512.0))
-            attrNbg0.x_pos = toFIXED(0);
+    if (attrNbg1.x_scroll > toFIXED(0)) {
+        attrNbg1.x_pos += attrNbg1.x_scroll;
+        if (attrNbg1.x_pos > toFIXED(512.0))
+            attrNbg1.x_pos = toFIXED(0);
     }
-    if (attrNbg0.y_scroll > toFIXED(0)) {
-        attrNbg0.y_pos += attrNbg0.y_scroll;
-        if (attrNbg0.y_pos > toFIXED(512.0))
-            attrNbg0.y_pos= toFIXED(0);
+    if (attrNbg1.y_scroll > toFIXED(0)) {
+        attrNbg1.y_pos += attrNbg1.y_scroll;
+        if (attrNbg1.y_pos > toFIXED(512.0))
+            attrNbg1.y_pos= toFIXED(0);
     }
-    slScrPosNbg1(attrNbg0.x_pos, attrNbg0.y_pos);
+    slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
     drawCharacterSelectGrid();
 }
@@ -157,10 +157,10 @@ void drawCharacterSelectGrid(void)
         text_y = 5;
     }
     
-    if (frame % 3 == 0) {
+    if (frame % 3 == 0) { // modulus
         draw_cursor = !draw_cursor;
     }
-    if (frame % 20 == 0) {
+    if (frame % 20 == 0) { // modulus
         draw_portrait = !draw_portrait;
     }
     
@@ -240,7 +240,7 @@ void drawCharacterSelectGrid(void)
                 set_spr_position(&menu_bg1, paw_x, portrait_y, MENU_BG1_DEPTH);
                 my_sprite_draw(&menu_bg1);
                 // PAW
-                my_sprite_animation(player->_sprite);
+                looped_animation(player->_sprite);
                 set_spr_position(player->_sprite, paw_x, portrait_y, PORTRAIT_DEPTH);
                 my_sprite_draw(player->_sprite);
                 break;
@@ -391,7 +391,7 @@ void characterSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
                 // assign to a default team (left vs right)
-                if (i %2 == 0) {
+                if (i %2 == 0) { // modulus
                     player->team.choice = TEAM_1;
                     player->_sprite->flip = sprNoflip;
                 }
@@ -521,7 +521,7 @@ void teamSelect_input(void)
                 } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
 
                 // Flip the sprite based on even/odd team
-                if (player->team.choice % 2 == 0) {
+                if (player->team.choice % 2 == 0) { // modulus
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;
@@ -538,7 +538,7 @@ void teamSelect_input(void)
                 } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
 
                 // Flip the sprite based on even/odd team
-                if (player->team.choice % 2 == 0) {
+                if (player->team.choice % 2 == 0) { // modulus
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;

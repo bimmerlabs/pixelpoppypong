@@ -40,6 +40,7 @@ version 0.2:
 -player select (done)
 -credit roll (done)
 -transitions (done)
+-music by random (started)
 
 version 0.3:
 -sounds (done)
@@ -47,28 +48,51 @@ version 0.3:
 
 version 0.4:
 -gameplay (basic) (done)
+-analog support (done)
 -vs AI
--ending
 -save game (done)
+-palette animation (done)
+-sound effects (started)
+-save game (started)
+-credit roll (started)
+-palette animations (done)
 
 version 0.5:
--sound effects
--lighting
--palette animation (done)
+-gameplay implementation:
+	power ups:
+		mushrooms (different colors have different effects?)
+		garfield (to unlock garfield character)
+		stadler (unlock stadler character)
+		fish bowls
+		rats/mice?
+		bombs
+		stars?
+		hearts?
+	Actions:
+		shields/block (maybe a power meter?)
+		attack forward (instead of D pad?)
+	Block breaking:
+		rescue kittens/wuppy?
+		
+		
 
 version 0.6:
--screen modes (2026)
+-lighting
+-sound effects
+-ending
+-high scores
+-save game
 
 
 version 1.0:
 -final logo / intro
--final title screen
+-final title screen (close? needs sfx)
 -final menu (screen?)
 	-controller inputs (done)
 	-analog support (done)
 	-screen modes (2026)
 	-sound test
--player select
+-player select (needs tweaks to reflect gameplay)
 -full gameplay loop
 	-physics
 	-ai opponents
@@ -82,11 +106,12 @@ version 1.0:
 	-4 player?
 -credit roll
 -sound effects
--music by random
+-music by random (started)
 -save game
 -high scores
 -lighting (normal maps?)
--palette animations
+-palette animations (done)
+-screen modes (2026)
 
 play music on title screen (temp) (done)
 transition from menu to title (nextstate) (done)

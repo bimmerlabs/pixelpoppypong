@@ -53,7 +53,7 @@ void convertNumberToDigits(int number, unsigned char* hunds, unsigned char* tens
 
     *hunds = (number / 100);
     *tens = ((number - ((number/100) * 100))/10);
-    *ones = (number % 10);
+    *ones = (number % 10); // modulus
 }
 
 // input for handling pause
@@ -78,10 +78,10 @@ void pause_input(void)
         }
     }
     if (mosaic_out) {
-        mosaic_out = mosaicOut();
+        mosaic_out = mosaicOut(NBG1ON);
     }
     if (mosaic_in) {
-        mosaic_in = mosaicIn();
+        mosaic_in = mosaicIn(NBG1ON);
     }
 }
 
@@ -117,15 +117,19 @@ void pauseGame(void)
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
-    nbg0_rate = PAUSE_FADE;
-    slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+    nbg1_rate = PAUSE_FADE;
+    slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     if (game_options.mosaic_display) {
         mosaic_out = true;
     }
     g_Game.isPaused = true;
     mosaic_in_rate = MOSAIC_FAST_RATE;
     volume = LOWER_VOLUME;
+    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+    CDDA_SetVolume(volume);
+    #else
     jo_audio_set_volume(volume);
+    #endif
     // TODO:
     // playCDTrack(track);
     // maybe reduce the audio volume instead
@@ -138,6 +142,10 @@ void pauseGame(void)
 // check if player 1 paused the game
 static void checkForPausePress(void)
 {
+    if (!g_Game.isActive)
+    {
+        return;
+    }
     if (jo_is_pad1_key_down(JO_KEY_START))
     {
         pauseGame();
@@ -196,7 +204,11 @@ static void checkForPauseMenu(void)
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
+                #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+                CDDA_SetVolume(volume);
+                #else
                 jo_audio_set_volume(volume);
+                #endif
                 break;
 
             case PAUSE_OPTIONS_RESTART:
@@ -222,7 +234,11 @@ static void checkForPauseMenu(void)
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
+                #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+                CDDA_SetVolume(volume);
+                #else
                 jo_audio_set_volume(volume);
+                #endif
                 break;
             case PAUSE_OPTIONS_ANALOG:
                 // simply unpause
@@ -233,7 +249,8 @@ static void checkForPauseMenu(void)
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
                 volume = MAX_VOLUME;
-                jo_audio_set_volume(volume);
+                // jo_audio_set_volume(volume);
+                CDDA_SetVolume(volume);
                 break;
 
             default:
@@ -250,7 +267,11 @@ static void checkForPauseMenu(void)
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
         g_Game.isPaused = false;
         volume = MAX_VOLUME;
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        CDDA_SetVolume(volume);
+        #else
         jo_audio_set_volume(volume);
+        #endif
     }
 }
 

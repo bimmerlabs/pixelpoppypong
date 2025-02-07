@@ -22,9 +22,10 @@ void start_ball_movement(Sprite *ball) {
     ball->vel.z = my_random_range(1, 5);
            
     // Randomize direction
-    if (jo_random(99) % 2) ball->vel.x = -ball->vel.x;
-    if (jo_random(99) % 2) ball->vel.y = -ball->vel.y;
-    if (jo_random(99) % 2) ball->vel.z = -ball->vel.z;
+    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.x = -ball->vel.x; // modulus
+    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.y = -ball->vel.y; // modulus
+    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.z = -ball->vel.z; // modulus
+    // if (jo_random(99) % 2) ball->vel.z = -ball->vel.z; // modulus
 }
 
 // inline?
@@ -67,6 +68,12 @@ void update_ball(Sprite *ball) {
             break;
         case 4:
             ball->spr_id = ball->anim1.asset[3];
+            break;
+        case 5:
+            ball->spr_id = ball->anim1.asset[4];
+            break;
+        case 6:
+            ball->spr_id = ball->anim1.asset[5];
             break;
         default:
             ball->spr_id = ball->anim1.asset[0];
@@ -194,18 +201,10 @@ void update_ball(Sprite *ball) {
         ball->pos.y = SCREEN_TOP + ball->pos.r;
     }
     
-    if (!round_start) {
-        if (ball->vel.z == 0) {
-            ball->vel.z = 1;
-            if (jo_random(99) % 2) ball->vel.z = -ball->vel.z;
-        }
-    }
-    
     // Keep rotation within 0-359 degrees
     if (ball->rot.z == 360) {
         ball->rot.z = 0;
     }
-    // ball->rot.z %= 360; // this gets called a lot - delete?
     
     // update_bounding_box(&pixel_poppy);
 }

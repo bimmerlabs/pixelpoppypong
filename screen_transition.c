@@ -56,7 +56,7 @@ bool transitionOut(void) {
         fade_out = fadeOut(fade_out_rate, MINIMUM_FADE);
     }
     if (mosaic_out) {
-        mosaic_out = mosaicOut();
+        mosaic_out = mosaicOut(NBG1ON);
     }
     if (music_out) {
         music_out = musicOut();
@@ -75,7 +75,7 @@ bool transitionIn(void) {
         slow_fade_in = slowFadeIn(fade_in_rate, QUARTER_FADE);
     }
     if (mosaic_in) {
-        mosaic_in = mosaicIn();
+        mosaic_in = mosaicIn(NBG1ON);
     }
     if (music_in) {
         music_in = musicIn();
@@ -84,13 +84,13 @@ bool transitionIn(void) {
 }
 
 bool fadeOut(Sint16 rate, Sint16 min) {
-    if (nbg0_rate > min) {
-        nbg0_rate -= rate;
-        if (nbg0_rate < min) {
-            nbg0_rate = min;
+    if (nbg1_rate > min) {
+        nbg1_rate -= rate;
+        if (nbg1_rate < min) {
+            nbg1_rate = min;
         }
-        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
-        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
+        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
         return true;
     }
     else {
@@ -99,13 +99,13 @@ bool fadeOut(Sint16 rate, Sint16 min) {
 }
 
 bool fadeIn(Sint16 rate, Sint16 max) {
-    if (nbg0_rate < max) {
-        nbg0_rate += rate;
-        if (nbg0_rate > max) {
-            nbg0_rate = max;
+    if (nbg1_rate < max) {
+        nbg1_rate += rate;
+        if (nbg1_rate > max) {
+            nbg1_rate = max;
         }
-        slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
-        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
+        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
         return true;
     }
     else {
@@ -114,15 +114,15 @@ bool fadeIn(Sint16 rate, Sint16 max) {
 }
 
 bool slowFadeIn(Sint16 rate, Sint16 max) {
-    if (nbg0_rate < max && frame % 4 == 0) {
-        nbg0_rate += rate;
-        if (nbg0_rate > max) {
-            nbg0_rate = max;
+    if (nbg1_rate < max && JO_MOD_POW2(frame, 4) == 0) { // modulus
+        nbg1_rate += rate;
+        if (nbg1_rate > max) {
+            nbg1_rate = max;
         }
         if (!game_options.debug_display) {
-            slColOffsetA(nbg0_rate, nbg0_rate, nbg0_rate);
+            slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
         }
-        slColOffsetB(nbg0_rate, nbg0_rate, nbg0_rate);
+        slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
         return true;
     }
     else {
@@ -131,22 +131,17 @@ bool slowFadeIn(Sint16 rate, Sint16 max) {
 }
 
 // MOSAIC
-void mosaicInit(void) {
+void mosaicInit(jo_scroll_screen screens) {
     rand_max = MOSAIC_MAX;
     mosaic_x = MOSAIC_MAX;
     mosaic_y = MOSAIC_MAX;
     slScrMosSize(mosaic_x, mosaic_y);
-    if (!game_options.debug_display) {
-        slScrMosaicOn(NBG0ON | NBG1ON);
-    }
-    else {
-        slScrMosaicOn(NBG1ON);
-    }
+    slScrMosaicOn(screens);
 }
 
-bool mosaicOut(void) {
+bool mosaicOut(jo_scroll_screen screens) {
     if (mosaic_x < MOSAIC_MAX && mosaic_y < MOSAIC_MAX) {
-        if (frame % MOSAIC_FAST_RATE == 0) {
+        if (frame % MOSAIC_FAST_RATE == 0) { // modulus
             mosaic_x++;
             if (mosaic_x > MOSAIC_MAX)
                 mosaic_x = MOSAIC_MAX;
@@ -155,19 +150,19 @@ bool mosaicOut(void) {
                 mosaic_y = MOSAIC_MAX;
         }
 	slScrMosSize(mosaic_x, mosaic_y);
-	slScrMosaicOn(NBG1ON);
+	slScrMosaicOn(screens);
         return true;
     }
     else {
 	slScrMosSize(MOSAIC_MAX, MOSAIC_MAX);
-	slScrMosaicOn(NBG1ON);
+	slScrMosaicOn(screens);
         return false;
     }
 }
 
-bool mosaicIn(void) {
+bool mosaicIn(jo_scroll_screen screens) {
     if (mosaic_x > MOSAIC_MIN+1 && mosaic_y > MOSAIC_MIN+1) {
-        if (frame % mosaic_in_rate == 0) {
+        if (frame % mosaic_in_rate == 0) { // modulus
             mosaic_x--;
             if (mosaic_x < MOSAIC_MIN)
                 mosaic_x = MOSAIC_MIN;
@@ -176,7 +171,7 @@ bool mosaicIn(void) {
                 mosaic_y = MOSAIC_MIN;
         }
 	slScrMosSize(mosaic_x, mosaic_y);
-	slScrMosaicOn(NBG1ON | SPRON);
+	slScrMosaicOn(screens);
         return true;
     }
     else {
@@ -186,20 +181,14 @@ bool mosaicIn(void) {
     }
 }
 
-void mosaicRandom(void) {
-    if (frame % MOSAIC_RANDOM_RATE == 0) {
+void mosaicRandom(jo_scroll_screen screens) {
+    if (frame % MOSAIC_RANDOM_RATE == 0) { // modulus
         mosaic_x = my_random_range(1, rand_max);
         mosaic_y = my_random_range(1, rand_max);
 	slScrMosSize(mosaic_x, mosaic_y);
-	// every frame??
-        if (!game_options.debug_display) {
-            slScrMosaicOn(NBG0ON | NBG1ON);
-        }
-        else {
-            slScrMosaicOn(NBG1ON);
-        }
+	slScrMosaicOn(screens);
     }
-    if (frame % 80 == 0 && rand_max > 7) {
+    if (frame % 80 == 0 && rand_max > 7) { // modulus (could use 64 as a power of 2)
 	rand_max--;
     }
 }
@@ -210,7 +199,11 @@ bool musicOut(void) {
         if (volume < MIN_VOLUME) {
             volume = MIN_VOLUME;
         }
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        CDDA_SetVolume(volume >> 4);
+        #else
         jo_audio_set_volume(volume);
+        #endif
         return true;
     }
     else {
@@ -224,7 +217,11 @@ bool musicIn(void) {
         if (volume > MAX_VOLUME) {
             volume = MAX_VOLUME;
         }
+        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+        CDDA_SetVolume(volume >> 4);
+        #else
         jo_audio_set_volume(volume);
+        #endif
         return true;
     }
     else {

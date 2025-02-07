@@ -1,9 +1,6 @@
 #include <jo/jo.h>
 #include "ColorHelpers.h"
 
-bool do_update = false;
-bool update_palette = false;
-
 // palettes
 void clamp_hue(ObjectHSL *hsl)
 {
@@ -59,7 +56,6 @@ void MultiPalette2Buffer(RgbBuff *bufferPal, HslPalette *hslPal, GlobalHSL *hsl_
 void UpdatePaletteFromBuffer(RgbBuff *bufferPal, jo_palette *palette, PaletteRange *range) {
     for (int i = range->lower; i <= range->upper; i++) {
         palette->data[i]  = bufferPal->color[i];
-        update_palette = false;
     }
 }
 

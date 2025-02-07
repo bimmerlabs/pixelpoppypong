@@ -22,7 +22,7 @@ void pppLogo_init(void)
     }
     
     // this way only until I implement palette adjustments
-    if (game_options.debug_mode || !game_options.use_rtc) {
+    if (!game_options.use_rtc) {
         current_background++;
         if (current_background > 4) {
             current_background = 1;
@@ -55,20 +55,11 @@ void pppLogo_init(void)
     
     g_Game.lastState = GAME_STATE_PPP_LOGO;
     
-    // if (!game_options.debug_display) {
-        // slColorCalc ( CC_RATE | CC_TOP | NBG0ON );
-        // transparency_rate = TRANSPARENCY_MAX;
-        // slColRateNbg1 ( transparency_rate );
-    // }
-    // else {
-        // transparency_rate = TRANSPARENCY_MIN;
-    // }
-    
     screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
     
     
     if (game_options.mosaic_display) {
-        mosaicInit();
+        mosaicInit(NBG1ON);
     }
     fade_in_rate = 1;
     
@@ -111,8 +102,6 @@ void pppLogo_input(void)
         mosaic_y = MOSAIC_MIN;
 	slScrMosSize(mosaic_x, mosaic_y);
         fade_in_rate = 8;
-        // transparency_rate = TRANSPARENCY_MIN;
-        // slColRateNbg1 ( transparency_rate );
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }
@@ -134,10 +123,6 @@ void pppLogo_update(void)
     {
         slow_fade_in = true;
         transition_in = true;
-        // if (frame % 60 == 0 && transparency_rate > TRANSPARENCY_MIN+16 && !fade_out) {
-            // transparency_rate--;
-            // slColRateNbg1 ( transparency_rate );
-        // }
     }    
     // transition mosaic in
     if(g_LogoTimer > PPP_MOSAIC_TIMER)
@@ -148,13 +133,9 @@ void pppLogo_update(void)
         if (fade_out) {
             fade_out = fadeOut(1, NEUTRAL_FADE);
         }
-        // if (frame % 15 == 0 && transparency_rate > TRANSPARENCY_MIN) {
-            // transparency_rate--;
-            // slColRateNbg1 ( transparency_rate );
-        // }
     }
     else if (game_options.mosaic_display) {
-        mosaicRandom();
+        mosaicRandom(NBG1ON);
     }
     
     if(g_LogoTimer == PPP_MOSAIC_TIMER-10)
@@ -169,8 +150,6 @@ void pppLogo_update(void)
         if (!game_options.mosaic_display) {
             jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         }
-        // transparency_rate = TRANSPARENCY_MAX;
-        // slColRateNbg1 ( transparency_rate );
     }
 
     if(g_LogoTimer > PPP_LOGO_TIMER)

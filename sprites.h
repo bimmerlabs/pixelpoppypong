@@ -4,7 +4,9 @@
 #include "main.h"
 #include "math.h"
 
-#define FRAMERATE 4 // for animation speed
+#define FRAMERATE1 4 // for animation speed (power of 2)
+#define FRAMERATE2 6 // for animation speed
+#define FRAMERATE3 8 // for animation speed (power of 2)
 #define BALL_RADIUS toFIXED(24)
 
 typedef struct {
@@ -88,6 +90,9 @@ extern Sprite paw_blank;
 extern Sprite boss1;
 extern Sprite boss2;
 
+extern Sprite bomb;
+extern Sprite fishtank;
+
 // add options input (difficulty, game mode, etc)
 static inline void reset_ball(Sprite *sprite) {
     sprite->pos.x = toFIXED(0);
@@ -126,16 +131,10 @@ static inline void	my_sprite_draw(Sprite *sprite) {
 	slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
 }
 
-// // works but not really
-// static inline void	my_polygon_draw(Sprite *sprite) {
-	// FIXED pos[XYZSS] = { sprite->pos.x, sprite->pos.y, sprite->pos.z, sprite->scl.x, sprite->scl.y };
-	// SPR_ATTR attr = SPR_ATTRIBUTE( No_Texture, 256, No_Gouraud, sprite->mesh | ECdis | CL32KRGB, sprPolyLine | sprite->zmode );
-	// slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
-// }
-
-static inline void my_sprite_animation(Sprite *sprite) {
+// loops through all frames
+static inline void looped_animation(Sprite *sprite) {
         // move to an animation module
-        if (frame % FRAMERATE == 0) {
+        if (JO_MOD_POW2(frame, FRAMERATE1) == 0) { // modulus
             sprite->anim1.frame++;
             if (sprite->anim1.frame > sprite->anim1.max) {
                 sprite->anim1.frame = 0;
@@ -144,12 +143,99 @@ static inline void my_sprite_animation(Sprite *sprite) {
         }
 }
 
-static inline void static_sprite_animation(Sprite *sprite) {
-    sprite->anim1.frame++;
+static inline void looped_animation2(Sprite *sprite) {
+        // move to an animation module
+        if (frame % 6 == 0) { // modulus
+            sprite->anim2.frame++;
+            if (sprite->anim2.frame > sprite->anim2.max) {
+                sprite->anim2.frame = 0;
+            }
+            sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+        }
+}
+
+static inline void looped_animation3(Sprite *sprite) {
+        // move to an animation module
+        if (JO_MOD_POW2(frame, FRAMERATE3) == 0) { // modulus
+            sprite->anim1.frame++;
+            if (sprite->anim1.frame > sprite->anim1.max) {
+                sprite->anim1.frame = 0;
+            }
+            sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        }
+}
+
+// increments 1 frame
+static inline bool static_animation(Sprite *sprite) {
+    if (JO_MOD_POW2(frame, FRAMERATE1) == 0) { // modulus
+        sprite->anim1.frame++;
+        sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+    }
     if (sprite->anim1.frame > sprite->anim1.max) {
         sprite->anim1.frame = 0;
+        sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        return false;
     }
-    sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+    return true;
+}
+
+static inline bool static_animation2(Sprite *sprite) {
+    if (frame % FRAMERATE2 == 0) { // modulus
+        sprite->anim2.frame++;
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+    }
+    if (sprite->anim2.frame > sprite->anim2.max) {
+        sprite->anim2.frame = 0;
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+        return false;
+    }
+    return true;
+}
+
+static inline bool static_animation3(Sprite *sprite) {
+    if (JO_MOD_POW2(frame, FRAMERATE3) == 0) { // modulus
+        sprite->anim2.frame++;
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+    }
+    if (sprite->anim2.frame > sprite->anim2.max) {
+        sprite->anim2.frame = 0;
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+        return false;
+    }
+    return true;
+}
+
+// not worth it for just one more frame of animation..
+// static inline void fishtank_animation(Sprite *sprite) {
+        // // move to an animation module
+        // if (frame % FRAMERATE3 == 0) { // modulus
+            // sprite->anim1.frame++;
+            // if (sprite->anim1.frame > sprite->anim1.max) {
+                // sprite->anim1.frame = 0;
+            // }
+            // if (sprite->anim1.frame == sprite->anim1.max) {
+                // sprite->anim1.frame = 0;
+                // if (frame % 80 == 0) { // modulus
+                    // sprite->anim1.frame = sprite->anim1.max;
+                // }
+            // }
+            // sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        // }
+// }
+
+static inline bool explode_animation(Sprite *sprite) {
+    if (frame % 6 == 0) { // modulus
+        sprite->anim2.frame++;
+    }
+    if (sprite->anim2.frame > sprite->anim2.max) {
+        // sprite->anim2.frame = 0;
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.max];
+        return false;
+    }
+    else {
+        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+    }
+    return true;
 }
 
 static inline void random_sprite_animation(Sprite *sprite, int min, int max) {
@@ -160,6 +246,7 @@ static inline void random_sprite_animation(Sprite *sprite, int min, int max) {
 static inline void sprite_frame_reset(Sprite *sprite) {
     sprite->anim1.frame = 0;
     sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+    sprite->anim2.frame = 0;
 }
 
 // SPR_ATTRIBUTE

@@ -1,6 +1,7 @@
 #pragma once
 
 extern int memory_access;
+extern Uint8 backup_device;
 
 void    save_game_backup(void);
 bool    load_game_backup(void);

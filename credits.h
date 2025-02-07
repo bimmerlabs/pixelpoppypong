@@ -1,8 +1,7 @@
 #pragma once
 
-#define CREDITS_TIME (100 * 60)
 #define CREDITS_BEGIN (1 * 60)
-#define CREDITS_DISPLAY_TIME (2 * 60)
+#define CREDITS_DISPLAY_TIME (2.5 * 60)
 #define CREDITS_DELAY_TIME (1 * 60)
 
 #define CREDITS_RATE toFIXED(0.25)
