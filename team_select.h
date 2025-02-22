@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jo/jo.h>
+#include "objects/player.h"
 
 #define TEAM_SELECT_TIMER (1 * 60)
 
@@ -40,6 +41,8 @@ void characterSelect_input(void);
 void teamSelect_init(void);
 void assign_team(int oldTeam, int newTeam);
 void teamSelect_input(void);
+void validateCharacters(PLAYER *player);
+void validateTeam(PLAYER *player);
 bool playerReadyState(void);
 void resetReadyState(void);
 bool validateTeams(void);

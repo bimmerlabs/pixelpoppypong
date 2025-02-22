@@ -23,10 +23,6 @@ static  __jo_force_inline void      my_fixed_3d_rotate_matrix_rad(jo_rot3D_fixed
 // from danny duarte
 Uint32 ApproximateIntegerSqrt(Uint32 value);
 
-Uint8 RandomInRange(Uint8 from, Uint8 to);
-
-Uint8 FastRandom();
-
 int my_random_range(int min, int max);
 
 #endif // MATH_H

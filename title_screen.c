@@ -8,7 +8,7 @@
 #include "screen_transition.h"
 // #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
-#include "BG_DEF/sprites.h"
+#include "BG_DEF/sprite_colors.h"
 
 // globals for menu options
 int g_TitleScreenChoice = 0;
@@ -59,7 +59,6 @@ void titleScreen_init(void)
     g_TitleTimer = 0;
     
     // reset hsl colors
-    // reset_logo1();
     reset_sprites();
     do_update_logo1 = true;
     do_update_menu3 = true;
@@ -102,11 +101,14 @@ void titleScreen_init(void)
     g_Game.minTeams = 1;
     g_Game.maxTeams = 1;
     g_Game.numTeams = 0;
+    
+    // doesn't really make sense
     g_Game.minPlayers = 0;
     g_Game.maxPlayers = 2;
-    g_Game.numPlayers = 0;
-    g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
+    g_Game.currentNumPlayers = 0;
     g_Game.numPlayers = ONE_PLAYER;
+    
+    g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
     
     
     mosaic_in = true;
@@ -137,10 +139,9 @@ void startScreen_update(void)
         return;
     }
     g_TitleTimer++;
-    poppy_animation_id = my_random_range(0, 4);
+    poppy_animation_id = my_random_range(0, 4); // delete??
     if (!logo_bounce && !logo_falling) {
         if (g_TitleTimer == LOGO_TIMER) {
-            // reset_logo1();
             reset_sprites();
             h_value = 0;
             do_update_logo1 = true;
@@ -158,7 +159,8 @@ void startScreen_update(void)
     // check if the frameAnim has expired
     if(g_TitleTimer > TITLE_TIMER)
     {
-        transitionState(GAME_STATE_DEMO_LOOP);
+        transitionState(g_AttractScreenState);
+        attract_screen_state();
         g_TitleTimer = 0;
     }
 }
@@ -293,11 +295,10 @@ void titleMenu_init(void)
     else {
         menu_bg1.mesh = MESHoff;
     }
-    menu_bg1.spr_id = menu_bg1.anim1.asset[6];
+    menu_bg1.spr_id = menu_bg1.anim1.asset[5];
     set_spr_position(&menu_bg1, 0, MENU_Y+5, 95);
     set_spr_scale(&menu_bg1, 0, 0);
 
-    game_palette.data[28] = JO_COLOR_White;
     h_value = 0;
     
     music_in = true;
@@ -419,7 +420,7 @@ void menuScreen_input(void)
                     g_Game.minTeams = 2;
                     g_Game.maxTeams = 3;
                 }
-                else if (g_Game.numPlayers == FOUR_PLAYERS) {
+                else if (g_Game.numPlayers == FOUR_PLAYER) {
                     g_Game.minTeams = 2;
                     g_Game.maxTeams = 4;
                 }
@@ -480,7 +481,7 @@ void menuScreen_input(void)
                     g_Game.minTeams = 2;
                     g_Game.maxTeams = 3;
                 }
-                else if (g_Game.numPlayers == FOUR_PLAYERS) {
+                else if (g_Game.numPlayers == FOUR_PLAYER) {
                     g_Game.minTeams = 2;
                     g_Game.maxTeams = 4;
                 }
@@ -583,7 +584,6 @@ void drawMenu(void)
         // PLAY SOUND EFFECT
         poppy_animation = true;
         poppy_animation_frame += 1;
-        // pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
         if (poppy_animation && poppy_animation_frame % 20 == 0) // modulus
         {
             // PLAY SOUND EFFECT
@@ -808,9 +808,9 @@ void optionsScreen_init(void)
         menu_bg2.mesh = MESHoff;
     }
     menu_bg2.spr_id = menu_bg2.anim1.asset[4];
-    menu_bg2.zmode = _ZmCT;
-    set_spr_position(&menu_bg2, 0, -120, 95);
-    set_spr_scale(&menu_bg2, 230, OPTION_MAX*16);
+    menu_bg2.zmode = _ZmCC;
+    set_spr_position(&menu_bg2, 0, 0, 95);
+    set_spr_scale(&menu_bg2, 240, 480);
 }
 
 void optionsScreen_input(void)
@@ -825,6 +825,10 @@ void optionsScreen_input(void)
             g_OptionScreenChoice++;
     }
 
+    if (g_OptionScreenChoice == OPTION_ANALOG) {
+        analogAdjustmentScreen_input();
+    }
+    
     if (jo_is_pad1_key_down(JO_KEY_LEFT) || jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
         switch(g_OptionScreenChoice)
@@ -966,6 +970,17 @@ void drawOptions(void)
     }
     
     options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "ANALOG ADJUSTMENT:");
+    options_y += 1;
+    analogAdjustmentScreen_draw(title_x+5, options_y);     
+    
+    for(unsigned int i = 0; i < COUNTOF(g_Inputs); i++)
+    {
+        if (jo_is_input_available(i)) {
+            options_y += 1;
+        }
+    }
+    options_y += 1;
     jo_nbg0_printf(title_x, options_y, "EXIT");
     
     my_sprite_draw(&menu_bg2); // shadow
@@ -1008,8 +1023,17 @@ void drawOptionsCursor(void)
         return;
     }
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
-    cursor.pos.x = toFIXED(-230) + offset;
+    cursor.pos.x = toFIXED(-240) + offset;
     cursor.pos.y = toFIXED(-96 + (g_OptionScreenChoice * 32)); // vertical position varies based on selection
+    if (g_OptionScreenChoice == OPTION_EXIT) 
+    {
+        for(unsigned int i = 0; i < COUNTOF(g_Inputs); i++)
+        {
+            if (jo_is_input_available(i)) {
+                cursor.pos.y += toFIXED(16); 
+            }
+        }
+    }
     my_sprite_draw(&cursor);
     cursor_angle += 8;
     if (cursor_angle > 360) {

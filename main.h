@@ -5,12 +5,11 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.44"
-#define MAX_DEBUG_LEVEL 1
+#define VERSION "0.45"
 #define MAX_PLAYERS 4
-#define MAX_TEAMS 4
-#define MIN_TEAMS 2
-#define MAX_TEAM_MEMBERS 2
+#define MAX_TEAMS 4 // teams will really only be 2
+#define MIN_TEAMS 1
+#define MAX_TEAM_MEMBERS 1
 
 // Screen position
 #define SCREEN_RIGHT  toFIXED(352.0)
@@ -37,7 +36,7 @@ typedef struct {
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
-} GameOptions;
+} GameOptions, *PGameOptions;
 
 extern GameOptions game_options;
 
@@ -47,7 +46,7 @@ typedef enum _NUMBER_OF_PLAYERS
     ONE_PLAYER = 0,
     TWO_PLAYER = 1,
     THREE_PLAYER = 2,
-    FOUR_PLAYERS = 3,
+    FOUR_PLAYER = 3,
     GAME_PLAYERS_MAX,
 } NUMBER_OF_PLAYERS;
 
@@ -89,11 +88,12 @@ typedef struct _GAME
     NUMBER_OF_PLAYERS minPlayers;
     NUMBER_OF_PLAYERS maxPlayers;
     NUMBER_OF_PLAYERS numPlayers;
+    Uint8 currentNumPlayers;
 
     // number of teams
-    int minTeams;
-    int maxTeams;
-    int numTeams;
+    Uint8 minTeams;
+    Uint8 maxTeams;
+    Uint8 numTeams;
     
     // classic, story, battle
     GAME_MODE gameMode;
@@ -105,7 +105,7 @@ typedef struct _GAME
     int debug;
 
     // number of lives (1, 3, 6, 9)
-    int numLives;
+    Uint8 numLives;
 
     // is the game loading?
     bool isLoading;

@@ -25,22 +25,6 @@ Uint32 ApproximateIntegerSqrt(Uint32 value)
     return baseValue + estimatedValue;
 }
 
-Uint8 state;
-
-Uint8 FastRandom()
-{
-  state ^= state << 13;
-  state ^= state << 17;
-  state ^= state << 5;
-  return state;
-}
-
-Uint8 RandomInRange(Uint8 from, Uint8 to)
-{
-  Uint8 number = FastRandom();
-  return from + (number % ABS(to - from)); // modulus
-}
-
 int my_random_range(int min, int max) {
     int number = jo_random(99999);
     return min + (number % ABS(max - min) + 1); // modulus

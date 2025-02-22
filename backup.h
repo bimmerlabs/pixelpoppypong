@@ -1,7 +1,19 @@
 #pragma once
+#include "objects/player.h"
+#include "gameplay.h"
 
 extern int memory_access;
 extern Uint8 backup_device;
+
+typedef struct _SAVEGAME 
+{
+    GameOptions game_options;
+    bool *characterAvailable;
+    HighScoreEntry highScores[SCORE_ENTRIES];
+    INPUT inputSettings[MAX_INPUTS];
+} SaveGame;
+
+extern SaveGame save_game;
 
 void    save_game_backup(void);
 bool    load_game_backup(void);

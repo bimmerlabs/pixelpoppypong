@@ -1,8 +1,7 @@
 #include <jo/jo.h>
 
-jo_palette game_palette; // define your palette
+jo_palette game_palette;
 
-// this is your palette handler
 jo_palette      *my_game_palette_handling(void)
 {
     jo_create_palette(&game_palette);
@@ -21,10 +20,6 @@ void init_font(void) {
     slCharNbg0(COL_TYPE_256, CHAR_SIZE_1x1);
     jo_vdp2_set_nbg0_8bits_font(&img, " 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!?,.:;\"'&()=\%/\\*+-$<>", game_palette.id, false, true);
     jo_free_img(&img);
-    // for (int i = 57; i < 64; i++) {
-    for (int i = 2; i < 8; i++) {
-            game_palette.data[i] = JO_COLOR_White;
-    }
     #if defined(MY_TV_704x240)
         slZoomNbg0(toFIXED(0.5), toFIXED(1.0));
     #endif

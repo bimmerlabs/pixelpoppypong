@@ -4,7 +4,6 @@
 #include "state.h"
 #include "ppp_logo.h"
 #include "screen_transition.h"
-// #include "objects/explosion.h"
 #include "BG_DEF/nbg1.h"
 
 unsigned int g_LogoTimer = 0;

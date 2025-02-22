@@ -45,7 +45,7 @@ void check_inputs(void) {
         if (!jo_is_input_available(i)) {
             continue;
         }
-        if (jo_get_input_type(i) == JoNightsPad) {
+        if (jo_get_input_type(i) == JoNightsPad) { // need to handle analog inputs for menu screens
                 input->isAnalog = true;
             	// X and Y are centered at 128
 		char axis_x_raw = jo_get_input_axis(i, JoAxis1) - 0x80;
@@ -113,10 +113,10 @@ void check_inputs(void) {
             continue;
         }
         if (jo_get_input_type(i) == JoNightsPad) {
-            jo_nbg0_printf(input_x, input_y, "INPUT %i:%2i", i, toINT(jo_fixed_mult(input->sensitivity, toFIXED(100))));
+            jo_nbg0_printf(input_x, input_y, "INPUT %i:%2i", i+1, toINT(jo_fixed_mult(input->sensitivity, toFIXED(100))));
         }
         else {
-            jo_nbg0_printf(input_x, input_y, "INPUT %i:DIGITAL", i);
+            jo_nbg0_printf(input_x, input_y, "INPUT %i:DIGITAL", i+1);
         }
         input_y += 1;
     }

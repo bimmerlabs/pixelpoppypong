@@ -159,6 +159,7 @@ void display_credits(void)
         if (credit_id == 0) {
             bg_height = 48;
             jo_nbg0_printf(CREDITS_X2, 14, "PIXEL POPPY PONG 2025");
+            jo_nbg0_printf(19, 15, "CREDITS");
         }
         else if (credit_id == 1) {
             bg_height = 48;
@@ -186,13 +187,15 @@ void display_credits(void)
 
         else if (credit_id == 5) {
             bg_height = 48;
+            slScrPosNbg0(toFIXED(0), toFIXED(-4));
             jo_nbg0_printf(CREDITS_X1, 13, "ORIGINAL BACKGROUND ART:");
-            jo_nbg0_printf(CREDITS_X2, 15, "TATIANA SHERBUL");
-            jo_nbg0_printf(CREDITS_X2, 16, "WWW.BEHANCE.NET/T-SHERBUL");
+            jo_nbg0_printf(CREDITS_X2, 14, "TATIANA SHERBUL");
+            jo_nbg0_printf(CREDITS_X2, 15, "WWW.BEHANCE.NET/T-SHERBUL");
         }
 
         else if (credit_id == 6) {
-            bg_height = 56;
+            bg_height = 64;
+            slScrPosNbg0(toFIXED(0), toFIXED(0));
             jo_nbg0_printf(CREDITS_X1, 12, "SPECIAL THANKS:");
             jo_nbg0_printf(CREDITS_X2, 13, "REYME:SUPPORT & ADVICE");
             jo_nbg0_printf(CREDITS_X2, 14, "PONUT64:SOUND DRIVER");
@@ -202,28 +205,24 @@ void display_credits(void)
         }
 
         else if (credit_id == 7) {
-            bg_height = 48;
+            bg_height = 32;
+            slScrPosNbg0(toFIXED(0), toFIXED(-4));
             jo_nbg0_printf(18, 14, "THE END!");
         }
 
         else if (credit_id == 8)
         {
-            credits_display = false;
+            mosaic_in_rate = MOSAIC_FAST_RATE;
+            slColorCalcOn(OFF);
+            slScrMosaicOn(OFF);
+            slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);
+            slScrPosNbg0(toFIXED(0), toFIXED(0));
+            g_Game.lastState = GAME_STATE_CREDITS;
+            transitionState(GAME_STATE_UNINITIALIZED);
         }
 
-        if (credit_id <= 7) {
-            my_sprite_draw(&menu_bg1); // shadow
-        }
+        my_sprite_draw(&menu_bg1); // shadow
 
-    }
-    else if (credit_id == 8)
-    {
-        mosaic_in_rate = MOSAIC_FAST_RATE;
-        slColorCalcOn(OFF);
-        slScrMosaicOn(OFF);
-        slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);
-        g_Game.lastState = GAME_STATE_CREDITS;
-        transitionState(GAME_STATE_UNINITIALIZED);
     }
 }
 
@@ -233,6 +232,7 @@ void    credits_input(void)	{
         slColorCalcOn(OFF);
         slScrMosaicOn(OFF);
         slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);
+        slScrPosNbg0(toFIXED(0), toFIXED(0));
         g_Game.lastState = GAME_STATE_CREDITS;
         transitionState(GAME_STATE_UNINITIALIZED);
     }

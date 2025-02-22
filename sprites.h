@@ -61,7 +61,6 @@ typedef struct {
     int    zmode;
     Animation anim1;
     Animation anim2;
-    Animation anim3;
 } Sprite;
 
 extern Sprite logo1;
@@ -74,24 +73,43 @@ extern Sprite menu_bg2;
 extern Sprite character_portrait;
 extern Sprite player_bg;
 extern Sprite player_cursor;
+
+// game UI
 extern Sprite timer_num1;
 extern Sprite timer_num10;
 extern Sprite meter;
+extern Sprite heart;
+extern Sprite star;
 extern Sprite goal1;
 extern Sprite goal2;
+
+extern Sprite shield1;
+extern Sprite shield2;
+extern Sprite shield3;
+extern Sprite shield4;
+
+// characters
 extern Sprite pixel_poppy;
+extern Sprite pixel_poppy_shadow;
 extern Sprite macchi;
 extern Sprite jelly;
 extern Sprite penny;
 extern Sprite potter;
 extern Sprite sparta;
-extern Sprite poppy; // player can make their own pet
+extern Sprite poppy;
+extern Sprite tj;
+extern Sprite george;
+extern Sprite wuppy;
+extern Sprite stadler;
+extern Sprite garfield;
 extern Sprite paw_blank;
-extern Sprite boss1;
-extern Sprite boss2;
 
-extern Sprite bomb;
-extern Sprite fishtank;
+// items
+extern Sprite bomb_item;
+extern Sprite fishtank_item;
+extern Sprite shroom_item;
+extern Sprite craig_item;
+extern Sprite garfield_item;
 
 // add options input (difficulty, game mode, etc)
 static inline void reset_ball(Sprite *sprite) {
@@ -111,6 +129,12 @@ static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
     sprite->pos.z = toFIXED(pz);
 }
 
+static inline void set_shield_position(Sprite *_player, Sprite *_shield, FIXED shield_pos) {
+    _shield->pos.x = _player->pos.x + shield_pos;
+    _shield->pos.y = _player->pos.y;
+    _shield->pos.z = _player->pos.z;
+}
+
 static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
     sprite->scl.x = toFIXED(sx);
     sprite->scl.y = toFIXED(sy);
@@ -125,44 +149,10 @@ static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
 // sprHflip : Horizontally flipped display.
 // sprHVflip : Flip the display vertically and horizontally.
 
-static inline void	my_sprite_draw(Sprite *sprite) {
+static inline void	my_sprite_draw(Sprite *sprite) { // note: switched to using 256bnk mode, so all palette indexes are now 0
 	FIXED pos[XYZSS] = { sprite->pos.x, sprite->pos.y, sprite->pos.z, sprite->scl.x, sprite->scl.y };
-	SPR_ATTR attr = SPR_ATTRIBUTE( sprite->spr_id, JO_MULT_BY_64(sprite->pal_id), No_Gouraud, sprite->mesh | ECdis | CL64Bnk, sprite->flip | sprite->zmode );
+	SPR_ATTR attr = SPR_ATTRIBUTE( sprite->spr_id, 0, No_Gouraud, sprite->mesh | ECdis | CL256Bnk, sprite->flip | sprite->zmode );
 	slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
-}
-
-// loops through all frames
-static inline void looped_animation(Sprite *sprite) {
-        // move to an animation module
-        if (JO_MOD_POW2(frame, FRAMERATE1) == 0) { // modulus
-            sprite->anim1.frame++;
-            if (sprite->anim1.frame > sprite->anim1.max) {
-                sprite->anim1.frame = 0;
-            }
-            sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
-        }
-}
-
-static inline void looped_animation2(Sprite *sprite) {
-        // move to an animation module
-        if (frame % 6 == 0) { // modulus
-            sprite->anim2.frame++;
-            if (sprite->anim2.frame > sprite->anim2.max) {
-                sprite->anim2.frame = 0;
-            }
-            sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
-        }
-}
-
-static inline void looped_animation3(Sprite *sprite) {
-        // move to an animation module
-        if (JO_MOD_POW2(frame, FRAMERATE3) == 0) { // modulus
-            sprite->anim1.frame++;
-            if (sprite->anim1.frame > sprite->anim1.max) {
-                sprite->anim1.frame = 0;
-            }
-            sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
-        }
 }
 
 // increments 1 frame
@@ -179,49 +169,29 @@ static inline bool static_animation(Sprite *sprite) {
     return true;
 }
 
-static inline bool static_animation2(Sprite *sprite) {
-    if (frame % FRAMERATE2 == 0) { // modulus
-        sprite->anim2.frame++;
-        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
-    }
-    if (sprite->anim2.frame > sprite->anim2.max) {
-        sprite->anim2.frame = 0;
-        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
-        return false;
-    }
-    return true;
+// loops through all frames based on powers of 2
+static inline void looped_animation_pow(Sprite *sprite, unsigned int framerate) {
+        // move to an animation module
+        if (JO_MOD_POW2(frame, framerate) == 0) { // modulus
+            sprite->anim1.frame++;
+            if (sprite->anim1.frame > sprite->anim1.max) {
+                sprite->anim1.frame = 0;
+            }
+            sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
+        }
 }
 
-static inline bool static_animation3(Sprite *sprite) {
-    if (JO_MOD_POW2(frame, FRAMERATE3) == 0) { // modulus
-        sprite->anim2.frame++;
-        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
-    }
-    if (sprite->anim2.frame > sprite->anim2.max) {
-        sprite->anim2.frame = 0;
-        sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
-        return false;
-    }
-    return true;
+// loops through second animation based on modulus
+static inline void looped_animation_mod(Sprite *sprite, unsigned int framerate) {
+        // move to an animation module
+        if (frame % framerate == 0) { // modulus
+            sprite->anim2.frame++;
+            if (sprite->anim2.frame > sprite->anim2.max) {
+                sprite->anim2.frame = 0;
+            }
+            sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
+        }
 }
-
-// not worth it for just one more frame of animation..
-// static inline void fishtank_animation(Sprite *sprite) {
-        // // move to an animation module
-        // if (frame % FRAMERATE3 == 0) { // modulus
-            // sprite->anim1.frame++;
-            // if (sprite->anim1.frame > sprite->anim1.max) {
-                // sprite->anim1.frame = 0;
-            // }
-            // if (sprite->anim1.frame == sprite->anim1.max) {
-                // sprite->anim1.frame = 0;
-                // if (frame % 80 == 0) { // modulus
-                    // sprite->anim1.frame = sprite->anim1.max;
-                // }
-            // }
-            // sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
-        // }
-// }
 
 static inline bool explode_animation(Sprite *sprite) {
     if (frame % 6 == 0) { // modulus
@@ -236,11 +206,6 @@ static inline bool explode_animation(Sprite *sprite) {
         sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame];
     }
     return true;
-}
-
-static inline void random_sprite_animation(Sprite *sprite, int min, int max) {
-    sprite->anim1.frame = my_random_range(min, max);
-    sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
 }
 
 static inline void sprite_frame_reset(Sprite *sprite) {

@@ -6,10 +6,6 @@
 #include "assets.h"
 #include "util.h"
 #include "screen_transition.h"
-// #include "objects/player.h"
-// #include "audio.h"
-
-// extern PLAYER g_Players[MAX_PLAYERS];
 
 int g_PauseChoice = 0;
 int g_PauseCursor = 0;
@@ -26,10 +22,6 @@ typedef enum _PAUSE_OPTIONS
     PAUSE_OPTION_MAX,
 } PAUSE_OPTIONS;
 
-// static int sortByScore(const void * macchi, const void * jelly);
-// //static int sortByTime(const void * macchi, const void * jelly);
-// static void validateScores(void);
-
 static void drawPauseMenuCursor(void);
 static void drawPauseMenu(int options_y);
 
@@ -41,6 +33,7 @@ static void checkForPauseMenu(void);
 // Pause callbacks
 //
 
+// don't need this in pause - maybe for gameplay?
 void convertNumberToDigits(int number, unsigned char* hunds, unsigned char* tens, unsigned char* ones)
 {
     if(number == 0)
@@ -85,7 +78,6 @@ void pause_input(void)
     }
 }
 
-// draw the current score while the game is paused
 void pause_draw(void)
 {
     if(g_Game.gameState != GAME_STATE_GAMEPLAY)
@@ -98,11 +90,6 @@ void pause_draw(void)
         int options_y = 6;
         jo_nbg0_printf(19, options_y, "PAWSED");
         options_y += 6;
-        //
-        // score
-        //
-
-        // drawPauseScore();
         drawPauseMenu(options_y);
         drawPauseMenuCursor();
     }
@@ -293,7 +280,7 @@ static void drawPauseMenu(int options_y)
     }
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "ANALOG ADJUSTMENT:");
-    options_y += 2;
+    options_y += 1;
     analogAdjustmentScreen_draw(options_x, options_y);    
 }
 

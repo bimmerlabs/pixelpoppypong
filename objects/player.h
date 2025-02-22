@@ -23,6 +23,7 @@
 #define PLAYER_Y 120
 #define PLAYER_DEPTH 120
 #define PLAYER_RADIUS toFIXED(26)
+#define SHIELD_OFFSET toFIXED(36)
 
 typedef enum _PLAYER_STATE
 {
@@ -68,13 +69,14 @@ typedef enum _CHARACTER_SELECT
 #define TOTAL_CHARACTERS (CHARACTER_NONE)
 
 extern bool characterAvailable[TOTAL_CHARACTERS];
+extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0
 
 // Array to hold attributes for each character
 extern const CHARACTER_ATTRIBUTES characterAttributes[];
 
 typedef enum _TEAM_SELECT
 {
-    TEAM_CPU = 0,
+    TEAM_UNSELECTED = 0,
     TEAM_1,
     TEAM_2,
     TEAM_3,
@@ -87,14 +89,14 @@ typedef struct _CHARACTER
 {
     int  choice;
     bool selected;
-    bool selectColor;
-    jo_color _color;
+    // bool selectColor;
+    // jo_color _color;
 } CHARACTER, *PCHARACTER;
 
 typedef struct _TEAM
 {   
-    int choice;
-    int oldTeam;
+    Uint8 choice;
+    Uint8 oldTeam;
     bool selected;
 } TEAM, *PTEAM;
 
@@ -142,12 +144,14 @@ typedef struct _PLAYER
     Sprite *_cursor;
     Sprite *_sprite;
     Sprite *_portrait;
+    FIXED shield_pos;
 
 } PLAYER, *PPLAYER;
 
 void drawPlayerSprite(PPLAYER player);
 void speedLimitPlayer(PPLAYER player);
 void boundPlayer(PPLAYER player);
+void boundAiPlayer(PPLAYER player);
 void explodeNeighbors(PPLAYER player);
 
 void getPlayersInput(void);
@@ -158,6 +162,7 @@ void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion);
 void initPlayers(void);
 void initVsModePlayers(void);
 void initDemoPlayers(void);
+void initAiPlayers(void);
 
 void resetPlayerScores(void);
 void spawnPlayers(void);

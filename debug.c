@@ -92,6 +92,11 @@ void debux_text(void)
                 jo_nbg0_printf(2, 8, "P2_INPUT:%i", g_Players[1].input->id);
                 jo_nbg0_printf(20, 8, "IS SELECTED:%i", g_Players[1].input->isSelected);
                 
+                jo_nbg0_printf(2, 10, "TEAM 1 AVAILABLE:%i", teamAvailable[1]);
+                jo_nbg0_printf(2, 11, "TEAM 2 AVAILABLE:%i", teamAvailable[2]);
+                jo_nbg0_printf(2, 12, "TEAM 3 AVAILABLE:%i", teamAvailable[3]);
+                jo_nbg0_printf(2, 13, "TEAM 4 AVAILABLE:%i", teamAvailable[4]);
+                
                 // jo_nbg0_printf(2, 7, "TOTAL_CHARACTERS:%i",  TOTAL_CHARACTERS);
                 // jo_nbg0_printf(2, 8, "P1 CHAR CHOICE:%i", g_Players[0].character.choice);
                 
@@ -161,6 +166,13 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 12, "SPR1 ACTIVE:%i", sprite_list[1].active);
                 // jo_nbg0_printf(2, 10, "PLAYER 1 ACTIVE:%i",  g_Players[0].isPlaying);
                 // jo_nbg0_printf(20, 10, "P1 TEAM CHOICE:%i", g_Players[0].team.choice);
+                
+                                
+                jo_nbg0_printf(20, 10, "TEAM 1 AVAILABLE:%i", teamAvailable[1]);
+                jo_nbg0_printf(20, 11, "TEAM 2 AVAILABLE:%i", teamAvailable[2]);
+                jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", teamAvailable[3]);
+                jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", teamAvailable[4]);
+                
                 break;
                 
             case GAME_STATE_CREDITS: // transition

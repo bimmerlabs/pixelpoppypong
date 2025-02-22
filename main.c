@@ -41,10 +41,9 @@
 #include "debug.h"
 #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
-#include "BG_DEF/sprites.h"
+#include "BG_DEF/sprite_colors.h"
 #include "credits.h"
-
-#define MAX_SPRITE 50
+#include "highscores.h"
 
 GAME g_Game = {0};
 ASSETS g_Assets = {0};
@@ -57,7 +56,7 @@ int run_once_callback = 0;
 
 GameOptions game_options = {
     .debug_mode = false,
-    .debug_display = false,
+    .debug_display = true,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
@@ -68,11 +67,9 @@ void loading_screen(void)
     if (g_Game.gameState == !GAME_STATE_TRANSITION) {
         return;
     }
-    // currently only works in debug mode (need to work into transitions somehow)
     if (g_Game.isLoading) {
         slColOffsetOn(NBG0ON | NBG1ON);
         jo_set_displayed_screens(JO_NBG0_SCREEN);
-        // slColRateNbg1 (TRANSPARENCY_MIN);
         slColOffsetOn(NBG1ON);
         jo_nbg0_printf(17, 12, "LOADING!");
         
@@ -81,12 +78,12 @@ void loading_screen(void)
         }
         
         // loading bar        
-        char dots[MAX_SPRITE]; // Adjust size based on expected max sprites
+        char dots[50];
         int sprite_count = jo_sprite_count()/2;
         
         // Clamp sprite count to prevent overflow
-        if (sprite_count >= MAX_SPRITE) {
-            sprite_count = MAX_SPRITE - 1; // Reserve 1 byte for null-terminator
+        if (sprite_count >= 50) {
+            sprite_count = 49; // Reserve 1 byte for null-terminator
         }
         
         // Generate dot string
@@ -122,6 +119,9 @@ void my_input_callback(void) {
             break;
         case GAME_STATE_CREDITS:
             credits_input();
+            break;
+        case GAME_STATE_HIGHSCORES:
+            score_input();
             break;
         case GAME_STATE_TITLE_MENU:
             menuScreen_input();
@@ -181,43 +181,93 @@ void abcStart_callback(void)
 // cycle through HSL colors
 void my_color_calc(void)
 {
-    if (do_update_logo1) {
-        update_palette_logo1 = update_sprites_color(&p_rangeLogo);
-        do_update_logo1 = false;
-    }
-    if (do_update_menu1) {
-        update_palette_menu1 = update_sprites_color(&p_rangeMenu1);
-        do_update_menu1 = false;
-    }
-    if (do_update_menu2) {
-        update_palette_menu2 = update_sprites_color(&p_rangeMenu2);
-        do_update_menu2 = false;
-    }
-    if (do_update_menu3) {
-        update_palette_menu3 = update_sprites_color(&p_rangeMenu3);
-        do_update_menu3 = false;
-    }
-    if (do_update_menu4) {
-        update_palette_menu4 = update_sprites_color(&p_rangeMenu4);
-        do_update_menu4 = false;
+    switch (g_Game.gameState) {
+        case GAME_STATE_TITLE_SCREEN: {
+            if (do_update_logo1) {
+                update_palette_logo1 = update_sprites_color(&p_rangeLogo);
+                do_update_logo1 = false;
+            }
+            break;
+        }
+        case GAME_STATE_TITLE_MENU: {
+            if (do_update_menu1) {
+                update_palette_menu1 = update_sprites_color(&p_rangeMenu1);
+                do_update_menu1 = false;
+            }
+            if (do_update_menu2) {
+                update_palette_menu2 = update_sprites_color(&p_rangeMenu2);
+                do_update_menu2 = false;
+            }
+            if (do_update_menu3) {
+                update_palette_menu3 = update_sprites_color(&p_rangeMenu3);
+                do_update_menu3 = false;
+            }
+            if (do_update_menu4) {
+                update_palette_menu4 = update_sprites_color(&p_rangeMenu4);
+                do_update_menu4 = false;
+            }
+            break;
+        }
+        case GAME_STATE_DEMO_LOOP: {
+            if (do_update_shroom) {
+                update_palette_shroom = update_sprites_color(&p_rangeShroom);
+                do_update_shroom = false;
+            }
+            break;
+        }
+        case GAME_STATE_GAMEPLAY: {
+            if (do_update_shroom) {
+                update_palette_shroom = update_sprites_color(&p_rangeShroom);
+                do_update_shroom = false;
+            }
+            break;
+        }
+        default:
+        {
+            return;
+        }
     }
 }
 void my_palette_update(void)
 {
-    if (update_palette_logo1) {
-        update_palette_logo1 = update_sprites_palette(&p_rangeLogo);
-    }
-    if (update_palette_menu1) {
-        update_palette_menu1 = update_sprites_palette(&p_rangeMenu1);
-    }
-    if (update_palette_menu2) {
-        update_palette_menu2 = update_sprites_palette(&p_rangeMenu2);
-    }
-    if (update_palette_menu3) {
-        update_palette_menu3 = update_sprites_palette(&p_rangeMenu3);
-    }
-    if (update_palette_menu4) {
-        update_palette_menu4 = update_sprites_palette(&p_rangeMenu4);
+    switch (g_Game.gameState) {
+        case GAME_STATE_TITLE_SCREEN: {
+            if (update_palette_logo1) {
+                update_palette_logo1 = update_sprites_palette(&p_rangeLogo);
+            }
+            break;
+        }
+        case GAME_STATE_TITLE_MENU: {
+            if (update_palette_menu1) {
+                update_palette_menu1 = update_sprites_palette(&p_rangeMenu1);
+            }
+            if (update_palette_menu2) {
+                update_palette_menu2 = update_sprites_palette(&p_rangeMenu2);
+            }
+            if (update_palette_menu3) {
+                update_palette_menu3 = update_sprites_palette(&p_rangeMenu3);
+            }
+            if (update_palette_menu4) {
+                update_palette_menu4 = update_sprites_palette(&p_rangeMenu4);
+            }
+            break;
+        }
+        case GAME_STATE_DEMO_LOOP: {
+            if (update_palette_shroom) {
+                update_palette_shroom = update_sprites_palette(&p_rangeShroom);
+            }
+            break;
+        }
+        case GAME_STATE_GAMEPLAY: {
+            if (update_palette_shroom) {
+                update_palette_shroom = update_sprites_palette(&p_rangeShroom);
+            }
+            break;
+        }
+        default:
+        {
+            return;
+        }
     }
 }
 
@@ -257,7 +307,7 @@ void			jo_main(void)
     init_sprites_img();
     
     init_inputs();
-    
+    highScore_init();
     run_once_callback = jo_core_add_callback(run_once);
     
     jo_core_add_callback(screenTransition_update);
@@ -286,6 +336,7 @@ void			jo_main(void)
     jo_core_add_callback(demo_update);
     
     jo_core_add_callback(display_credits);
+    jo_core_add_callback(display_scores);
     
     jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);

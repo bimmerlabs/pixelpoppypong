@@ -10,9 +10,11 @@
 #include "objects/player.h"
 #include "audio.h"
 #include "credits.h"
-// #include "gameplay.h"
+#include "highscores.h"
 
 Uint16 state_fade_timer = STATE_FADE_TIMER;
+
+unsigned int g_AttractScreenState = ATTRACT_SCREEN_1;
 
 // transistions between game states
 void changeState(GAME_STATE newState)
@@ -95,6 +97,13 @@ void changeState(GAME_STATE newState)
             g_Game.gameState = g_Game.nextState;
             break;
         }
+        case GAME_STATE_HIGHSCORES:
+        {
+            g_Game.nextState = GAME_STATE_HIGHSCORES;
+            init_scores();
+            g_Game.gameState = g_Game.nextState;
+            break;
+        }
         case GAME_STATE_UNINITIALIZED:
         {
             jo_core_tv_off();
@@ -171,6 +180,14 @@ void game_state_update(void)
     
     if (!transition_out) {
         changeState(g_Game.nextState);
+    }
+}
+
+void attract_screen_state(void)
+{
+    g_AttractScreenState++;
+    if (g_AttractScreenState == ATTRACT_SCREEN_MAX) {
+        g_AttractScreenState = ATTRACT_SCREEN_1;
     }
 }
 

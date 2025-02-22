@@ -9,6 +9,7 @@
 extern PLAYER g_Players[MAX_PLAYERS];
 
 int g_StartGameFrames = 0;
+Uint8 currentNumPlayers = 0;
 bool g_TeamSelectPressedStart = false;
 bool draw_cursor = false;
 bool draw_portrait = false;
@@ -34,12 +35,16 @@ void teamSelect_init(void)
     g_Game.lastState = GAME_STATE_TEAM_SELECT;
     unloadTitleScreenAssets();
     loadCharacterAssets();
-    
+    reset_inputs();
     initPlayers();
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
     g_Game.numTeams = 0;
+    for (int i = 0; i < MAX_TEAMS; i++) {
+        teamCount[i] = 0;
+    }
+    
     if (game_options.debug_mode == true) {
         g_Game.minTeams = 0;
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
@@ -60,10 +65,22 @@ void teamSelect_init(void)
         characterAvailable[CHARACTER_WALRUS] = false;
         characterAvailable[CHARACTER_GARF]   = false;
     }
-    
-    for (int i = 0; i < MAX_TEAMS; i++) {
-        teamCount[i] = 0;
+
+    for (int i = 1; i < MAX_TEAMS+1; i++) {
+        teamAvailable[i] = true;
     }
+    
+    if (game_options.mesh_display) {
+        menu_bg1.mesh = MESHon;
+        menu_bg2.mesh = MESHon;
+        player_bg.mesh = MESHon;
+    }
+    else {
+        menu_bg1.mesh = MESHoff;
+        menu_bg2.mesh = MESHoff;
+        player_bg.mesh = MESHoff;
+    }
+    
     
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     
@@ -72,8 +89,7 @@ void teamSelect_init(void)
     set_spr_scale(&menu_bg1, 46, 46);
     menu_bg2.spr_id = menu_bg2.anim1.asset[5];
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
-    set_spr_scale(&menu_bg2, 54, 352); // ONLY HAPPENS ONCE?
-
+    set_spr_scale(&menu_bg2, 54, 352);
         
     mosaic_in = true;
     music_in = true;
@@ -101,15 +117,18 @@ void teamSelect_update(void)
                 PPLAYER player = &g_Players[i];
                 if(player->isPlaying != PLAYING)
                 {
-                    // player didn't pick a team and thus isn't playing
-                    player->objectState = OBJECT_STATE_INACTIVE;
+                    if (g_Game.numPlayers >= g_Game.currentNumPlayers) {
+                        initAiPlayers();               
+                    }
+                    else {
+                        // player didn't pick a team and thus isn't playing
+                        player->objectState = OBJECT_STATE_INACTIVE;
+                    }
                 }
             }
             transitionState(GAME_STATE_GAMEPLAY);
         }
     }
-
-    // updatePlayers();
 }
 
 // main draw routine
@@ -125,11 +144,6 @@ void teamSelect_draw(void)
         if (attrNbg1.x_pos > toFIXED(512.0))
             attrNbg1.x_pos = toFIXED(0);
     }
-    if (attrNbg1.y_scroll > toFIXED(0)) {
-        attrNbg1.y_pos += attrNbg1.y_scroll;
-        if (attrNbg1.y_pos > toFIXED(512.0))
-            attrNbg1.y_pos= toFIXED(0);
-    }
     slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
     drawCharacterSelectGrid();
@@ -137,7 +151,6 @@ void teamSelect_draw(void)
 
 void drawCharacterSelectGrid(void)
 {    
-    // eventually will need to adjust y axis for widescreen support
     int portrait_x = PORTRAIT_X;
     int portrait_y = PORTRAIT_Y;
     int paw_x = PAW_X;
@@ -203,19 +216,41 @@ void drawCharacterSelectGrid(void)
         // HORIZONTAL STRIPE
         // WARNING: doesn't work on hardware (VDP1 is too slow)
         // alternatives: create new bg? use second bg layer?
-        // LEFT
         if (g_Game.numPlayers < THREE_PLAYER) { // only draw for up to 2 players
             player->_bg->spr_id = player->_bg->anim1.asset[i];
-            set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
-            set_spr_scale(player->_bg, 90, 52);
+            // LEFT
             player->_bg->zmode = _ZmLC;
+            set_spr_scale(player->_bg, 90, 52);
+            set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
             my_sprite_draw(player->_bg);
             // RIGHT
-            set_spr_position(player->_bg, 352, portrait_y, PLAYER_BG2_DEPTH);
-            set_spr_scale(player->_bg, 210, 52);
             player->_bg->zmode = _ZmRC;
+            set_spr_scale(player->_bg, 210, 52);
+            set_spr_position(player->_bg, 352, portrait_y, PLAYER_BG2_DEPTH);
             my_sprite_draw(player->_bg);
         }
+        // still too slow..
+        // else {
+            // player->_bg->spr_id = player->_bg->anim1.asset[i];
+            // // LEFT
+            // player->_bg->zmode = _ZmLC;
+            // set_spr_scale(player->_bg, 90, 52);
+            // set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
+            // my_sprite_draw(player->_bg);
+            // // player->_bg->zmode = _ZmLC;
+            // // set_spr_scale(player->_bg, 90, 3);
+            // // set_spr_position(player->_bg, -352, portrait_y-48, PLAYER_BG2_DEPTH);
+            // // my_sprite_draw(player->_bg);
+            // // set_spr_position(player->_bg, -352, portrait_y+48, PLAYER_BG2_DEPTH);
+            // // my_sprite_draw(player->_bg);
+            // // RIGHT
+            // // player->_bg->zmode = _ZmRC;
+            // // set_spr_scale(player->_bg, 210, 3);
+            // // set_spr_position(player->_bg, 352, portrait_y-48, PLAYER_BG2_DEPTH);
+            // // my_sprite_draw(player->_bg);
+            // // set_spr_position(player->_bg, 352, portrait_y+48, PLAYER_BG2_DEPTH);
+            // // my_sprite_draw(player->_bg);
+        // }
 
         // VERTICAL STRIPE
         menu_bg2.zmode = _ZmCB;
@@ -230,8 +265,10 @@ void drawCharacterSelectGrid(void)
                 set_spr_position(&menu_bg1, portrait_x, portrait_y, MENU_BG1_DEPTH);
                 my_sprite_draw(&menu_bg1);
                 // PAW
-                set_spr_position(&paw_blank, paw_x, portrait_y, PORTRAIT_DEPTH);
-                my_sprite_draw(&paw_blank);
+                // set_spr_position(&paw_blank, paw_x, portrait_y, PORTRAIT_DEPTH); // use for 'random' choice
+                // my_sprite_draw(&paw_blank); 
+                set_spr_position(player->_sprite, paw_x, portrait_y, PORTRAIT_DEPTH);
+                my_sprite_draw(player->_sprite);
                 break;
             case true: // SELECT TEAM
                 set_spr_position(player->_cursor, paw_x, portrait_y, CURSOR_DEPTH);
@@ -240,7 +277,7 @@ void drawCharacterSelectGrid(void)
                 set_spr_position(&menu_bg1, paw_x, portrait_y, MENU_BG1_DEPTH);
                 my_sprite_draw(&menu_bg1);
                 // PAW
-                looped_animation(player->_sprite);
+                looped_animation_pow(player->_sprite, 4);
                 set_spr_position(player->_sprite, paw_x, portrait_y, PORTRAIT_DEPTH);
                 my_sprite_draw(player->_sprite);
                 break;
@@ -375,7 +412,7 @@ void characterSelect_input(void)
             if (jo_is_input_key_down(player->input->id, JO_KEY_B) && player->pressedB == false)
             {
                 player->startSelection = false;
-                player->input->isSelected = false;
+                // player->input->isSelected = false; // only change inputs on state change
                 characterAvailable[player->character.choice] = true;
                 player->_sprite = &paw_blank;
                 player->character.choice = CHARACTER_NONE;
@@ -391,7 +428,7 @@ void characterSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
                 // assign to a default team (left vs right)
-                if (i %2 == 0) { // modulus
+                if (i %2 == 0) { // modulus (replace with jo function)
                     player->team.choice = TEAM_1;
                     player->_sprite->flip = sprNoflip;
                 }
@@ -423,19 +460,19 @@ void characterSelect_input(void)
                     player->_sprite = &sparta;
                     break;
                  case CHARACTER_TJ:
-                    player->_sprite = &macchi;
+                    player->_sprite = &tj;
                     break;
                  case CHARACTER_GEORGE:
-                    player->_sprite = &jelly;
+                    player->_sprite = &george;
                     break;
                  case CHARACTER_WUPPY:
-                    player->_sprite = &macchi;
+                    player->_sprite = &wuppy;
                     break;
                  case CHARACTER_WALRUS:
-                    player->_sprite = &jelly;
+                    player->_sprite = &stadler;
                     break;
                  case CHARACTER_GARF:
-                    player->_sprite = &macchi;
+                    player->_sprite = &garfield;
                     break;
                  default:
                     break;
@@ -445,29 +482,32 @@ void characterSelect_input(void)
         }
         // BEGIN CHARACTER SELECTION
         if (!player->startSelection) {
-            for(unsigned int ip = 0; ip < COUNTOF(g_Inputs); ip++)
-            {
-                // Once a player starts selection, they shouldn't be able to assign a new id
-                if (g_Inputs[ip].isSelected) {
-                    continue;
-                }
-                if (jo_is_input_key_down(ip, JO_KEY_START))
+            // Once a player starts selection, they shouldn't be able to assign a new id
+            if (player->input->isSelected && jo_is_input_key_down(player->input->id, JO_KEY_START)) {
+                player->startSelection = true;
+                player->character.choice = CHARACTER_MACCHI;
+                validateCharacters(player);
+            }
+            else {
+                for(unsigned int ip = 0; ip < COUNTOF(g_Inputs); ip++)
                 {
-                    player->input = &g_Inputs[ip];
-                    player->input->id = ip;
-                    player->input->isSelected = true;
-                    
-                    player->startSelection = true;
-                    player->character.choice = CHARACTER_MACCHI;
-                    // only select available characters // maybe use for a random selection
-                    while (!characterAvailable[player->character.choice]) {
-                            player->character.choice++;
-                            if (player->character.choice > TOTAL_CHARACTERS)
-                            {
-                                player->character.choice = CHARACTER_MACCHI;
-                            }
-                   }
-                   return;
+                    // Once a player starts selection, they shouldn't be able to assign a new id
+                    if (g_Inputs[ip].isSelected) {
+                        continue;
+                    }
+                    if (jo_is_input_key_down(ip, JO_KEY_START))
+                    {
+                        player->input = &g_Inputs[ip];
+                        player->input->id = ip;
+                        player->input->isSelected = true;
+                        
+                        player->startSelection = true;
+                        player->character.choice = CHARACTER_MACCHI;
+                        validateCharacters(player);
+                        player->team.choice = TEAM_1;
+                        validateTeam(player);
+                       return;
+                    }
                 }
             }
         }
@@ -476,13 +516,7 @@ void characterSelect_input(void)
             player->_sprite->flip = sprNoflip;
             // make sure 2 people don't have the same character selected
             if (player->startSelection) {
-                while (!characterAvailable[player->character.choice]) {
-                        player->character.choice++;
-                        if (player->character.choice > TOTAL_CHARACTERS)
-                        {
-                            player->character.choice = CHARACTER_MACCHI;
-                        }
-               }
+                validateCharacters(player);
            }
         }
     }
@@ -551,7 +585,6 @@ void teamSelect_input(void)
             if (jo_is_input_key_down(player->input->id, JO_KEY_B))
             {
                 player->pressedB = true;
-                player->input->isSelected = false;
                 characterAvailable[player->character.choice] = true;
                 player->character.selected = false;
                 return;
@@ -565,6 +598,7 @@ void teamSelect_input(void)
                 assign_team(player->team.oldTeam, player->team.choice);
                 player->team.oldTeam = player->team.choice;
                 player->team.selected = true;
+                teamAvailable[player->team.choice] = false;
                 g_Game.numTeams++;
                 return;
             }
@@ -590,6 +624,7 @@ void teamSelect_input(void)
                     return;
                 }
                  player->isReady = true;
+                 g_Game.currentNumPlayers++;
                  return;
             }
             
@@ -600,11 +635,38 @@ void teamSelect_input(void)
                 all_players_ready = false;
                 player->isReady = false;
                 player->team.selected = false;
-                player->team.oldTeam = TEAM_CPU;
+                teamAvailable[player->team.choice] = true;
+                player->team.choice = TEAM_UNSELECTED;
+                player->team.oldTeam = TEAM_UNSELECTED;
                 player->pressedB = true;
                 g_Game.numTeams--;
+                g_Game.currentNumPlayers--;
                 return;
             }
+        }
+    }
+}
+
+// VALIDATION CHECKS
+
+// only select available characters 
+// maybe use for a random selection
+void validateCharacters(PLAYER *player) {
+    while (!characterAvailable[player->character.choice]) {
+        player->character.choice++;
+        if (player->character.choice > TOTAL_CHARACTERS)
+        {
+            player->character.choice = CHARACTER_MACCHI;
+        }
+    }
+}
+
+void validateTeam(PLAYER *player) {
+    while (!teamAvailable[player->team.choice]) {
+        player->team.choice++;
+        if (player->team.choice > MAX_TEAMS)
+        {
+            player->team.choice = TEAM_1;
         }
     }
 }

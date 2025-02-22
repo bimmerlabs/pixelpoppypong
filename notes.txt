@@ -49,12 +49,12 @@ version 0.3:
 version 0.4:
 -gameplay (basic) (done)
 -analog support (done)
--vs AI
+-vs AI (started)
 -save game (done)
 -palette animation (done)
 -sound effects (started)
--save game (started)
--credit roll (started)
+-save game (done)
+-credit roll (done)
 -palette animations (done)
 
 version 0.5:
@@ -72,7 +72,7 @@ version 0.5:
 		shields/block (maybe a power meter?)
 		attack forward (instead of D pad?)
 	Block breaking:
-		rescue kittens/wuppy?
+		rescue kittens/wuppy? (not this version)
 		
 		
 
@@ -80,8 +80,8 @@ version 0.6:
 -lighting
 -sound effects
 -ending
--high scores
--save game
+-high scores (started)
+-save game (done)
 
 
 version 1.0:

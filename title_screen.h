@@ -1,5 +1,5 @@
 #pragma once
-#include "BG_DEF/sprites.h"
+#include "BG_DEF/sprite_colors.h"
 
 #define TITLE_TIMER (30 * 60)
 #define LOGO_TIMER (25 * 60)
@@ -53,6 +53,7 @@ typedef enum _OPTIONS
     OPTION_DRAWMESH,
     OPTION_DRAWMOSAIC,
     OPTION_USE_RTC,
+    OPTION_ANALOG,
     OPTION_EXIT,
     OPTION_MAX,
 } OPTIONS;
@@ -81,8 +82,6 @@ static inline void animateMenuColor(bool *_do_update) {
         }
     }
     *_do_update = true;
-    // jo_nbg0_printf(2, 7, "INCREASING:%i", increasing);
-    // jo_nbg0_printf(2, 8, "H_VALUE:%i", h_value);
 }
 
 void titleScreen_init(void);
