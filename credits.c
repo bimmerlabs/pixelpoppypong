@@ -125,9 +125,9 @@ void display_credits(void)
             display_timer--;
             if (display_timer == 0) {
                 credits_fade_out = true; // Start fading out
-                if (!game_options.debug_display && game_options.mosaic_display) {
-                    mosaic_out = true;
-                }
+                // if (!game_options.debug_display && game_options.mosaic_display) {
+                    // mosaic_out = true;
+                // }
             }
         }
         else if (delay_timer > 0) { // Delay before fading in
@@ -146,15 +146,15 @@ void display_credits(void)
             }
         }
 
-        if (game_options.debug_display) {
-            jo_nbg0_printf(2, 4, "FADE_IN:%i", credits_fade_in);
-            jo_nbg0_printf(2, 5, "DISPLAY:%i", credits_display);
-            jo_nbg0_printf(2, 6, "FADE_OUT:%i", credits_fade_out);
-            jo_nbg0_printf(2, 7, "DISPLAY_TIMER:%i", display_timer);
-            jo_nbg0_printf(2, 8, "DELAY_TIMER:%i", delay_timer);
-            jo_nbg0_printf(2, 9, "TRANSPARENCY:%i", transparency_rate);
-            jo_nbg0_printf(2, 10, "CREDIT_ID:%i", credit_id);
-        }
+        // if (game_options.debug_display) {
+            // jo_nbg0_printf(2, 4, "FADE_IN:%i", credits_fade_in);
+            // jo_nbg0_printf(2, 5, "DISPLAY:%i", credits_display);
+            // jo_nbg0_printf(2, 6, "FADE_OUT:%i", credits_fade_out);
+            // jo_nbg0_printf(2, 7, "DISPLAY_TIMER:%i", display_timer);
+            // jo_nbg0_printf(2, 8, "DELAY_TIMER:%i", delay_timer);
+            // jo_nbg0_printf(2, 9, "TRANSPARENCY:%i", transparency_rate);
+            // jo_nbg0_printf(2, 10, "CREDIT_ID:%i", credit_id);
+        // }
 
         if (credit_id == 0) {
             bg_height = 48;

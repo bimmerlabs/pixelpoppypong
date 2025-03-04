@@ -5,11 +5,9 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.45"
+#define VERSION "0.49"
 #define MAX_PLAYERS 4
-#define MAX_TEAMS 4 // teams will really only be 2
-#define MIN_TEAMS 1
-#define MAX_TEAM_MEMBERS 1
+#define MAX_TEAMS 4
 
 // Screen position
 #define SCREEN_RIGHT  toFIXED(352.0)
@@ -25,10 +23,6 @@ extern jo_datetime now;
 extern Uint8 frame;
 extern Uint8 g_GameTimer;
 extern Uint16 cursor_angle; // for title & pawsed menus
-
-// temporary - to be removed
-extern int player1_score;
-extern int player2_score;
 
 typedef struct {
     bool debug_mode;
@@ -53,9 +47,9 @@ typedef enum _NUMBER_OF_PLAYERS
 // supported game types
 typedef enum _GAME_MODE
 {
-    GAME_MODE_CLASSIC = 0, // JUST PONG
-    GAME_MODE_STORY = 1, // STORY MODE?
-    GAME_MODE_BATTLE = 2, // BATTLE MODE (2 OR 4 PLAYER MODE ONLY)
+    GAME_MODE_STORY = 0, // STORY MODE?
+    GAME_MODE_BATTLE = 1, // BATTLE MODE (2 OR 4 PLAYER MODE ONLY)
+    GAME_MODE_CLASSIC = 2, // JUST PONG
     GAME_MODE_MAX,
 } GAME_MODE;
 
@@ -91,7 +85,7 @@ typedef struct _GAME
     Uint8 currentNumPlayers;
 
     // number of teams
-    Uint8 minTeams;
+    Uint8 minTeams; // MIN AND MAX ARE ALWAYS THE SAME - REMOVE ONE
     Uint8 maxTeams;
     Uint8 numTeams;
     
@@ -106,6 +100,8 @@ typedef struct _GAME
 
     // number of lives (1, 3, 6, 9)
     Uint8 numLives;
+    // number of stars (1, 2, 3)
+    Uint8 numStars;
 
     // is the game loading?
     bool isLoading;

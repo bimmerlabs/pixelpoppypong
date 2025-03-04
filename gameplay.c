@@ -5,10 +5,8 @@
 #include "physics.h"
 #include "assets.h"
 #include "screen_transition.h"
-#include "objects/player.h"
 #include "AI.h"
 #include "BG_DEF/sprite_colors.h"
-extern PLAYER g_Players[MAX_PLAYERS];
 unsigned int g_DemoTimer = 0;
 bool start_timer = false;
 bool round_start = false;
@@ -21,7 +19,6 @@ Uint16 g_RoundOverTimer = 0;
 
 int player1_score = 0;
 int player2_score = 0;
-HighScoreEntry highScores[SCORE_ENTRIES];
 
 static bool draw_demo_text = true;
 static bool times_up = false;
@@ -30,25 +27,12 @@ static bool isRoundOver(void);
 // static void drawStats(void);
 // static void drawScore(void);
 
-void highScore_init(void) {
-    highScores[0] = (HighScoreEntry){500000, "CDS"};
-    highScores[1] = (HighScoreEntry){450000, "BUB"};
-    highScores[2] = (HighScoreEntry){400000, "SES"};
-    highScores[3] = (HighScoreEntry){350000, "DAD"};
-    highScores[4] = (HighScoreEntry){300000, "OCS"};
-    highScores[5] = (HighScoreEntry){250000, "FOO"};
-    highScores[6] = (HighScoreEntry){200000, "BAR"};
-    highScores[7] = (HighScoreEntry){150000, "PPP"};
-    highScores[8] = (HighScoreEntry){125000, "ITS"};
-    highScores[9] = (HighScoreEntry){100000, "WUP"};
-}
-
-void gameplay_init() {
-    // jo_memset((void *)JO_VDP2_LAST_REG, 0, 0x40000);
-    // jo_memset((void *)JO_VDP2_VRAM, 0, 0x40000);
-    // jo_memset((void *)JO_VDP2_CRAM, 0, 0x0800);
-    
+void gameplay_init() {    
     if (g_Game.nextState != GAME_STATE_DEMO_LOOP && g_Game.lastState != GAME_STATE_GAMEPLAY) {
+        if (g_Game.gameMode == GAME_MODE_STORY) {
+            unloadTitleScreenAssets();
+            loadCharacterAssets();
+        }
         loadGameAssets();
     }
     
@@ -65,9 +49,10 @@ void gameplay_init() {
                 initVsModePlayers();
                 break;
             }
-            case GAME_MODE_STORY:
-                initVsModePlayers();
+            case GAME_MODE_STORY: {
+                initStoryMode();
                 break;
+            }
             default:
                 break;
         }
@@ -82,7 +67,7 @@ void gameplay_init() {
 
     resetPlayerScores();
     
-    // collision detection    sprite_count = 0;
+    // collision detection    // sprite_id = 0;
 
     // debug only
     reset_ball(&pixel_poppy);
@@ -103,6 +88,7 @@ void gameplay_init() {
 
     reset_sprites();
     do_update_shroom = true;
+    do_update_PmenuAll = true;
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -127,12 +113,15 @@ void gameplay_init() {
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
+    // set_spr_scale(&goal2, 2, 0.1); // need a different sprite for 4 teams
+
+    set_item_position(&bomb_item);
+    set_item_position(&fishtank_item);
+    set_item_position(&shroom_item);
+    set_item_position(&garfield_item);
+    set_item_position(&craig_item);    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
-    
-    // temporary - to be removed
-    player1_score = 0;
-    player2_score = 0;
 }
 
 void demo_init(void) {
@@ -218,7 +207,6 @@ void demo_update(void)
             // SPRITES
         my_sprite_draw(&timer_num10); // tens
         my_sprite_draw(&timer_num1);  // ones
-        // my_sprite_draw(&menu_bg1);     // shadow
                 // field
         my_sprite_draw(&goal1);
         my_sprite_draw(&goal2);
@@ -229,10 +217,14 @@ void demo_update(void)
         if (draw_bomb) {
             my_sprite_draw(&bomb_item);
         }
-        my_sprite_draw(&fishtank_item);
-        my_sprite_draw(&shroom_item);
-        my_sprite_draw(&garfield_item);
-        my_sprite_draw(&craig_item);
+        if (fishtank_item.visible)
+            my_sprite_draw(&fishtank_item);
+        if (shroom_item.visible)
+            my_sprite_draw(&shroom_item);
+        if (garfield_item.visible)
+            my_sprite_draw(&garfield_item);
+        if (craig_item.visible)
+            my_sprite_draw(&craig_item);
                 
     //ANIMATIONS
         if (!explode_bomb) {
@@ -246,78 +238,18 @@ void demo_update(void)
         }
         looped_animation_pow(&fishtank_item, 8);
         looped_animation_pow(&shroom_item, 4);
-        // if (frame % 2 == 0) { // modulus
-            hsl_incSprites.h += 2;
-            do_update_shroom = true;
-        // }
+        hsl_incSprites.h += 2;
+        do_update_shroom = true;
                 
         update_ball(&pixel_poppy);
         my_sprite_draw(&pixel_poppy);
         
     // TEXT / UI
-        jo_nbg0_printf(8, 2, "%09d", player1_score);
-        jo_nbg0_printf(27, 2, "%09d", player2_score);
-        
-        if (game_options.debug_display) {
-            jo_nbg0_printf(2, 11, "DRAW_BOMB:%i", draw_bomb);
-            jo_nbg0_printf(2, 12, "EXPLODE_BOMB:%i", explode_bomb);
-        }
-          
         for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
         {
-            static int portrait_x = 300;
-            static int portrait_y = 190;
-            static int heart_x = 260;
-            static int heart_y = 180;
-            static int star_x = 15;
-            static int star_y = 15;
             PPLAYER player = &g_Players[i];
-            // move to an animation module
             looped_animation_pow(player->_sprite, 4);
-            
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];    
-            set_spr_scale(player->_portrait, 1.1, 1);
-            // switch statement
-            if (player->team.choice == TEAM_1) {
-                set_shield_position(player->_sprite, &shield1, player->shield_pos);
-                looped_animation_pow(&shield1, 4);
-                my_sprite_draw(&shield1);
-                
-                // set_spr_position(player->_shield, -portrait_x, -portrait_y, PLAYER_DEPTH); // PORTRAIT_DEPTH
-                set_spr_position(player->_portrait, -portrait_x, -portrait_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&heart, -heart_x, -heart_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&star, -portrait_x-star_x, -portrait_y+star_y, 90); // PORTRAIT_DEPTH
-            } 
-            else if (player->team.choice  == TEAM_2) {
-                set_shield_position(player->_sprite, &shield2, player->shield_pos);
-                looped_animation_pow(&shield2, 4);
-                my_sprite_draw(&shield2);
-                
-                set_spr_position(player->_portrait, portrait_x, -portrait_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&heart, heart_x, -heart_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&star, portrait_x-star_x, -portrait_y+star_y, 90); // PORTRAIT_DEPTH
-            }
-            else if (player->team.choice  == TEAM_3) {
-                set_shield_position(player->_sprite, &shield3, player->shield_pos);
-                looped_animation_pow(&shield3, 4);
-                my_sprite_draw(&shield3);
-                
-                set_spr_position(player->_portrait, -portrait_x, portrait_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&heart, -heart_x, heart_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&star, -portrait_x-star_x, portrait_y+star_y, 90); // PORTRAIT_DEPTH
-            }
-            else if (player->team.choice  == TEAM_4) {
-                set_shield_position(player->_sprite, &shield4, player->shield_pos);
-                looped_animation_pow(&shield4, 4);
-                my_sprite_draw(&shield4);
-                
-                set_spr_position(player->_portrait, portrait_x, portrait_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&heart, heart_x, heart_y, 90); // PORTRAIT_DEPTH
-                set_spr_position(&star, portrait_x-star_x, portrait_y+star_y, 90); // PORTRAIT_DEPTH
-            }
-            my_sprite_draw(player->_portrait);
-            my_sprite_draw(&heart);
-            my_sprite_draw(&star);
+            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];            gameplayUI_draw(player);
         }
     }
     else if (!g_Game.isPaused && times_up) {
@@ -329,9 +261,126 @@ void demo_update(void)
             #endif
             play_battle_is_over = false;
         }
-            jo_nbg0_printf(17, 14, "TIME OUT");
-            
+        jo_nbg0_printf(17, 14, "TIME OUT");
+        // transition?  end game?  add scores?  enter initials?
     }
+}
+
+void gameScore_draw(void) {
+    if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
+    {
+        return;
+    }
+    if (!g_Game.isPaused && !times_up) {
+        for(unsigned int i = 0; i <= (g_Game.numPlayers); i++)
+        {
+            PPLAYER player = &g_Players[i];
+            gameplayScores_draw(player);
+        }
+    }
+}
+
+void gameplayUI_draw(PPLAYER player) {
+    static int portrait_x = 300;
+    static int portrait_y = 190;
+    static int color_multiplier = 5;
+    static int power_meter_height = 3;
+    switch (player->teamChoice) 
+    {
+        case TEAM_1: {
+            int heart_x = -(portrait_x - 40);
+            int heart_y = -(portrait_y - 12);
+            int star_y = -(portrait_y + 12);
+            set_shield_position(player->_sprite, &shield1, player->shield_pos);
+            looped_animation_pow(&shield1, 4);
+            my_sprite_draw(&shield1);
+
+            set_spr_position(player->_portrait, -portrait_x, -portrait_y, 90);
+            draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
+            draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
+            
+            // calculate power meter color            hslSprites.color[p_rangePmenu[0].lower].h = player->shield.power*color_multiplier;            calculate_sprites_color(&p_rangePmenu[0]);
+            do_update_Pmenu[0] = true;
+            
+            player->_bg->spr_id = player->_bg->anim1.asset[0];
+            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            set_spr_position(player->_bg, (-portrait_x-25), (-portrait_y+24), 80);
+            my_sprite_draw(player->_bg); // have a shield meter for each player?
+            break;
+        }
+        case TEAM_2: {
+            int heart_x = portrait_x - 40;
+            int heart_y = -(portrait_y - 12);
+            int star_y = -(portrait_y + 12);
+            set_shield_position(player->_sprite, &shield2, player->shield_pos);
+            looped_animation_pow(&shield2, 4);
+            my_sprite_draw(&shield2);
+
+            set_spr_position(player->_portrait, portrait_x, -portrait_y, 90);
+            draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
+            draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
+            
+            // calculate power meter color
+            hslSprites.color[p_rangePmenu[1].lower].h = player->shield.power*color_multiplier;
+            calculate_sprites_color(&p_rangePmenu[1]);
+            do_update_Pmenu[1] = true;
+            
+            player->_bg->spr_id = player->_bg->anim1.asset[1];
+            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            set_spr_position(player->_bg, (portrait_x-25), (-portrait_y+24), 80);
+            my_sprite_draw(player->_bg);
+            break;
+        }
+        case TEAM_3: {
+            int heart_x = -(portrait_x - 40);
+            int heart_y = portrait_y + 12;
+            int star_y = portrait_y - 12;
+            set_shield_position(player->_sprite, &shield3, player->shield_pos);
+            looped_animation_pow(&shield3, 4);
+            my_sprite_draw(&shield3);
+
+            set_spr_position(player->_portrait, -portrait_x, portrait_y, 90);
+            draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
+            draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
+            
+            // calculate power meter color
+            hslSprites.color[p_rangePmenu[2].lower].h = player->shield.power*color_multiplier;
+            calculate_sprites_color(&p_rangePmenu[2]);
+            do_update_Pmenu[2] = true;
+            
+            player->_bg->spr_id = player->_bg->anim1.asset[2];
+            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            set_spr_position(player->_bg, (-portrait_x-25), (portrait_y+24), 80);
+            my_sprite_draw(player->_bg);
+            break;
+        }
+        case TEAM_4: {
+            int heart_x = portrait_x - 40;
+            int heart_y = portrait_y + 12;
+            int star_y = portrait_y - 12;
+            set_shield_position(player->_sprite, &shield4, player->shield_pos);
+            looped_animation_pow(&shield4, 4);
+            my_sprite_draw(&shield4);
+
+            set_spr_position(player->_portrait, portrait_x, portrait_y, 90);
+            draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
+            draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
+            
+            // calculate power meter color
+            hslSprites.color[p_rangePmenu[3].lower].h = player->shield.power*color_multiplier;
+            calculate_sprites_color(&p_rangePmenu[3]);
+            do_update_Pmenu[3] = true;
+            
+            player->_bg->spr_id = player->_bg->anim1.asset[3];
+            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            set_spr_position(player->_bg, (portrait_x-25), (portrait_y+24), 80);
+            my_sprite_draw(player->_bg);
+            break;
+        }
+        default:
+            break;
+    }
+    my_sprite_draw(player->_portrait);
 }
 
 static bool isRoundOver(void)
@@ -411,30 +460,3 @@ void    demo_input(void)	{
         g_DemoTimer = 0;
     }
 }
-
-// need to validate// void sort_high_scores() {
-    // for (int i = 0; i < SCORE_LEVELS - 1; i++) {
-        // for (int j = i + 1; j < SCORE_LEVELS; j++) {
-            // if (highScores[j].score > highScores[i].score) {
-                // HighScoreEntry temp = highScores[i];
-                // highScores[i] = highScores[j];
-                // highScores[j] = temp;
-            // }
-        // }
-    // }
-// }
-
-// needs to insert based on the sorting order// void add_high_score(Uint16 newScore, const char *initials) {
-    // // Check if the new score qualifies
-    // if (newScore <= highScores[SCORE_LEVELS - 1].score) {
-        // return;  // Score is too low, ignore
-    // }
-
-    // // Insert at the last position
-    // highScores[SCORE_LEVELS - 1].score = newScore;
-    // jo_strncpy(highScores[SCORE_LEVELS - 1].initials, initials, INITIALS_LENGTH);
-    // highScores[SCORE_LEVELS - 1].initials[INITIALS_LENGTH] = '\0';  // Null terminate
-
-    // // Sort the list
-    // sort_high_scores();
-// }

@@ -2,9 +2,13 @@
 #include "../main.h"
 
 #include "../palettetools.h"
+#include "../lighting.h"
 #include "../font.h"
 
+bool do_update_ppplogo = false;
 bool do_update_logo1 = false;
+bool do_update_Pmenu[MAX_PLAYERS];
+bool do_update_PmenuAll = false;
 bool do_update_menu1 = false;
 bool do_update_menu2 = false;
 bool do_update_menu3 = false;
@@ -12,7 +16,10 @@ bool do_update_menu4 = false;
 bool do_update_fish = false;
 bool do_update_bomb = false;
 bool do_update_shroom = false;
+bool update_palette_ppplogo = false;
 bool update_palette_logo1 = false;
+bool update_palette_Pmenu[MAX_PLAYERS];
+bool update_palette_PmenuAll = false;
 bool update_palette_menu1 = false;
 bool update_palette_menu2 = false;
 bool update_palette_menu3 = false;
@@ -21,10 +28,12 @@ bool update_palette_fish = false;
 bool update_palette_bomb = false;
 bool update_palette_shroom = false;
 
+LightSource light = {toFIXED(10), toFIXED(255), toFIXED(255), 0, 0, 0};  // scene light
+
 // base palette for color map calculations
 RgbPalette rgbSprites = {
     { {1, 1, 1}, {1, 255, 1}, {255, 255, 255}, {87, 87, 87}, {145, 145, 145}, {223, 125, 27}, {235, 189, 21}, {249, 163, 27}, 
-      {255, 245, 141}, {249, 179, 183}, {99, 105, 169}, {201, 137, 93}, {71, 141, 91}, {103, 35, 45}, {237, 29, 37}, {241, 255, 1}, 
+      {255, 245, 141}, {249, 179, 183}, {33, 191, 255}, {33, 191, 255}, {33, 191, 255}, {33, 191, 255}, {237, 29, 37}, {241, 255, 1}, 
       {255, 10, 10}, {255, 194, 10}, {133, 255, 10}, {10, 255, 71}, {10, 255, 255}, {10, 71, 255}, {133, 10, 255}, {255, 10, 194}, 
       {255, 255, 255}, {1, 1, 1}, {27, 27, 27}, {27, 27, 27}, {247, 247, 1}, {255, 255, 255}, {63, 73, 205}, {247, 247, 1}, 
       {1, 1, 1}, {161, 25, 99}, {213, 77, 153}, {235, 121, 185}, {255, 175, 201}, {40, 130, 200}, {153, 217, 234}, {199, 235, 245}, 
@@ -46,14 +55,14 @@ RgbPalette rgbSprites = {
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {79, 55, 25}, {195, 195, 195}, {175, 141, 103}, {129, 89, 39}, 
       {255, 255, 255}, {255, 241, 187}, {255, 233, 157}, {255, 205, 121}, {225, 155, 85}, {167, 99, 31}, {0, 0, 0}, {0, 0, 0}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {85, 121, 129}, {195, 195, 195}, {177, 201, 217}, {127, 175, 191}, 
-      {255, 255, 255}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, 
+      {255, 255, 255}, {1, 1, 1}, {29, 81, 129}, {27, 105, 185}, {53, 133, 237}, {33, 191, 255}, {83, 191, 249}, {133, 209, 251}, 
       {1, 1, 1}, {81, 55, 23}, {175, 141, 103}, {127, 127, 127}, {79, 55, 25}, {195, 195, 195}, {129, 89, 39}, {175, 141, 103}, 
-      {255, 255, 255}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, 
+      {255, 255, 255}, {141, 231, 255}, {157, 251, 253}, {191, 253, 255}, {207, 249, 253}, {253, 255, 255}, {0, 0, 0}, {255, 255, 255}, 
       {1, 1, 1}, {39, 26, 24}, {73, 46, 42}, {107, 67, 53}, {123, 78, 58}, {134, 93, 72}, {157, 107, 81}, {163, 111, 90}, 
       {255, 255, 255}, {161, 120, 96}, {171, 133, 105}, {178, 138, 115}, {189, 148, 120}, {201, 159, 134}, {217, 182, 150}, {233, 201, 161}, 
       {11, 11, 11}, {255, 125, 169}, {249, 179, 183}, {87, 87, 87}, {255, 245, 141}, {255, 255, 255}, {255, 175, 43}, {249, 163, 27}, 
-      {223, 125, 27}, {189, 103, 17}, {0, 0, 0}, {129, 255, 129}, {239, 191, 129}, {239, 65, 129}, {127, 1, 129}, {17, 65, 129}, 
-      {17, 191, 129}, {89, 195, 231}, {167, 195, 231}, {205, 127, 231}, {167, 61, 231}, {89, 61, 231}, {51, 129, 231}, {83, 153, 249}, 
+      {223, 125, 27}, {189, 103, 17}, {0, 0, 0}, {127, 255, 127}, {211, 249, 127}, {255, 1, 127}, {127, 1, 127}, {1, 127, 127}, 
+      {1, 255, 127}, {89, 195, 231}, {167, 195, 231}, {255, 127, 127}, {167, 61, 231}, {1, 1, 127}, {51, 129, 231}, {83, 153, 249}, 
       {129, 179, 249}, {173, 153, 249}, {173, 103, 249}, {127, 77, 249}, {83, 103, 249}, {83, 153, 249}, {127, 127, 255} }
 };
 
@@ -130,10 +139,14 @@ HslPalette hslSprites = {
 };
 
 // palette ranges
-PaletteRange p_rangeSprites   = { 0, 254 };     // all colors
+PaletteRange p_rangeSprites   = { 0, 234 };     // all colors
 PaletteRange p_rangeFont      = { 2, 6 };       // font
 PaletteRange p_rangeLogo      = { 16, 23 };     // logo
-PaletteRange p_rangeMenu1     = { 26, 26 };     // tmenu
+PaletteRange p_rangePmenu[MAX_PLAYERS] = {      // pmenu (players)
+    {10, 10}, {11, 11}, {12, 12}, {12, 12}
+};
+PaletteRange p_rangePmenuAll  = { 10, 12 };
+PaletteRange p_rangeMenu1     = { 26, 26 };     // tmenu (ui)
 PaletteRange p_rangeMenu2     = { 27, 27 };
 PaletteRange p_rangeMenu3     = { 28, 28 };
 PaletteRange p_rangeMenu4     = { 31, 31 };
@@ -169,18 +182,36 @@ PaletteRange p_rangeNormalMap = { 235, 254 };   // normal map
 GlobalHSL hsl_incSprites = {0, 0, 0};
 
 // initial image setup: hue, saturation, luminance, x_pos, y_pos, x_scale, y_scale, x_scroll (rate), y_scroll (rate), min_sat_id, max_sat_id, min_lum_id, max_lum_id
-ImageAttr attrSprites = { 0, 0, 0, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
+ImageAttr attrSprites = { 288, 250, 255, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
 
 void init_sprites_img(void) {
     MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSprites);
     min_max_sl_id(&hslSprites, &p_rangeSprites, &attrSprites);
+    
+    for(unsigned int i = 0; i < (MAX_PLAYERS); i++)
+    {
+        do_update_Pmenu[i] = false;
+        update_palette_Pmenu[i] = false;
+    }
+    
+    // normal maps
+    InitNormal2d(&hslSprites, &rgbSprites, &light, &p_rangeNormalMap, &attrSprites);
+    MultiPaletteUpdate(&game_palette, &hslSprites, &hsl_incSprites, &p_rangeNormalMap);
 }
 
+// directly set the HSL color
+bool calculate_sprites_color(PaletteRange *range) {
+    MultiHslTorRgb2Buffer(&hslSprites, &bufferSprites, range);
+    return true;
+}
+
+// set the HSL color by hue, saturation, and luminance increments
 bool update_sprites_color(PaletteRange *range) {
     MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, range);
     return true;
 }
 
+// update CRAM from buffer palette
 bool update_sprites_palette(PaletteRange *range) {
     UpdatePaletteFromBuffer(&bufferSprites, &game_palette, range);
     return false;
@@ -191,4 +222,13 @@ void reset_sprites (void) {
     MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSprites);
     min_max_sl_id(&hslSprites, &p_rangeSprites, &attrSprites);
     MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, &p_rangeSprites);
+}
+
+
+void update_ppplogo_color(void) {
+    NormalMapLighting2d(&hslSprites, &rgbSprites, &bufferSprites, &light, &p_rangeNormalMap, &hsl_incSprites);
+}
+
+void update_ppplogo_palette(void) {
+    UpdatePaletteFromBuffer(&bufferSprites, &game_palette, &p_rangeNormalMap);
 }

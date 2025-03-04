@@ -77,6 +77,8 @@ void UpdatePaletteFromBuffer(RgbBuff *bufferPal, jo_palette *palette, PaletteRan
 void MultiRgbToHsl(HslPalette *hslPal, RgbPalette *rgbPal, PaletteRange *range);
 void MultiHslTorRgb(HslPalette *hslPal, RgbPalette *rgbPal, PaletteRange *range);
 
+void MultiHslTorRgb2Buffer(HslPalette *hslPal, RgbBuff *bufferPal, PaletteRange *range);
+
 void min_max_sl_id(HslPalette *hslPal, PaletteRange *range, ImageAttr *attr);
 
 #endif // PALETTETOOLS_H

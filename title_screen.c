@@ -96,20 +96,18 @@ void titleScreen_init(void)
     g_OptionScreenChoice = 0;
     g_TitleScreenLastChoice = TITLE_OPTION_GAME_MODE;
 
-    // Defaults
-    g_Game.gameMode = GAME_MODE_CLASSIC;
-    g_Game.minTeams = 1;
-    g_Game.maxTeams = 1;
-    g_Game.numTeams = 0;
-    
-    // doesn't really make sense
-    g_Game.minPlayers = 0;
-    g_Game.maxPlayers = 2;
+    // INITIAL GAME MODE
+    g_Game.gameMode = GAME_MODE_STORY;
+    g_Game.minPlayers = ONE_PLAYER;
+    g_Game.maxPlayers = ONE_PLAYER;
     g_Game.currentNumPlayers = 0;
     g_Game.numPlayers = ONE_PLAYER;
     
-    g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
+    g_Game.minTeams = 0;
+    g_Game.maxTeams = 0;
+    g_Game.numTeams = 0;
     
+    g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
     
     mosaic_in = true;
     music_in = true;
@@ -199,7 +197,6 @@ void drawTitle(void)
     // title graphic
     // jo_nbg0_printf(14, 23, "GAME LOGO HERE!");
     if (frame % 10 == 0) { // modulus
-        // replace with palette calculation
         draw_start_text = !draw_start_text;
     }
     if (draw_start_text) {
@@ -382,48 +379,13 @@ void menuScreen_input(void)
             case TITLE_OPTION_GAME_MODE:
                 g_Game.gameMode--;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
-                if (g_Game.gameMode == GAME_MODE_STORY) {
-                    g_Game.minPlayers = 0;
-                    g_Game.maxPlayers = 1;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else if (g_Game.gameMode == GAME_MODE_CLASSIC) {
-                    g_Game.minPlayers = 0;
-                    g_Game.maxPlayers = 2;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else {
-                    g_Game.minPlayers = 1;
-                    g_Game.maxPlayers = GAME_PLAYERS_MAX;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 2;
-                }
+                selectGameMode();
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
                 g_Game.numPlayers--;
-                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, g_Game.maxPlayers);
-                if (g_Game.numPlayers == ONE_PLAYER) {
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else if (g_Game.numPlayers == TWO_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 2;
-                }
-                else if (g_Game.numPlayers == THREE_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 3;
-                }
-                else if (g_Game.numPlayers == FOUR_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 4;
-                }
+                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, (g_Game.maxPlayers+1));
+                selectNumPlayers();
                 break;
 
             case TITLE_OPTION_GAME_DIFFICULTY:
@@ -443,48 +405,13 @@ void menuScreen_input(void)
             case TITLE_OPTION_GAME_MODE:
                 g_Game.gameMode++;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
-                if (g_Game.gameMode == GAME_MODE_STORY) {
-                    g_Game.minPlayers = 0;
-                    g_Game.maxPlayers = 1;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else if (g_Game.gameMode == GAME_MODE_CLASSIC) {
-                    g_Game.minPlayers = 0;
-                    g_Game.maxPlayers = 2;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else {
-                    g_Game.minPlayers = 1;
-                    g_Game.maxPlayers = GAME_PLAYERS_MAX;
-                    g_Game.numPlayers = g_Game.minPlayers;
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 2;
-                }
+                selectGameMode();
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
                 g_Game.numPlayers++;
-                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, g_Game.maxPlayers);
-                if (g_Game.numPlayers == ONE_PLAYER) {
-                    g_Game.minTeams = 1;
-                    g_Game.maxTeams = 1;
-                }
-                else if (g_Game.numPlayers == TWO_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 2;
-                }
-                else if (g_Game.numPlayers == THREE_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 3;
-                }
-                else if (g_Game.numPlayers == FOUR_PLAYER) {
-                    g_Game.minTeams = 2;
-                    g_Game.maxTeams = 4;
-                }
+                sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, (g_Game.maxPlayers+1));
+                selectNumPlayers();
                 break;
             
             case TITLE_OPTION_GAME_DIFFICULTY:
@@ -522,9 +449,15 @@ void menuScreen_input(void)
                 g_TitleScreenChoice++;
                 break;
                 
-            case TITLE_OPTION_GAME_START:
-                transitionState(GAME_STATE_TEAM_SELECT);
+            case TITLE_OPTION_GAME_START: {
+                if (g_Game.gameMode == GAME_MODE_STORY) {
+                    transitionState(GAME_STATE_GAMEPLAY);
+                }
+                else {
+                    transitionState(GAME_STATE_TEAM_SELECT);
+                }
                 break;
+            }
                 
             case TITLE_OPTION_GAME_OPTIONS:
                 changeState(GAME_STATE_TITLE_OPTIONS);

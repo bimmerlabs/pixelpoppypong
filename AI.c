@@ -54,9 +54,9 @@ void playerAI(Sprite *ball) {
                     player->curPos.dy = toFIXED(0);
                 }
             }
-            if (game_options.debug_display) {
-                jo_nbg0_printf(2, 14, "CENTER_DIFF:%i", toINT(center_diff));
-            }
+            // if (game_options.debug_display) {
+                // jo_nbg0_printf(2, 14, "CENTER_DIFF:%i", toINT(center_diff));
+            // }
         }
         else {
             // Check if the ball is moving towards player 2's goal
@@ -102,7 +102,7 @@ void playerAI(Sprite *ball) {
         // if (game_options.debug_mode) {
             // jo_nbg0_printf(text_x, text_y, "PLAYER ID: %i", player->playerID);
             // text_y++;
-            // jo_nbg0_printf(text_x, text_y, "TEAM: %i", player->team.choice);
+            // jo_nbg0_printf(text_x, text_y, "TEAM: %i", player->teamChoice);
             // text_y++;
             
             // // Check inputs

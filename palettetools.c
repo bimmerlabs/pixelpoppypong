@@ -30,6 +30,7 @@ void SinglePaletteUpdate(int index, ObjectColor color, jo_palette palette)
     palette.data[index] = JO_COLOR_RGB(color.r, color.g, color.b);
 }
 
+// this directly modifies the palette (not good outside of vblank)
 void MultiPaletteUpdate(jo_palette *palette, HslPalette *hslPal, GlobalHSL *hsl_increment, PaletteRange *range) {
     for (int i = range->lower; i <= range->upper; i++) {
         ObjectColor color;
@@ -69,6 +70,17 @@ void MultiRgbToHsl(HslPalette *hslPal, RgbPalette *rgbPal, PaletteRange *range) 
 void MultiHslTorRgb(HslPalette *hslPal, RgbPalette *rgbPal, PaletteRange *range) {
     for (int i = range->lower; i <= range->upper; i++) {
         ColorHelpers_RGBToHSL(&rgbPal->color[i], &hslPal->color[i]);
+    }
+}
+
+// use for real-time adjustments, then update the palette from bufferPal
+void MultiHslTorRgb2Buffer(HslPalette *hslPal, RgbBuff *bufferPal, PaletteRange *range) {
+    static ObjectColor rgbColor;
+    for (int i = range->lower; i <= range->upper; i++) {
+        rgbColor.r = JO_COLOR_SATURN_GET_R(bufferPal->color[i]);
+        rgbColor.g = JO_COLOR_SATURN_GET_G(bufferPal->color[i]);
+        rgbColor.b = JO_COLOR_SATURN_GET_B(bufferPal->color[i]);
+        ColorHelpers_HSLToRGB(&hslPal->color[i], &rgbColor);
     }
 }
 

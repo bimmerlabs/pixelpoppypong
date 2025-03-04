@@ -22,6 +22,16 @@
 #define FRICTION_COEFFICIENT toFIXED(4.0) // Adjust this value to alter the ball curve
 
 typedef struct {
+    // int playerID;
+    bool onLeftSide;
+    bool hasTouched;
+    Uint16 touchCount;
+    Uint8 teamChoice;
+} BallTouchTracker;
+
+extern BallTouchTracker touchedBy[MAX_PLAYERS];
+
+typedef struct {
     Sprite *sprite;
     bool active;
 } SpriteEntry;
@@ -30,7 +40,9 @@ typedef struct {
 
 // Array of SpriteEntries to store all sprites for sweep and prune
 extern SpriteEntry sprite_list[MAX_SPRITES];
-extern int sprite_count;
+extern int sprite_id;
+
+void initTouchCounter(void);
 
 // Function to initialize the ball's movement
 void start_ball_movement(Sprite *ball);
@@ -85,6 +97,19 @@ static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_colli
     }
 
     return z_velocity;
+}
+
+static inline void updateBallTouch(PPLAYER player) {
+    // Reset hasTouched for all players
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++) {
+        touchedBy[i].hasTouched = false;
+    }
+
+    // Update the player who last touched the ball
+    // touchedBy[player->PlayerID].PlayerID = player->PlayerID;
+    touchedBy[player->playerID].hasTouched = true;
+    touchedBy[player->playerID].touchCount++;
+    touchedBy[player->playerID].teamChoice = player->teamChoice; // needs to be initialized, not here
 }
 
 // Function to update the ball's position and check for collisions

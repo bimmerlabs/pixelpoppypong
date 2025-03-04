@@ -3,26 +3,27 @@
 #include "../main.h"
 #include "../assets.h"
 #include "player.h"
-// #include "grid.h"
-// #include "explosion.h"
-// #include "../team_select.h"
 #include "../sprites.h"
 #include "../gameplay.h"
 #include "../physics.h"
 #include "../util.h"
 #include "../team_select.h"
+#include "../BG_DEF/sprite_colors.h"
 
 // distance formula without the square root
 bool checkDistance(PPLAYER a, PPLAYER b);
 
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
+bool characterUnlocked[TOTAL_CHARACTERS] = {0};
 bool characterAvailable[TOTAL_CHARACTERS] = {0};
 bool teamAvailable[MAX_TEAMS+1] = {0};
+int teamCount[MAX_TEAMS+1] = {0};
 
 void respawnPlayer(PPLAYER player, bool deductLife);
 
-static int getLives(GAME_MODE mode);
+static int getLives(void);
+static int getStars(void);
 
 const CHARACTER_ATTRIBUTES characterAttributes[] = {
    //s  a  p   // speed, acceleration, power - scale 0-100
@@ -40,8 +41,6 @@ const CHARACTER_ATTRIBUTES characterAttributes[] = {
     {60, 60, 60}, // NONE: Medium attributes (for CPU)
 };
 
-int teamCount[MAX_TEAMS] = {0};
-
 void spawnPlayers(void)
 {
     PPLAYER player = NULL;
@@ -55,51 +54,113 @@ void spawnPlayers(void)
 
 void resetPlayerScores(void)
 {
+    
+    g_Game.numLives = getLives();
+    g_Game.numStars = getStars();
+    
     PPLAYER player = NULL;
-
-    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         player = &g_Players[i];
 
+        player->shield.power = 26;
+        player->score.stars  = 0;
         player->score.deaths = 0;
         player->score.points = 0;
-        player->score.team_points = 0;
-
-        if(player->isPlaying)
-        {
-            player->numLives = getLives(g_Game.gameMode);
-        }
-        else
-        {
-            player->numLives = 0;
-        }
+        player->numLives = g_Game.numLives;
+        
+        touchedBy[i].onLeftSide = false;
+        touchedBy[i].hasTouched = false;
+        touchedBy[i].touchCount = 0;
+        touchedBy[i].teamChoice = 0;
+        
+        // // for testing UI elements
+        // if (game_options.debug_mode == true) {
+            // if (i == 0) {
+                // player->shield.power = 2;
+                // player->score.stars  = 3;
+                // player->numLives = 12;
+                // // player->score.points = 99999999;
+            // }
+            // if (i == 1) {
+                // player->shield.power = 13;
+                // player->score.stars  = 2;
+                // player->numLives = 6;
+                // // player->score.points = 123456789;
+            // }
+            // if (i == 2) {
+                // player->shield.power = 20;
+                // player->score.stars  = 0;
+                // player->numLives = 9;
+                // // player->score.points = 1;
+            // }
+            // if (i == 3) {
+                // player->shield.power = 26;
+                // player->score.stars  = 1;
+                // player->numLives = 3;
+                // // player->score.points = 1000000;
+            // }
+        // }
     }
 }
 
-static int getLives(GAME_MODE mode)
+static int getLives(void)
 {
     int numLives = 0;
-
-    switch(mode)
+    
+    switch(g_Game.gameMode)
     {
-        // case GAME_MODE_PRACTICE:
-            // numLives = 1000; // basically infinite lives
-            // break;
-        // case GAME_MODE_NORMAL:
-            // numLives = 3;
-            // break;
-        // case GAME_MODE_HARDCORE:
-            // numLives = 1;
-            // break;
-        // case GAME_MODE_TIME_ATTACK:
-            // numLives = 3;
-            // break;
+        case GAME_MODE_CLASSIC:
+            numLives = 3;
+            break;
+        case GAME_MODE_STORY: {
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    numLives = 9;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    numLives = 6;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    numLives = 3;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        }
+        case GAME_MODE_BATTLE:
+            numLives = 9;
+            break;
         default:
-            numLives = 0; // should never get here
             break;
     }
 
     return numLives;
+
+}
+
+static int getStars(void)
+{
+    int numStars = 0;
+    
+    switch(g_Game.gameMode)
+    {
+        case GAME_MODE_CLASSIC:
+            numStars = 1;
+            break;
+        case GAME_MODE_STORY:
+            numStars = 2;
+            break;
+        case GAME_MODE_BATTLE:
+            numStars = 3;
+            break;
+        default:
+            break;
+    }
+
+    return numStars;
 
 }
 
@@ -113,13 +174,13 @@ void initPlayers(void)
     {
         player = &g_Players[i];
         
+        player->playerID = i;
         player->objectState = OBJECT_STATE_ACTIVE;
         player->input->id = 0;
         player->input->isSelected = false;
         
         player->score.deaths = 0;
         player->score.points = 0;
-        player->score.team_points = 0;
 
         // PLAYER      
         player->startSelection = false;
@@ -140,9 +201,9 @@ void initPlayers(void)
         player->power = 0;
         
         // TEAM
-        player->team.choice = TEAM_UNSELECTED;
-        player->team.oldTeam = TEAM_UNSELECTED;
-        player->team.selected = false;
+        player->teamChoice = TEAM_UNSELECTED;
+        player->teamOldTeam = TEAM_UNSELECTED;
+        player->teamSelected = false;
         
         player->moveHorizontal = false;
         player->moveVertical = false;
@@ -151,8 +212,21 @@ void initPlayers(void)
         // assign cursor & bg tile to each player
         player->_cursor = &player_cursor;
         player->_bg = &player_bg;
+        player->_bg->zmode = _ZmLC;
         player->_sprite = &paw_blank;
-        player->_sprite->spr_id = paw_blank_id; // not sure why this changes     
+        player->_sprite->spr_id = paw_blank_id; // not sure why this changes
+        
+        
+        if (i == 1) {
+            hsl_incSprites.h -= 30;
+        }
+        else if (i == 2) {
+            hsl_incSprites.h -= 60;
+        }
+        else if (i == 3) {
+            hsl_incSprites.h -= 90;
+        }
+        update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
         
         // INPUTS
         player->curPos.dx = toFIXED(0);
@@ -164,62 +238,11 @@ void initPlayers(void)
     }
 }
 
-void initVsModePlayers(void)
-{
-    PPLAYER player = NULL;
-
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
-    {
-        player = &g_Players[i];
-        
-        player->_sprite->spr_id = player->_sprite->anim1.asset[0];
-        
-        // add_sprite_to_sweep_and_prune(player->_sprite);
-        // Flip the sprite based on even/odd team
-        if (player->team.choice == TEAM_1) {
-            player->_sprite->flip = sprNoflip;
-            player->onLeftSide = true;
-            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 2) {
-                set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
-            }
-            else {
-                set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
-            }
-            player->shield_pos = SHIELD_OFFSET;
-        } 
-        else if (player->team.choice  == TEAM_2) {
-            player->_sprite->flip = sprHflip;
-            player->onLeftSide = false;
-            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
-                set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
-            }
-            else {
-                set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
-            }
-            player->shield_pos = -SHIELD_OFFSET;
-        }
-        else if (player->team.choice  == TEAM_3) {
-            player->_sprite->flip = sprVflip;
-            player->onLeftSide = true;
-            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
-            player->shield_pos = SHIELD_OFFSET;
-        }
-        else if (player->team.choice  == TEAM_4) {
-            player->_sprite->flip = sprHVflip;
-            player->onLeftSide = false;
-            set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
-            player->shield_pos = -SHIELD_OFFSET;
-        }
-        // player->_shield->spr_id = player->_shield->anim1.asset[6];
-        player->_sprite->isColliding = false;
-    }
-}
-
 void initAiPlayers(void)
 {
     PPLAYER player = NULL;
     
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
         if (player->isPlaying == PLAYING) {
@@ -227,13 +250,15 @@ void initAiPlayers(void)
         }
         
         validateTeam(player);
-        teamAvailable[player->team.choice] = false;
-        g_Game.numTeams++; 
+        teamAvailable[player->teamChoice] = false;
+        g_Game.numTeams++;
+        g_Game.currentNumPlayers++;
         
         player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
         validateCharacters(player);
         characterAvailable[player->character.choice] = false;
         
+        // SPRITES
         switch (player->character.choice)
         {
             case CHARACTER_MACCHI:
@@ -272,6 +297,8 @@ void initAiPlayers(void)
             default:
                 break;
         }
+        player->_bg->spr_id = player->_bg->anim1.asset[i];
+        player_bg.mesh = MESHoff;
         // ASSIGN STATS
         player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
         player->acceleration = characterAttributes[player->character.choice].acceleration;
@@ -283,15 +310,128 @@ void initAiPlayers(void)
     }
 }
 
+void initStoryCharacters(void)
+{
+    PPLAYER player = NULL;
+    player = &g_Players[1];
+
+    validateTeam(player);
+    teamAvailable[player->teamChoice] = false;
+    g_Game.numTeams++; 
+
+    player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
+    characterAvailable[player->character.choice] = false;
+
+    // SPRITES
+    switch (player->character.choice)
+    {
+        case CHARACTER_MACCHI:
+            player->_sprite = &macchi;
+            break;
+        case CHARACTER_JELLY:
+            player->_sprite = &jelly;
+            break;
+        case CHARACTER_PENNY:
+            player->_sprite = &penny;
+            break;
+        case CHARACTER_POPPY:
+            player->_sprite = &poppy;
+            break;
+        case CHARACTER_POTTER:
+            player->_sprite = &potter;
+            break;
+        case CHARACTER_SPARTA:
+            player->_sprite = &sparta;
+            break;
+        case CHARACTER_TJ:
+            player->_sprite = &tj;
+            break;
+        case CHARACTER_GEORGE:
+            player->_sprite = &george;
+            break;
+        case CHARACTER_WUPPY:
+            player->_sprite = &wuppy;
+            break;
+        case CHARACTER_WALRUS:
+            player->_sprite = &stadler;
+            break;
+        case CHARACTER_GARF:
+            player->_sprite = &garfield;
+            break;
+        default:
+        break;
+    }
+    player_bg.mesh = MESHoff;
+
+    // ASSIGN STATS
+    player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
+    player->acceleration = characterAttributes[player->character.choice].acceleration;
+    player->power = characterAttributes[player->character.choice].power;
+
+    player->isPlaying = PLAYING;
+    player->objectState = OBJECT_STATE_ACTIVE;
+    player->isAI = true;
+}
+
+void initVsModePlayers(void)
+{
+    PPLAYER player = NULL;
+
+    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    {
+        player = &g_Players[i];
+        
+        player->_sprite->spr_id = player->_sprite->anim1.asset[0];
+        set_spr_scale(player->_portrait, 1.1, 1);
+        
+        // add_sprite_to_sweep_and_prune(player->_sprite);
+        // Flip the sprite based on even/odd team
+        if (player->teamChoice == TEAM_1) {
+            player->_sprite->flip = sprNoflip;
+            player->onLeftSide = true;
+            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams == 2) {
+                set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+            }
+            else {
+                set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
+            player->shield_pos = SHIELD_OFFSET;
+        } 
+        else if (player->teamChoice  == TEAM_2) {
+            player->_sprite->flip = sprHflip;
+            player->onLeftSide = false;
+            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
+                set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+            }
+            else {
+                set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
+            player->shield_pos = -SHIELD_OFFSET;
+        }
+        else if (player->teamChoice  == TEAM_3) {
+            player->_sprite->flip = sprVflip;
+            player->onLeftSide = true;
+            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            player->shield_pos = SHIELD_OFFSET;
+        }
+        else if (player->teamChoice  == TEAM_4) {
+            player->_sprite->flip = sprHVflip;
+            player->onLeftSide = false;
+            set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            player->shield_pos = -SHIELD_OFFSET;
+        }
+        player->_sprite->isColliding = false;
+        
+        player_bg.mesh = MESHoff;
+    }
+}
+
 void initDemoPlayers(void)
 {
     PPLAYER player = NULL;
-    
-    // g_Game.numPlayers = TWO_PLAYER;
-    // g_Game.numPlayers = THREE_PLAYER;
-    // g_Game.numPlayers = FOUR_PLAYER;
-    
+        
     g_Game.numPlayers = my_random_range(TWO_PLAYER, FOUR_PLAYER);
+    g_Game.gameMode = GAME_MODE_BATTLE;
     initPlayers();
     
     for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
@@ -300,17 +440,12 @@ void initDemoPlayers(void)
         // add_sprite_to_sweep_and_prune(player->_sprite);
         if (i == 0) {
             player->_sprite = &macchi;
-            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
             player->_sprite->flip = sprNoflip;
             player->onLeftSide = true;
-            player->team.choice = TEAM_1;
-            player->objectState = OBJECT_STATE_ACTIVE;
-            player->scored = false;
-            player->isAI = true;
+            player->teamChoice = TEAM_1;
             set_spr_position(player->_sprite, -1*PLAYER_X, -100, PLAYER_DEPTH);
             player->character.choice = i;
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
-            set_spr_scale(player->_portrait, 1.1, 1);
             player->shield_pos = SHIELD_OFFSET;
         }
         else if (i == 1) {
@@ -326,16 +461,11 @@ void initDemoPlayers(void)
                 player->_sprite = &sparta;
                 player->character.choice = 4;
             }
-            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
             player->_sprite->flip = sprHflip;
             player->onLeftSide = false;
-            player->team.choice = TEAM_2;
-            player->objectState = OBJECT_STATE_ACTIVE;
-            player->scored = false;
-            player->isAI = true;
+            player->teamChoice = TEAM_2;
             set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
-            set_spr_scale(player->_portrait, 1.1, 1);
             player->shield_pos = -SHIELD_OFFSET;
         }
         else if (i == 2) {
@@ -351,16 +481,11 @@ void initDemoPlayers(void)
                 player->_sprite = &penny;
                 player->character.choice = 2;
             }
-            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
             player->_sprite->flip = sprVflip;
             player->onLeftSide = true;
-            player->team.choice = TEAM_3;
-            player->objectState = OBJECT_STATE_ACTIVE;
-            player->scored = false;
-            player->isAI = true;
+            player->teamChoice = TEAM_3;
             set_spr_position(player->_sprite, -1*PLAYER_X, 100, PLAYER_DEPTH);
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
-            set_spr_scale(player->_portrait, 1.1, 1);
             player->shield_pos = SHIELD_OFFSET;
         }
         else if (i == 3) {
@@ -376,19 +501,18 @@ void initDemoPlayers(void)
                 player->_sprite = &tj;
                 player->character.choice = 6;
             }
-            player->_sprite->spr_id = player->_sprite->anim1.asset[i];
+            player->_sprite->spr_id = player->_sprite->anim1.asset[0];
             player->_sprite->flip = sprHVflip;
             player->onLeftSide = false;
-            player->team.choice = TEAM_4;
-            player->objectState = OBJECT_STATE_ACTIVE;
-            player->scored = false;
-            player->isAI = true;
+            player->teamChoice = TEAM_4;
             set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
-            set_spr_scale(player->_portrait, 1.1, 1);
             player->shield_pos = -SHIELD_OFFSET;
         }
         
+        player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
+        set_spr_scale(player->_portrait, 1.1, 1);
+        player->objectState = OBJECT_STATE_ACTIVE;
+        player->isAI = true;
         player->_sprite->isColliding = false;
         boundPlayer(player);        
     }
@@ -735,7 +859,7 @@ void boundAiPlayer(PPLAYER player)
     }
 
     // needs to account for game modes (1-4 players)
-    switch(player->team.choice)
+    switch(player->teamChoice)
     {
         case TEAM_1: {
             if(player->_sprite->pos.y > SCREEN_MIDDLE - PLAYER_HEIGHT)
@@ -750,9 +874,13 @@ void boundAiPlayer(PPLAYER player)
             break;
         }
         case TEAM_2: {
-            if(player->_sprite->pos.y > SCREEN_MIDDLE - PLAYER_HEIGHT)
+                int bottom = SCREEN_MIDDLE;
+            if (g_Game.numTeams <= 3) {
+                bottom = SCREEN_BOTTOM;
+            }
+            if(player->_sprite->pos.y > bottom - PLAYER_HEIGHT)
             {
-                player->_sprite->pos.y = SCREEN_MIDDLE - PLAYER_HEIGHT;
+                player->_sprite->pos.y = bottom - PLAYER_HEIGHT;
             }
 
             if(player->_sprite->pos.y < SCREEN_TOP + PLAYER_HEIGHT)
@@ -896,8 +1024,6 @@ void respawnPlayer(PPLAYER player, bool deductLife)
     // reset speed to zero
     player->curPos.dx = 0;
     player->curPos.dy = 0;
-    // player->da = 0;
-    // player->ds = 0;
 
     player->subState = PLAYER_STATE_ACTIVE;
 }

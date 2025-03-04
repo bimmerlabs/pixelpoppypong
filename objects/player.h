@@ -37,9 +37,9 @@ typedef enum _PLAYER_STATE
 
 typedef struct _SCORE
 {
+    unsigned int stars;
     unsigned int deaths; // last wave player was alive for
     unsigned int points; // number of boxes opened
-    unsigned int team_points; // points of entire team
 
 } SCORE, *PSCORE;
 
@@ -49,6 +49,11 @@ typedef struct _CHARACTER_ATTRIBUTES
     int acceleration; // Acceleration rate on a scale of 1-10
     int power;        // Power on a scale of 1-10
 } CHARACTER_ATTRIBUTES;
+
+typedef struct _SHIELD
+{
+    Uint8 power;
+} SHIELD;
 
 typedef enum _CHARACTER_SELECT
 {
@@ -68,8 +73,9 @@ typedef enum _CHARACTER_SELECT
 
 #define TOTAL_CHARACTERS (CHARACTER_NONE)
 
+extern bool characterUnlocked[TOTAL_CHARACTERS]; // distinction between selection and what gets saved in backup ram
 extern bool characterAvailable[TOTAL_CHARACTERS];
-extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0
+extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0 // could be part of a team struct
 
 // Array to hold attributes for each character
 extern const CHARACTER_ATTRIBUTES characterAttributes[];
@@ -83,22 +89,13 @@ typedef enum _TEAM_SELECT
     TEAM_4,
 } TEAM_SELECT;
 
-extern int teamCount[MAX_TEAMS];
+extern int teamCount[MAX_TEAMS+1];
 
 typedef struct _CHARACTER
 {
     int  choice;
     bool selected;
-    // bool selectColor;
-    // jo_color _color;
 } CHARACTER, *PCHARACTER;
-
-typedef struct _TEAM
-{   
-    Uint8 choice;
-    Uint8 oldTeam;
-    bool selected;
-} TEAM, *PTEAM;
 
 // This structure represents the player
 typedef struct _PLAYER
@@ -107,7 +104,6 @@ typedef struct _PLAYER
     PLAYER_STATE subState;
     SCORE score;
     CHARACTER character;
-    TEAM team;
     
     // 0-11, controller ID (replace with actual inputs)
     PINPUT input;
@@ -122,13 +118,21 @@ typedef struct _PLAYER
     bool onLeftSide;
     bool scored;
     bool isAI;
-    
     int numLives;
+    
+    // Team (replaces team struct values)
+    // make into a struct again?
+    Uint8 teamChoice;
+    Uint8 teamOldTeam;
+    bool teamSelected;
     
     // Attributes from the selected character
     FIXED maxSpeed;
     FIXED acceleration;
     FIXED power;
+    
+    // SHIELD
+    SHIELD shield;
     
     // timers (in frames)
     int invulnerabilityFrames; // how long player in invulerable
@@ -160,9 +164,10 @@ void drawPlayers(void);
 void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion);
 
 void initPlayers(void);
+void initAiPlayers(void);
+void initStoryCharacters(void);
 void initVsModePlayers(void);
 void initDemoPlayers(void);
-void initAiPlayers(void);
 
 void resetPlayerScores(void);
 void spawnPlayers(void);

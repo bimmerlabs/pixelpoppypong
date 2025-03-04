@@ -90,7 +90,7 @@ void loadCommonAssets(void)
     // pixel poppy
     loadSprite(&pixel_poppy, g_Assets.pixel_poppy1, "POPPY.TGA", pixel_poppy1_tileset, NUM_POPPY_SPRITES, 64, 50, true);
     pixel_poppy_shadow.anim1.asset = g_Assets.pixel_poppy1;
-    pixel_poppy_shadow.spr_id = pixel_poppy_shadow.anim1.asset[6];
+    pixel_poppy_shadow.spr_id = pixel_poppy_shadow.anim1.asset[7];
     // menu cursor
     cursor.spr_id = jo_sprite_add_tga(NULL, "CURSOR.TGA", palette_transparent_index);
     
@@ -102,6 +102,25 @@ void loadCommonAssets(void)
     player_bg.anim1.asset = g_Assets.menubg;
     meter.anim1.asset = g_Assets.menubg;
     meter.spr_id = meter.anim1.asset[7];
+    
+    ppplogo.spr_id = jo_sprite_add_tga(NULL, "PPPLOGO.TGA", palette_transparent_index);
+    pppshadow.spr_id = jo_sprite_add_tga(NULL, "PPPSHDW.TGA", palette_transparent_index); 
+}
+
+void loadPPPLogoAssets(void)
+{        
+    ppplogo.spr_id = jo_sprite_add_tga(NULL, "PPPLOGO.TGA", palette_transparent_index);
+    pppshadow.spr_id = jo_sprite_add_tga(NULL, "PPPSHDW.TGA", palette_transparent_index);  
+    
+    g_Game.isLoading = false;
+}
+
+void unloadPPPLogoAssets(void)
+{
+    g_Game.isLoading = true;
+    // unloads everything after this point
+    jo_sprite_free_from(ppplogo.spr_id);
+    
 }
 
 void loadTitleScreenAssets(void)

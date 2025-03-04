@@ -4,9 +4,12 @@
 
 #include <jo/jo.h>
 
-extern FIXED FIXED_510;
-extern FIXED FIXED_255;
-extern FIXED FIXED_127;
+#define FIXED_100 toFIXED(100)
+#define FIXED_127 toFIXED(127)
+#define FIXED_255 toFIXED(255)
+#define FIXED_510 toFIXED(510)
+#define FIXED_765 toFIXED(765)
+#define FIXED_1024 toFIXED(1024)
 
 static  __jo_force_inline void      my_fixed_3d_translate_matrix(jo_pos3D_fixed *p)
 {
@@ -25,4 +28,5 @@ Uint32 ApproximateIntegerSqrt(Uint32 value);
 
 int my_random_range(int min, int max);
 
+FIXED my_fixed_sine(int angle);
 #endif // MATH_H

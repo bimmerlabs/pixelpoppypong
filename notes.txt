@@ -46,7 +46,12 @@ version 0.3:
 -sounds (done)
 -music (placeholder) (done)
 
-version 0.4:
+version 0.43:
+-VERSIONS AFTER THIS HAVE FLICKERING ON NBG0 (fixed)
+	check to see if it doesn't happen in 2 or 3 players?
+	use 4bpp for NBG0?
+
+version 0.45:
 -gameplay (basic) (done)
 -analog support (done)
 -vs AI (started)
@@ -57,8 +62,35 @@ version 0.4:
 -credit roll (done)
 -palette animations (done)
 
+0.46
+-locate gameplay UI elements (done)
+	-hearts (done)
+	-stars  (done)
+	-power meter (re-generated when you touch pixelpoppy?) (done)
+	
+0.47-0.49
+-implement item generation (started)
+	generate positions (done)
+	randomly choose from list of items to 'display' (no more than 2 at a time?)
+		some items have a lesser chance of appearing (craig/garfield)
+	display items for some time period
+		-if they never get touched, disappear and generate a new item
+-use actual player/team score (done)
+	-individual scores (done)
+	-team scores (deleted)
+	-need to assign player 3 to team 1 if players > 2 (done)
+	-init all scores / team scores (done)
+	-reset touch count (done)
+	-decide if there will be 2 teams or 4 teams (4 teams, 1 player per team)
+	-fix character position & bounding for different number of teams (fixed)
+-set up actual gameplay loop (scoring, hearts, stars?)
+-classic pong game? (remove x movement and power ups?)
+
 version 0.5:
 -gameplay implementation:
+	story mode (started)
+		Block breaking? (not this version)
+		rescue kittens/wuppy?
 	power ups:
 		mushrooms (different colors have different effects?)
 		garfield (to unlock garfield character)
@@ -69,10 +101,9 @@ version 0.5:
 		stars?
 		hearts?
 	Actions:
-		shields/block (maybe a power meter?)
+		shields/block (started)
+		-need shield/meter for each player?  blue?  color calc? (started)
 		attack forward (instead of D pad?)
-	Block breaking:
-		rescue kittens/wuppy? (not this version)
 		
 		
 
@@ -81,11 +112,19 @@ version 0.6:
 -sound effects
 -ending
 -high scores (started)
--save game (done)
+-team high scores? (started?)
+-save game (done?)
 
+version 0.7-0.8
+-polishing?
+
+version 0.9? (review build)
+-review mode (debug on, debug display disabled)
+-RTC turned off by default
+-emulation disclaimer? (kronos is too slow - SSF doesn't work, no other emulators tested that work.  Yabuse and most forks other than Kronos are hopelessly broken.  Mednafen works, but doesn't look the best)
 
 version 1.0:
--final logo / intro
+-final logo / intro (done)
 -final title screen (close? needs sfx)
 -final menu (screen?)
 	-controller inputs (done)
@@ -102,13 +141,13 @@ version 1.0:
 	-ending
 -multiplayer
 	-vs / battle
-	-co-op
+	-co-op (dropped)
 	-4 player?
 -credit roll
 -sound effects
 -music by random (started)
--save game
--high scores
+-save game (done)
+-high scores (started)
 -lighting (normal maps?)
 -palette animations (done)
 -screen modes (2026)
@@ -116,3 +155,26 @@ version 1.0:
 play music on title screen (temp) (done)
 transition from menu to title (nextstate) (done)
 transition from pause menu to title menu (reset fade) (done)
+
+jingles/music:
+
+this is kind of a wish list, in order of preference (I don't necessarily expect to get everything).  I might be able to just squeeze in the "story mode" (with a very, very minimal story lol).  so a boss theme could be kinda cool.  
+
+events/jingles:
+score a goal
+win a match
+win a game
+touch a mushroom (grow bigger?)
+touch a star (move faster?)
+unlock a new character
+
+songs?
+boss theme
+character introduction / attract mode
+credits? (30s) (currently using the character select music)
+high score?  (20s) (currently using the "start game" jingle - it works ok)
+
+gameplay loop:
+classic - 2 players, no items, use screen edges (make this first)
+story - 1 player, fight each character in order, Wuppy is the final boss (?)
+battle - 2-4 players, items, high scores, unlock garfield and craig as characters

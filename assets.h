@@ -5,7 +5,7 @@
 #include "sprites.h"
 
 #define NUM_PAW_SPRITES 5
-#define NUM_POPPY_SPRITES 6
+#define NUM_POPPY_SPRITES 8
 
 #define NUM_CHARACTER_SPRITES 12
 #define NUM_PCURSOR_SPRITES 4
@@ -105,6 +105,9 @@ extern int paw_blank_id;
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int frames, int w, int h, bool asset1or2);
 void loadSoundAssets(void);
 void loadCommonAssets(void);
+
+void loadPPPLogoAssets(void);
+void unloadPPPLogoAssets(void);
 
 void loadTitleScreenAssets(void);
 void unloadTitleScreenAssets(void);

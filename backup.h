@@ -1,6 +1,6 @@
 #pragma once
 #include "objects/player.h"
-#include "gameplay.h"
+#include "highscores.h"
 
 extern int memory_access;
 extern Uint8 backup_device;

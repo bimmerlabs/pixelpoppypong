@@ -36,6 +36,9 @@ extern int g_StartGameFrames; // for debugging
 extern bool g_TeamSelectPressedStart; // for debugging
 extern bool all_players_ready; // for debugging
 
+void resetTeams(void);
+void initCharacters(void);
+void initTeams(void);
 void drawCharacterSelectGrid(void);  // re-organize these to be in order
 void characterSelect_input(void);
 void teamSelect_init(void);
@@ -45,6 +48,6 @@ void validateCharacters(PLAYER *player);
 void validateTeam(PLAYER *player);
 bool playerReadyState(void);
 void resetReadyState(void);
-bool validateTeams(void);
+bool validateTeamCount(void);
 void teamSelect_update(void);
 void teamSelect_draw(void);

@@ -6,11 +6,14 @@
 #include "assets.h"
 #include "util.h"
 #include "screen_transition.h"
+#include "objects/player.h"
 
 int g_PauseChoice = 0;
 int g_PauseCursor = 0;
 
 // #define PAUSE_TRACK 0
+
+extern PLAYER g_Players[MAX_PLAYERS];
 
 typedef enum _PAUSE_OPTIONS
 {
@@ -264,7 +267,7 @@ static void checkForPauseMenu(void)
 
 // Options menu + values
 static void drawPauseMenu(int options_y)
-{
+{                
     int options_x = 15;
     jo_nbg0_printf(options_x, options_y, "RESUME");
     options_y += 2;

@@ -5,10 +5,25 @@
 #include "main.h"
 #include "math.h"
 #include "gameplay.h"
+#include "highscores.h"
 #include "screen_transition.h"
 #include "objects/player.h"
 
 FIXED impulse = toFIXED(0);
+
+extern PLAYER g_Players[MAX_PLAYERS];
+
+BallTouchTracker touchedBy[MAX_PLAYERS];
+
+void initTouchCounter(void) {
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        touchedBy[i].onLeftSide = false;
+        touchedBy[i].hasTouched = false;
+        touchedBy[i].touchCount = 0;
+        touchedBy[i].teamChoice = 0;
+    }
+}
 
 // inline?
 // Function to initialize the ball's movement
@@ -95,9 +110,7 @@ void update_ball(Sprite *ball) {
         // Adjust Z velocity for horizontal collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
         if (ball->pos.y > GOAL_TOP && ball->pos.y < GOAL_BOTTOM) {
-            player1_score += JO_ABS(toINT(ball->vel.x)) * 5;
-            player1_score += JO_ABS(toINT(ball->vel.y)) * 50;
-            player1_score += JO_ABS(toINT(ball->vel.z)) * 100;
+            updateScoreLeft(ball);            
         }
     }
     else if (ball->pos.x <= SCREEN_LEFT + ball->pos.r) {
@@ -114,9 +127,7 @@ void update_ball(Sprite *ball) {
         // Adjust Z velocity for horizontal collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
         if (ball->pos.y > GOAL_TOP && ball->pos.y < GOAL_BOTTOM) {
-            player2_score += JO_ABS(toINT(ball->vel.x)) * 5;
-            player2_score += JO_ABS(toINT(ball->vel.y)) * 50;
-            player2_score += JO_ABS(toINT(ball->vel.z)) * 100;
+            updateScoreRight(ball);
         }
     }
     if (ball->pos.y >= SCREEN_BOTTOM - ball->pos.r || ball->pos.y <= SCREEN_TOP + ball->pos.r) {
@@ -277,17 +288,17 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     // Calculate the dot product of the relative velocity and the collision normal
     FIXED dot_product = (dvx * dx) + (dvy * dy); // use to tell if object is moving toward or away
     
-    if (game_options.debug_display) {
-        jo_nbg0_printf(2, 16, "DOT_PRODUCT:%i", dot_product);
-        jo_nbg0_printf(2, 17, "DX:%i", dx);
-        jo_nbg0_printf(2, 18, "DY:%i", dy);
-        jo_nbg0_printf(2, 20, "IMPULSE:%i", toINT(impulse));
-        // jo_nbg0_printf(20, 16, "D_SQUARED:%i", distance_squared);
-        jo_nbg0_printf(20, 17, "DVX:%i", dvx);
-        jo_nbg0_printf(20, 18, "DVY:%i", dvy);
-    }
+    // if (game_options.debug_display) {
+        // jo_nbg0_printf(2, 16, "DOT_PRODUCT:%i", dot_product);
+        // jo_nbg0_printf(2, 17, "DX:%i", dx);
+        // jo_nbg0_printf(2, 18, "DY:%i", dy);
+        // jo_nbg0_printf(2, 20, "IMPULSE:%i", toINT(impulse));
+        // // jo_nbg0_printf(20, 16, "D_SQUARED:%i", distance_squared);
+        // jo_nbg0_printf(20, 17, "DVX:%i", dvx);
+        // jo_nbg0_printf(20, 18, "DVY:%i", dvy);
+    // }
     
-    // // If the dot product is positive, the ball is moving away
+    // If the dot product is positive, the ball is moving away
     if (dot_product > toFIXED(0)) {
         ball->isColliding = false;
         player->_sprite->isColliding = false;
@@ -311,6 +322,7 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
        
         ball->isColliding = true;
         player->_sprite->isColliding = true;
+        updateBallTouch(player);
         return true;
     }
     else {
@@ -460,24 +472,24 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 // }
 
 SpriteEntry sprite_list[MAX_SPRITES];
-int sprite_count = 0;
+int sprite_id = 0;
 
 // Add a sprite to the sweep and prune list
 void add_sprite_to_sweep_and_prune(Sprite *sprite) {
-    if (sprite_count >= MAX_SPRITES) return; // Limit reached
-    sprite_list[sprite_count].sprite = sprite;
-    sprite_list[sprite_count].active = true;
+    if (sprite_id >= MAX_SPRITES) return; // Limit reached
+    sprite_list[sprite_id].sprite = sprite;
+    sprite_list[sprite_id].active = true;
     sprite->isColliding = false;
-    sprite_count++;
+    sprite_id++;
 }
 
 // Remove a sprite from the sweep and prune list
 void remove_sprite_from_sweep_and_prune(Sprite *sprite) {
-    for (int i = 0; i < sprite_count; i++) {
+    for (int i = 0; i < sprite_id; i++) {
         if (sprite_list[i].sprite == sprite) {
-        sprite_list[sprite_count].active = false;
-            // sprite_list[i] = sprite_list[sprite_count - 1]; // Replace with last entry
-            sprite_count--;
+        sprite_list[sprite_id].active = false;
+            // sprite_list[i] = sprite_list[sprite_id - 1]; // Replace with last entry
+            sprite_id--;
             return;
         }
     }
@@ -485,8 +497,8 @@ void remove_sprite_from_sweep_and_prune(Sprite *sprite) {
 
 // Sort sprites by the min_x value of their bounding box
 void sort_sprites_by_min_x() {
-    for (int i = 0; i < sprite_count - 1; i++) {
-        for (int j = i + 1; j < sprite_count; j++) {
+    for (int i = 0; i < sprite_id - 1; i++) {
+        for (int j = i + 1; j < sprite_id; j++) {
             if (sprite_list[i].sprite->bbox.min_x > sprite_list[j].sprite->bbox.min_x) {
                 SpriteEntry temp = sprite_list[i];
                 sprite_list[i] = sprite_list[j];
@@ -502,11 +514,11 @@ void sweep_and_prune(void) {
     sort_sprites_by_min_x();
 
     // Check for overlaps
-    for (int i = 0; i < sprite_count; i++) {
+    for (int i = 0; i < sprite_id; i++) {
         Sprite *a = sprite_list[i].sprite;
         if (!sprite_list[i].active) continue;
 
-        for (int j = i + 1; j < sprite_count; j++) {
+        for (int j = i + 1; j < sprite_id; j++) {
             Sprite *b = sprite_list[j].sprite;
             if (!sprite_list[j].active) continue;
 

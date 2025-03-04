@@ -63,6 +63,9 @@ typedef struct {
     Animation anim2;
 } Sprite;
 
+extern Sprite ppplogo;
+extern Sprite pppshadow;
+
 extern Sprite logo1;
 extern Sprite logo2;
 extern Sprite cursor;
@@ -123,6 +126,15 @@ static inline void reset_ball(Sprite *sprite) {
     sprite->pos.r = BALL_RADIUS;
 }
 
+static inline void set_item_position(Sprite *sprite) {
+    FIXED px = toFIXED(my_random_range(0, 280));
+    FIXED py = toFIXED(my_random_range(0, 180));
+    if (JO_MOD_POW2(jo_random(9999), 2)) px = -px; // modulus
+    if (JO_MOD_POW2(jo_random(9999), 2)) py = -py; // modulus
+    sprite->pos.x = px;
+    sprite->pos.y = py;
+}
+
 static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
     sprite->pos.x = toFIXED(px);
     sprite->pos.y = toFIXED(py);
@@ -139,6 +151,7 @@ static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
     sprite->scl.x = toFIXED(sx);
     sprite->scl.y = toFIXED(sy);
 }
+
 
 // states
 
@@ -213,6 +226,7 @@ static inline void sprite_frame_reset(Sprite *sprite) {
     sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
     sprite->anim2.frame = 0;
 }
+
 
 // SPR_ATTRIBUTE
 // Format

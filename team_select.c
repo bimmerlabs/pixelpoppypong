@@ -3,8 +3,10 @@
 #include "team_select.h"
 #include "assets.h"
 #include "screen_transition.h"
+#include "physics.h"
 #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
+#include "BG_DEF/sprite_colors.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -30,44 +32,51 @@ const char *characterNames[] = {
     "CPU"
 };
 
+void initCharacters(void) {
+    // eventually some will be able to be unlocked based on saved score, playtime, etc
+    characterAvailable[CHARACTER_MACCHI] = true;
+    characterAvailable[CHARACTER_JELLY]  = true;
+    characterAvailable[CHARACTER_PENNY]  = true;
+    characterAvailable[CHARACTER_POTTER] = true;
+    characterAvailable[CHARACTER_SPARTA] = false;
+    characterAvailable[CHARACTER_POPPY]  = false;
+    characterAvailable[CHARACTER_TJ]     = false;
+    characterAvailable[CHARACTER_GEORGE] = false;
+    characterAvailable[CHARACTER_WUPPY]  = false;
+    characterAvailable[CHARACTER_WALRUS] = false;
+    characterAvailable[CHARACTER_GARF]   = false;
+}
+
+void initTeams(void) {
+    for(unsigned int i = 1; i <= MAX_TEAMS; i++)
+    {
+        teamAvailable[i] = true;
+        teamCount[i] = 0;
+    }
+}
+
 void teamSelect_init(void)
 {
     g_Game.lastState = GAME_STATE_TEAM_SELECT;
     unloadTitleScreenAssets();
     loadCharacterAssets();
     reset_inputs();
+    initTouchCounter();
+    reset_sprites();
+    do_update_PmenuAll = true;
     initPlayers();
+    
+    initTeams();
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
     g_Game.numTeams = 0;
-    for (int i = 0; i < MAX_TEAMS; i++) {
-        teamCount[i] = 0;
-    }
     
     if (game_options.debug_mode == true) {
         g_Game.minTeams = 0;
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
             characterAvailable[i] = true;
         }
-    }
-    else {
-        // eventually some will be able to be unlocked based on saved score, playtime, etc
-        characterAvailable[CHARACTER_MACCHI] = true;
-        characterAvailable[CHARACTER_JELLY]  = true;
-        characterAvailable[CHARACTER_PENNY]  = true;
-        characterAvailable[CHARACTER_POTTER] = true;
-        characterAvailable[CHARACTER_SPARTA] = false;
-        characterAvailable[CHARACTER_POPPY]  = false;
-        characterAvailable[CHARACTER_TJ]     = false;
-        characterAvailable[CHARACTER_GEORGE] = false;
-        characterAvailable[CHARACTER_WUPPY]  = false;
-        characterAvailable[CHARACTER_WALRUS] = false;
-        characterAvailable[CHARACTER_GARF]   = false;
-    }
-
-    for (int i = 1; i < MAX_TEAMS+1; i++) {
-        teamAvailable[i] = true;
     }
     
     if (game_options.mesh_display) {
@@ -90,7 +99,7 @@ void teamSelect_init(void)
     menu_bg2.spr_id = menu_bg2.anim1.asset[5];
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
     set_spr_scale(&menu_bg2, 54, 352);
-        
+    
     mosaic_in = true;
     music_in = true;
     fade_in = true;
@@ -186,8 +195,8 @@ void drawCharacterSelectGrid(void)
             if (player->character.choice != CHARACTER_NONE || g_Game.numPlayers > ONE_PLAYER) {
                 jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
             }           
-            if (player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
-                jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y+2, "TEAM %i", player->team.choice);
+            if (player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
+                jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y+2, "TEAM %i", player->teamChoice);
             }
         }
             
@@ -195,64 +204,25 @@ void drawCharacterSelectGrid(void)
             if (player->isReady) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "READY");
             }
-            else if (player->team.selected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+            else if (player->teamSelected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "PRESS");
             }
-            else if (!player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
+            else if (!player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "TEAM:");
             }
 
-            if (player->team.selected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+            if (player->teamSelected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "START");
             }
-            else if (player->team.selected && g_Game.numTeams < g_Game.minTeams) {
+            else if (player->teamSelected && g_Game.numTeams < g_Game.minTeams) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "WAIT.");
             }
-            else if (!player->team.selected && g_Game.numPlayers > ONE_PLAYER) {
-                jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->team.choice);
+            else if (!player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
+                jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->teamChoice);
             }
         }
 
-        // HORIZONTAL STRIPE
-        // WARNING: doesn't work on hardware (VDP1 is too slow)
-        // alternatives: create new bg? use second bg layer?
-        if (g_Game.numPlayers < THREE_PLAYER) { // only draw for up to 2 players
-            player->_bg->spr_id = player->_bg->anim1.asset[i];
-            // LEFT
-            player->_bg->zmode = _ZmLC;
-            set_spr_scale(player->_bg, 90, 52);
-            set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
-            my_sprite_draw(player->_bg);
-            // RIGHT
-            player->_bg->zmode = _ZmRC;
-            set_spr_scale(player->_bg, 210, 52);
-            set_spr_position(player->_bg, 352, portrait_y, PLAYER_BG2_DEPTH);
-            my_sprite_draw(player->_bg);
-        }
-        // still too slow..
-        // else {
-            // player->_bg->spr_id = player->_bg->anim1.asset[i];
-            // // LEFT
-            // player->_bg->zmode = _ZmLC;
-            // set_spr_scale(player->_bg, 90, 52);
-            // set_spr_position(player->_bg, -352, portrait_y, PLAYER_BG2_DEPTH);
-            // my_sprite_draw(player->_bg);
-            // // player->_bg->zmode = _ZmLC;
-            // // set_spr_scale(player->_bg, 90, 3);
-            // // set_spr_position(player->_bg, -352, portrait_y-48, PLAYER_BG2_DEPTH);
-            // // my_sprite_draw(player->_bg);
-            // // set_spr_position(player->_bg, -352, portrait_y+48, PLAYER_BG2_DEPTH);
-            // // my_sprite_draw(player->_bg);
-            // // RIGHT
-            // // player->_bg->zmode = _ZmRC;
-            // // set_spr_scale(player->_bg, 210, 3);
-            // // set_spr_position(player->_bg, 352, portrait_y-48, PLAYER_BG2_DEPTH);
-            // // my_sprite_draw(player->_bg);
-            // // set_spr_position(player->_bg, 352, portrait_y+48, PLAYER_BG2_DEPTH);
-            // // my_sprite_draw(player->_bg);
-        // }
-
-        // VERTICAL STRIPE
+        // VERTICAL STRIPE (animate?)
         menu_bg2.zmode = _ZmCB;
         my_sprite_draw(&menu_bg2);
                 
@@ -429,11 +399,11 @@ void characterSelect_input(void)
             {
                 // assign to a default team (left vs right)
                 if (i %2 == 0) { // modulus (replace with jo function)
-                    player->team.choice = TEAM_1;
+                    player->teamChoice = TEAM_1;
                     player->_sprite->flip = sprNoflip;
                 }
                 else {
-                    player->team.choice = TEAM_2;
+                    player->teamChoice = TEAM_2;
                     player->_sprite->flip = sprHflip;
                 }
                 player->character.selected = true;
@@ -504,7 +474,7 @@ void characterSelect_input(void)
                         player->startSelection = true;
                         player->character.choice = CHARACTER_MACCHI;
                         validateCharacters(player);
-                        player->team.choice = TEAM_1;
+                        player->teamChoice = TEAM_1;
                         validateTeam(player);
                        return;
                     }
@@ -533,29 +503,29 @@ void teamSelect_input(void)
         return;
     }
 
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
         
         player->pressedB = false; // button press expires
         
-        if (player->team.selected == false && player->character.selected) {
+        if (player->teamSelected == false && player->character.selected) {
             if (g_Game.numPlayers == ONE_PLAYER) {
                 // default team
-                player->team.choice = TEAM_1;
+                player->teamChoice = TEAM_1;
                 g_Game.numTeams++;
             }
             // CHOOSE A TEAM
             if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
-                    player->team.choice--;
-                    if (player->team.choice < TEAM_1) {
-                        player->team.choice = g_Game.maxTeams;
+                    player->teamChoice--;
+                    if (player->teamChoice < TEAM_1) {
+                        player->teamChoice = g_Game.maxTeams;
                     }
-                } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
+                } while (!teamAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
 
                 // Flip the sprite based on even/odd team
-                if (player->team.choice % 2 == 0) { // modulus
+                if (player->teamChoice % 2 == 0) { // modulus
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;
@@ -565,14 +535,15 @@ void teamSelect_input(void)
             }
             if (jo_is_input_key_down(player->input->id, JO_KEY_RIGHT) && g_Game.numPlayers != ONE_PLAYER) {
                 do {
-                    player->team.choice++;
-                    if (player->team.choice > g_Game.maxTeams) {
-                        player->team.choice = TEAM_1;
+                    player->teamChoice++;
+                    if (player->teamChoice > g_Game.maxTeams) {
+                        player->teamChoice = TEAM_1;
                     }
-                } while (teamCount[player->team.choice - TEAM_1] >= MAX_TEAM_MEMBERS); // Skip full teams
+                } while (!teamAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
+
 
                 // Flip the sprite based on even/odd team
-                if (player->team.choice % 2 == 0) { // modulus
+                if (player->teamChoice % 2 == 0) { // modulus
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;
@@ -595,16 +566,16 @@ void teamSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_A) ||
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
-                assign_team(player->team.oldTeam, player->team.choice);
-                player->team.oldTeam = player->team.choice;
-                player->team.selected = true;
-                teamAvailable[player->team.choice] = false;
+                assign_team(player->teamOldTeam, player->teamChoice);
+                player->teamOldTeam = player->teamChoice;
+                player->teamSelected = true;
+                teamAvailable[player->teamChoice] = false;
                 g_Game.numTeams++;
                 return;
             }
         }
         
-        if (player->team.selected == true) {
+        if (player->teamSelected == true) {
             // START GAME
             if (playerReadyState())
             {
@@ -615,9 +586,7 @@ void teamSelect_input(void)
             // PRESS START TO BE "READY"
             if (jo_is_input_key_down(player->input->id, JO_KEY_START))
             {
-                bool result;
-                result = validateTeams();
-                if(!result)
+                if(!validateTeamCount())
                 {
                     // todo: play bad noise
                     // jo_audio_play_sound(&g_Assets.crackPCM);
@@ -634,10 +603,10 @@ void teamSelect_input(void)
                 resetReadyState();
                 all_players_ready = false;
                 player->isReady = false;
-                player->team.selected = false;
-                teamAvailable[player->team.choice] = true;
-                player->team.choice = TEAM_UNSELECTED;
-                player->team.oldTeam = TEAM_UNSELECTED;
+                player->teamSelected = false;
+                teamAvailable[player->teamChoice] = true;
+                player->teamChoice = TEAM_1;
+                player->teamOldTeam = TEAM_UNSELECTED;
                 player->pressedB = true;
                 g_Game.numTeams--;
                 g_Game.currentNumPlayers--;
@@ -650,7 +619,6 @@ void teamSelect_input(void)
 // VALIDATION CHECKS
 
 // only select available characters 
-// maybe use for a random selection
 void validateCharacters(PLAYER *player) {
     while (!characterAvailable[player->character.choice]) {
         player->character.choice++;
@@ -662,18 +630,18 @@ void validateCharacters(PLAYER *player) {
 }
 
 void validateTeam(PLAYER *player) {
-    while (!teamAvailable[player->team.choice]) {
-        player->team.choice++;
-        if (player->team.choice > MAX_TEAMS)
-        {
-            player->team.choice = TEAM_1;
+    while (player->teamChoice < MAX_TEAMS) {
+        if (!teamAvailable[player->teamChoice]) {
+            player->teamChoice++;
         }
+        else
+            break;
     }
 }
 
 // DON'T START GAME UNTIL EVERONE IS READY
 bool playerReadyState(void) {
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+     for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
 
@@ -688,7 +656,7 @@ bool playerReadyState(void) {
 }
 
 void resetReadyState(void) {
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
         player->isReady = false;
@@ -706,18 +674,18 @@ void assign_team(int oldTeam, int newTeam) {
 }
 
 // AT LEAST 2 TEAMS ARE REQUIRED
-bool validateTeams(void)
+bool validateTeamCount(void)
 {
     if(g_Game.numTeams < g_Game.minTeams)
     {
         return false;
     }
     
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
 
-        if(player->team.choice == 0)
+        if(player->teamChoice == TEAM_UNSELECTED)
         {
             player->numLives = 0;
             player->isPlaying = NOT_PLAYING;

@@ -4,8 +4,24 @@
 #include "screen_transition.h"
 #include "gameplay.h"
 #include "sprites.h"
+#include "BG_DEF/nbg1.h"
 
 unsigned int g_ScoreTimer = 0;
+
+HighScoreEntry highScores[SCORE_ENTRIES];
+
+void highScore_init(void) {
+    highScores[0] = (HighScoreEntry){500000, "CDS"};
+    highScores[1] = (HighScoreEntry){450000, "BUB"};
+    highScores[2] = (HighScoreEntry){400000, "SES"};
+    highScores[3] = (HighScoreEntry){350000, "DAD"};
+    highScores[4] = (HighScoreEntry){300000, "OCS"};
+    highScores[5] = (HighScoreEntry){250000, "FOO"};
+    highScores[6] = (HighScoreEntry){200000, "BAR"};
+    highScores[7] = (HighScoreEntry){150000, "PPP"};
+    highScores[8] = (HighScoreEntry){125000, "ITS"};
+    highScores[9] = (HighScoreEntry){100000, "WUP"};
+}
 
 void init_scores(void)
 {
@@ -56,9 +72,22 @@ void display_scores(void)
         options_y += 2;
     }
     my_sprite_draw(&menu_bg2);
-        if (g_ScoreTimer == SCORE_DISPLAY_TIME) {
+    update_bg_position();    if (g_ScoreTimer == SCORE_DISPLAY_TIME) {
         g_Game.lastState = GAME_STATE_HIGHSCORES;
         transitionState(GAME_STATE_UNINITIALIZED);
+    }
+}
+
+static int backgroundAngle = 360;
+
+// draw an ellipse
+void update_bg_position(void) {
+    if (JO_MOD_POW2(frame, 2) == 0) {
+        backgroundAngle -= 1;
+        if (backgroundAngle == 0)
+            backgroundAngle = 360;
+        attrNbg1.x_pos = FIXED_127 + jo_fixed_mult(jo_cos(backgroundAngle), FIXED_127);
+        slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     }
 }
 
@@ -81,3 +110,16 @@ void sortHighScores(HighScoreEntry scores[]) {
         }
     }
 }
+// void addHighScore(Uint16 newScore, const char *initials) {
+    // // Check if the new score qualifies
+    // if (newScore <= highScores[SCORE_ENTRIES - 1].score) {
+        // return;  // Score is too low, ignore
+    // }
+
+    // // Insert at the last position
+    // highScores[SCORE_ENTRIES - 1].score = newScore;
+    // highScores[SCORE_ENTRIES - 1].initials = initials; // causes error
+
+    // // Sort the list
+    // sortHighScores(highScores);
+// }

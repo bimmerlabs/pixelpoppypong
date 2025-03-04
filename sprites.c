@@ -2,6 +2,34 @@
 
 // sprite structs - used with my_sprite_draw
 
+Sprite ppplogo = {
+    .pos = {toFIXED(0), toFIXED(0), toFIXED(100)},   // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,                                       
+    .pal_id = 0,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCC
+};
+
+Sprite pppshadow = {
+    .pos = {toFIXED(0), toFIXED(0), toFIXED(110)},   // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,                                       
+    .pal_id = 0,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHon,
+    .zmode = _ZmCC
+};
+
 // UI ELEMENTS
 Sprite logo1 = {
     .pos = {toFIXED(0), toFIXED(-200), toFIXED(97)},   // Position x, y, z (all initialized to 0)

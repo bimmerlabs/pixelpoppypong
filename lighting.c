@@ -1,10 +1,7 @@
 #include "lighting.h"
+#include "colorhelpers.h"
 
-LightSource light1 = {toFIXED(100), toFIXED(100), toFIXED(150), 0, 0, 0};  // scene light
-LightSource light2 = {toFIXED(100), toFIXED(90), toFIXED(60), 0, 0, 0};  // scene light
-LightSource light3 = {toFIXED(100), toFIXED(100), toFIXED(255), 0, 0, 0};  // scene light
-LightSource light4 = {toFIXED(100), toFIXED(100), toFIXED(127), 0, 0, 0};  // scene light
-
+// note: delete extra code
 
 void light_position_arc_fixed(LightSource *_light) { // experimental
     // Calculate the deltas from the center of the arc
@@ -106,59 +103,7 @@ void NormalMapLighting2d(
 
         hslPal->color[i].l = MAX(0, (255 - distance) + (JO_FIXED_TO_INT(_light->z) - 255)) + _light->ambient;
         
-        ColorHelpers_HSLToRGB(&hslPal->color[i], hsl_increment, &color);
-        bufferPal->color[i]  = JO_COLOR_RGB(color.r,  color.g,  color.b);
-    }
-    hsl_increment->h = 0;
-    hsl_increment->s = 0;
-    hsl_increment->l = 0;
-}
-
-// it is currently unknown if the 3d method is required, since the Saturn doesn't have UV mapping anyway.
-// results are the same as the 2d method
-// only use for initial setup
-void InitNormal3d(HslPalette *hslPal, RgbPalette *rgbPal, LightSource *_light, PaletteRange *range, ImageAttr *img_cfg) { 
-    for (int i = range->lower; i <= range->upper; i++) {
-        hslPal->color[i].h = img_cfg->hue;
-        hslPal->color[i].s = img_cfg->sat;
-        hslPal->color[i].l = img_cfg->lum;        
-        // Calculate the difference between the light source XYZ and the palette RGB values
-        int diff_r = JO_FIXED_TO_INT(_light->x) - rgbPal->color[i].r;
-        int diff_g = JO_FIXED_TO_INT(_light->y) - rgbPal->color[i].g;
-        int diff_b = JO_FIXED_TO_INT(_light->z) - rgbPal->color[i].b;
-
-        // Calculate the luminance adjustment based on the closeness of the light source to the color
-        // For simplicity, let's assume we adjust it based on the Euclidean distance
-        Uint32 value = diff_r * diff_r + diff_g * diff_g + diff_b * diff_b;
-        Sint16 distance = ApproximateIntegerSqrt(value);
-
-        // Adjust the luminance by the inverse of the distance
-        Sint16 luminance = MAX(0, 255 - distance);
-
-        hslPal->color[i].l = luminance;
-    }
-}
-// use for real-time adjustments, then update the palette from bufferPal
-void NormalMapLighting3d(
-    HslPalette *hslPal, RgbPalette *rgbPal, RgbBuff *bufferPal, LightSource *_light, 
-    PaletteRange *range, GlobalHSL *hsl_increment) { 
-    ObjectColor color;
-    for (int i = range->lower; i <= range->upper; i++) {
-        // Calculate the difference between the light source XYZ and the palette RGB values
-        int diff_r = JO_FIXED_TO_INT(_light->x) - rgbPal->color[i].r;
-        int diff_g = JO_FIXED_TO_INT(_light->y) - rgbPal->color[i].g;
-        int diff_b = JO_FIXED_TO_INT(_light->z) - rgbPal->color[i].b;
-
-        // Calculate the luminance adjustment based on the closeness of the light source to the color
-        // For simplicity, let's assume we adjust it based on the Euclidean distance
-        Uint32 value = diff_r * diff_r + diff_g * diff_g + diff_b * diff_b;
-        Sint16 distance = ApproximateIntegerSqrt(value); // @dannyduarte
-
-        // Adjust the luminance by the inverse of the distance
-        Sint16 luminance = MAX(0, 255 - distance);
-
-        hslPal->color[i].l = luminance;
-        ColorHelpers_HSLToRGB(&hslPal->color[i], hsl_increment, &color);
+        update_colors(&hslPal->color[i], hsl_increment, &color);
         bufferPal->color[i]  = JO_COLOR_RGB(color.r,  color.g,  color.b);
     }
     hsl_increment->h = 0;

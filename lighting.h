@@ -21,10 +21,7 @@ typedef struct {
     Uint16 hue;
 } LightSource;
 
-extern LightSource light1;
-extern LightSource light2;
-extern LightSource light3;
-extern LightSource light4;
+extern LightSource light;
 
 void light_position_arc_fixed(LightSource *_light); // experimental
 

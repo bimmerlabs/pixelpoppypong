@@ -52,11 +52,13 @@ jo_datetime now;
 
 Uint8 frame = 0;
 Uint8 g_GameTimer = TIMEOUT;
+
+// explcitly create callback names so they can be added / removed as neccesary?
 int run_once_callback = 0;
 
 GameOptions game_options = {
-    .debug_mode = false,
-    .debug_display = true,
+    .debug_mode = true,
+    .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
@@ -79,7 +81,7 @@ void loading_screen(void)
         
         // loading bar        
         char dots[50];
-        int sprite_count = jo_sprite_count()/2;
+        int sprite_count = jo_sprite_count()/3;
         
         // Clamp sprite count to prevent overflow
         if (sprite_count >= 50) {
@@ -102,6 +104,7 @@ void main_loop(void) {
     if (frame > 240)
         frame = 1;
     jo_nbg0_clear(); // clear text before every frame is drawn
+    gameScore_draw();
     debux_text();
     loading_screen();
 }
@@ -182,6 +185,14 @@ void abcStart_callback(void)
 void my_color_calc(void)
 {
     switch (g_Game.gameState) {
+        case GAME_STATE_PPP_LOGO: {
+            if (do_update_ppplogo) {
+                update_ppplogo_color();
+                do_update_ppplogo = false;
+                update_palette_ppplogo = true;
+            }
+            break;
+        }
         case GAME_STATE_TITLE_SCREEN: {
             if (do_update_logo1) {
                 update_palette_logo1 = update_sprites_color(&p_rangeLogo);
@@ -190,36 +201,19 @@ void my_color_calc(void)
             break;
         }
         case GAME_STATE_TITLE_MENU: {
-            if (do_update_menu1) {
-                update_palette_menu1 = update_sprites_color(&p_rangeMenu1);
-                do_update_menu1 = false;
-            }
-            if (do_update_menu2) {
-                update_palette_menu2 = update_sprites_color(&p_rangeMenu2);
-                do_update_menu2 = false;
-            }
-            if (do_update_menu3) {
-                update_palette_menu3 = update_sprites_color(&p_rangeMenu3);
-                do_update_menu3 = false;
-            }
-            if (do_update_menu4) {
-                update_palette_menu4 = update_sprites_color(&p_rangeMenu4);
-                do_update_menu4 = false;
-            }
+            updateTitleMenuColors();
+            break;
+        }
+        case GAME_STATE_TEAM_SELECT: {
+            updateTeamSelectColors();
             break;
         }
         case GAME_STATE_DEMO_LOOP: {
-            if (do_update_shroom) {
-                update_palette_shroom = update_sprites_color(&p_rangeShroom);
-                do_update_shroom = false;
-            }
+            updateGameColors();
             break;
         }
         case GAME_STATE_GAMEPLAY: {
-            if (do_update_shroom) {
-                update_palette_shroom = update_sprites_color(&p_rangeShroom);
-                do_update_shroom = false;
-            }
+            updateGameColors();
             break;
         }
         default:
@@ -231,6 +225,13 @@ void my_color_calc(void)
 void my_palette_update(void)
 {
     switch (g_Game.gameState) {
+        case GAME_STATE_PPP_LOGO: {
+            if (update_palette_ppplogo) {
+                update_ppplogo_palette();
+                update_palette_ppplogo = false;
+            }
+            break;
+        }
         case GAME_STATE_TITLE_SCREEN: {
             if (update_palette_logo1) {
                 update_palette_logo1 = update_sprites_palette(&p_rangeLogo);
@@ -238,30 +239,19 @@ void my_palette_update(void)
             break;
         }
         case GAME_STATE_TITLE_MENU: {
-            if (update_palette_menu1) {
-                update_palette_menu1 = update_sprites_palette(&p_rangeMenu1);
-            }
-            if (update_palette_menu2) {
-                update_palette_menu2 = update_sprites_palette(&p_rangeMenu2);
-            }
-            if (update_palette_menu3) {
-                update_palette_menu3 = update_sprites_palette(&p_rangeMenu3);
-            }
-            if (update_palette_menu4) {
-                update_palette_menu4 = update_sprites_palette(&p_rangeMenu4);
-            }
+            updateTitleMenuPalette();
+            break;
+        }
+        case GAME_STATE_TEAM_SELECT: {
+            updateTeamSelectPalette();
             break;
         }
         case GAME_STATE_DEMO_LOOP: {
-            if (update_palette_shroom) {
-                update_palette_shroom = update_sprites_palette(&p_rangeShroom);
-            }
+            updateGamePalette();
             break;
         }
         case GAME_STATE_GAMEPLAY: {
-            if (update_palette_shroom) {
-                update_palette_shroom = update_sprites_palette(&p_rangeShroom);
-            }
+            updateGamePalette();
             break;
         }
         default:
@@ -280,7 +270,6 @@ void run_once(void) {
 void			jo_main(void)
 {
     jo_core_init(JO_COLOR_Black);
-    
     
     #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
         // pone-sound
@@ -306,6 +295,7 @@ void			jo_main(void)
     loadSoundAssets();
     init_sprites_img();
     
+    initCharacters();
     init_inputs();
     highScore_init();
     run_once_callback = jo_core_add_callback(run_once);
@@ -319,9 +309,6 @@ void			jo_main(void)
     jo_core_add_callback(my_input_callback);
     
     jo_core_add_callback(pppLogo_update);
-    
-    jo_core_add_callback(my_color_calc);
-    jo_core_add_vblank_callback(my_palette_update);
     
     jo_core_add_callback(startScreen_update);
     jo_core_add_callback(titleScreen_update);
@@ -340,6 +327,10 @@ void			jo_main(void)
     
     jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);
+    
+    // do this last?
+    jo_core_add_callback(my_color_calc);
+    jo_core_add_vblank_callback(my_palette_update);
             
     jo_core_run();
 }
