@@ -6,7 +6,6 @@
 #include "../sprites.h"
 #include "../gameplay.h"
 #include "../physics.h"
-#include "../util.h"
 #include "../team_select.h"
 #include "../BG_DEF/sprite_colors.h"
 
@@ -170,7 +169,7 @@ void initPlayers(void)
 
     memset(g_Players, 0, sizeof(g_Players));
     
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
         
@@ -216,15 +215,15 @@ void initPlayers(void)
         player->_sprite = &paw_blank;
         player->_sprite->spr_id = paw_blank_id; // not sure why this changes
         
-        
+        // cursors
         if (i == 1) {
-            hsl_incSprites.h -= 30;
+            hsl_incSprites.h -= 90;
         }
         else if (i == 2) {
-            hsl_incSprites.h -= 60;
+            hsl_incSprites.h -= 180;
         }
         else if (i == 3) {
-            hsl_incSprites.h -= 90;
+            hsl_incSprites.h -= 270;
         }
         update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
         
@@ -371,28 +370,36 @@ void initStoryCharacters(void)
     player->isPlaying = PLAYING;
     player->objectState = OBJECT_STATE_ACTIVE;
     player->isAI = true;
+    g_Game.numTeams = 2; // NEEDS TO BE SET DIFFERENTLY IF 2 PLAYERS ARE SELECTED?
 }
 
 void initVsModePlayers(void)
 {
     PPLAYER player = NULL;
 
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
         
         player->_sprite->spr_id = player->_sprite->anim1.asset[0];
         set_spr_scale(player->_portrait, 1.1, 1);
-        
+        player->_bg->spr_id = player->_bg->anim1.asset[i];
+        player->_sprite->isColliding = false;
+        player_bg.mesh = MESHoff;
         // add_sprite_to_sweep_and_prune(player->_sprite);
-        // Flip the sprite based on even/odd team
+        
+        // PLAYER SPECIFIC ATTRIBUTES
+        // set goal position here??
+        // switch statement
         if (player->teamChoice == TEAM_1) {
             player->_sprite->flip = sprNoflip;
             player->onLeftSide = true;
             if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams == 2) {
+                g_Assets.drawSingleGoal[0] = true;
                 set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
             }
             else {
+                g_Assets.drawSingleGoal[0] = false;
                 set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
             }
             player->shield_pos = SHIELD_OFFSET;
@@ -401,9 +408,11 @@ void initVsModePlayers(void)
             player->_sprite->flip = sprHflip;
             player->onLeftSide = false;
             if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
+                g_Assets.drawSingleGoal[1] = true;
                 set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
             }
             else {
+                g_Assets.drawSingleGoal[1] = false;
                 set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
             }
             player->shield_pos = -SHIELD_OFFSET;
@@ -411,18 +420,17 @@ void initVsModePlayers(void)
         else if (player->teamChoice  == TEAM_3) {
             player->_sprite->flip = sprVflip;
             player->onLeftSide = true;
+            g_Assets.drawSingleGoal[2] = false;
             set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
             player->shield_pos = SHIELD_OFFSET;
         }
         else if (player->teamChoice  == TEAM_4) {
             player->_sprite->flip = sprHVflip;
             player->onLeftSide = false;
+            g_Assets.drawSingleGoal[3] = false;
             set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
             player->shield_pos = -SHIELD_OFFSET;
         }
-        player->_sprite->isColliding = false;
-        
-        player_bg.mesh = MESHoff;
     }
 }
 
@@ -430,11 +438,12 @@ void initDemoPlayers(void)
 {
     PPLAYER player = NULL;
         
-    g_Game.numPlayers = my_random_range(TWO_PLAYER, FOUR_PLAYER);
+    g_Game.numPlayers = my_random_range(ONE_PLAYER, FOUR_PLAYER);
+    g_Game.numTeams = 0;
     g_Game.gameMode = GAME_MODE_BATTLE;
     initPlayers();
     
-    for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
         // add_sprite_to_sweep_and_prune(player->_sprite);
@@ -444,9 +453,19 @@ void initDemoPlayers(void)
             player->_sprite->flip = sprNoflip;
             player->onLeftSide = true;
             player->teamChoice = TEAM_1;
-            set_spr_position(player->_sprite, -1*PLAYER_X, -100, PLAYER_DEPTH);
+            // g_Assets.drawSingleGoal[i] = false;
+            // set_spr_position(player->_sprite, -1*PLAYER_X, -100, PLAYER_DEPTH);
+            if (g_Game.numPlayers >= THREE_PLAYER) {
+                g_Assets.drawSingleGoal[0] = false;
+                set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
+            else {
+                g_Assets.drawSingleGoal[0] = true;
+                set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+            }
             player->character.choice = i;
             player->shield_pos = SHIELD_OFFSET;
+            g_Game.numTeams++;
         }
         else if (i == 1) {
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
@@ -465,10 +484,20 @@ void initDemoPlayers(void)
             player->_sprite->flip = sprHflip;
             player->onLeftSide = false;
             player->teamChoice = TEAM_2;
-            set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
+            // set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
+            
+            if (g_Game.numPlayers <= THREE_PLAYER) {
+                g_Assets.drawSingleGoal[i] = true;
+                set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+            }
+            else {
+                g_Assets.drawSingleGoal[i] = false;
+                set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            }
             player->shield_pos = -SHIELD_OFFSET;
+            g_Game.numTeams++;
         }
-        else if (i == 2) {
+        else if (i == 2) { // set up player 3 last (we need to know the team count)
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
                 player->_sprite = &poppy;
                 player->character.choice = 5;
@@ -485,8 +514,10 @@ void initDemoPlayers(void)
             player->_sprite->flip = sprVflip;
             player->onLeftSide = true;
             player->teamChoice = TEAM_3;
-            set_spr_position(player->_sprite, -1*PLAYER_X, 100, PLAYER_DEPTH);
+            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = SHIELD_OFFSET;
+            g_Game.numTeams++;
         }
         else if (i == 3) {
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
@@ -505,8 +536,10 @@ void initDemoPlayers(void)
             player->_sprite->flip = sprHVflip;
             player->onLeftSide = false;
             player->teamChoice = TEAM_4;
-            set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
+            set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+            g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = -SHIELD_OFFSET;
+            g_Game.numTeams++;
         }
         
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
@@ -514,7 +547,25 @@ void initDemoPlayers(void)
         player->objectState = OBJECT_STATE_ACTIVE;
         player->isAI = true;
         player->_sprite->isColliding = false;
-        boundPlayer(player);        
+        boundPlayer(player);
+    }
+}
+
+void initPlayerGoals(void)
+{
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
+    {
+        // set initial player colors (player 0 uses the default)
+        if (i == 1) {
+            hsl_incSprites.h -= 90;
+        }
+        else if (i == 2) {
+            hsl_incSprites.h -= 180;
+        }
+        else if (i == 3) {
+            hsl_incSprites.h -= 270;
+        }
+        update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i]);
     }
 }
 
@@ -690,57 +741,6 @@ void updatePlayers(void)
     }
 }
 
-void drawPlayers(void)
-{
-    for(unsigned int i = 0; i <  COUNTOF(g_Players); i++)
-    {
-        PPLAYER player = &g_Players[i];
-
-        if(player->objectState == OBJECT_STATE_INACTIVE)
-        {
-            continue;
-        }
-        my_sprite_draw(player->_sprite);
-    }
-}
-
-void drawPlayerSprite(PPLAYER player)
-{
-    // int playerSprite = 0;
-    // int crackSprite = 0;
-
-    // playerSprite = g_Assets.cursors[g_Assets.randomizedColors[player->input->id]];
-
-    // don't draw dead players
-    if(player->subState == PLAYER_STATE_DEAD)
-    {
-        return;
-    }
-
-    if(player->subState == PLAYER_STATE_EXPLODING || player->subState == PLAYER_STATE_EXPLODED)
-    {
-
-
-        // if(player->subState == PLAYER_STATE_EXPLODED)
-        // {
-            // crackSprite = g_Assets.cracks[player->crackChoice];
-            // jo_sprite_change_sprite_scale_xy_fixed(toFIXED(3), toFIXED(3));
-            // jo_sprite_draw3D(crackSprite, toINT(player->curPos.x), toINT(player->curPos.y), CRACKS_Z);
-            // jo_sprite_restore_sprite_scale();
-        // }
-
-        // jo_sprite_change_sprite_scale_xy_fixed(player->size, player->size);
-
-
-        // jo_sprite_draw3D_and_rotate(playerSprite, toINT(player->curPos.x), toINT(player->curPos.y), PLAYER_Z, player->angle);
-
-        jo_sprite_restore_sprite_scale();
-    }
-
-    // jo_sprite_draw3D(playerSprite, toINT(player->curPos.x), toINT(player->curPos.y), PLAYER_Z);
-
-
-}
 
 void speedLimitPlayer(PPLAYER player)
 {
@@ -862,9 +862,13 @@ void boundAiPlayer(PPLAYER player)
     switch(player->teamChoice)
     {
         case TEAM_1: {
-            if(player->_sprite->pos.y > SCREEN_MIDDLE - PLAYER_HEIGHT)
+            int bottom = SCREEN_MIDDLE;
+            if (g_Game.numTeams < 3) {
+                bottom = SCREEN_BOTTOM;
+            }
+            if(player->_sprite->pos.y > bottom - PLAYER_HEIGHT)
             {
-                player->_sprite->pos.y = SCREEN_MIDDLE - PLAYER_HEIGHT;
+                player->_sprite->pos.y = bottom - PLAYER_HEIGHT;
             }
 
             if(player->_sprite->pos.y < SCREEN_TOP + PLAYER_HEIGHT)
@@ -874,7 +878,7 @@ void boundAiPlayer(PPLAYER player)
             break;
         }
         case TEAM_2: {
-                int bottom = SCREEN_MIDDLE;
+            int bottom = SCREEN_MIDDLE;
             if (g_Game.numTeams <= 3) {
                 bottom = SCREEN_BOTTOM;
             }

@@ -8,6 +8,7 @@
 
 extern bool do_update_ppplogo;
 extern bool do_update_logo1;
+extern bool do_update_Goals[MAX_PLAYERS];
 extern bool do_update_Pmenu[MAX_PLAYERS];
 extern bool do_update_PmenuAll;
 extern bool do_update_menu1;
@@ -19,6 +20,7 @@ extern bool do_update_bomb;
 extern bool do_update_shroom;
 extern bool update_palette_ppplogo;
 extern bool update_palette_logo1;
+extern bool update_palette_Goals[MAX_PLAYERS];
 extern bool update_palette_Pmenu[MAX_PLAYERS];
 extern bool update_palette_PmenuAll;
 extern bool update_palette_menu1;
@@ -37,9 +39,9 @@ extern HslPalette hslSprites;
 extern ImageAttr attrSprites;
 
 extern PaletteRange p_rangeLogo;
+extern PaletteRange p_rangeGoals[MAX_PLAYERS];
 extern PaletteRange p_rangePmenu[MAX_PLAYERS];
 extern PaletteRange p_rangePmenuAll;
-extern PaletteRange p_rangePmenu4;
 extern PaletteRange p_rangeMenu1;
 extern PaletteRange p_rangeMenu2;
 extern PaletteRange p_rangeMenu3;
@@ -103,63 +105,60 @@ static inline void updateTeamSelectColors(void) {
 		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll);
 		do_update_PmenuAll = false;
 	}
+	// cursors
+	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
+		if (do_update_Pmenu[i]) {
+			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
+			do_update_Pmenu[i] = false;
+		}
+	}
 }
 static inline void updateTeamSelectPalette(void) {
 	if (update_palette_PmenuAll) {
 		update_palette_PmenuAll = update_sprites_palette(&p_rangePmenuAll);
 	}
+	// cursors
+	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
+		if (update_palette_Pmenu[i]) {
+			update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
+		}
+	}
 }
 
 // gameplay
-static inline void updateGameColors(void) {
+static __jo_force_inline void updateGameColors(void) {
 	if (do_update_shroom) {
 		update_palette_shroom = update_sprites_color(&p_rangeShroom);
 		do_update_shroom = false;
 	}
-	Uint8 i = 0;
-	if (do_update_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
-		do_update_Pmenu[i] = false;
-	}
-	i++;
-	if (do_update_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
-		do_update_Pmenu[i] = false;
-	}
-	i++;
-	if (do_update_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
-		do_update_Pmenu[i] = false;
-	}
-	i++;
-	if (do_update_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
-		do_update_Pmenu[i] = false;
+	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
+		// power meter
+		if (do_update_Pmenu[i]) {
+			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
+			do_update_Pmenu[i] = false;
+		}
+		if (update_palette_Goals[i]) {
+			update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i]);
+			do_update_Goals[i] = false;
+		}
 	}
 	if (do_update_PmenuAll) {
 		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll);
 		do_update_PmenuAll = false;
 	}
 }
-static inline void updateGamePalette(void) {
+static __jo_force_inline void updateGamePalette(void) {
 	if (update_palette_shroom) {
 		update_palette_shroom = update_sprites_palette(&p_rangeShroom);
 	}
-	Uint8 i = 0;
-	if (update_palette_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
-	}
-	i++;
-	if (update_palette_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
-	}
-	i++;
-	if (update_palette_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
-	}
-	i++;
-	if (update_palette_Pmenu[i]) {
-		update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
+	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
+		// power meter
+		if (update_palette_Pmenu[i]) {
+			update_palette_Pmenu[i] = update_sprites_palette(&p_rangePmenu[i]);
+		}
+		if (update_palette_Goals[i]) {
+			update_palette_Goals[i] = update_sprites_palette(&p_rangeGoals[i]);
+		}
 	}
 	if (update_palette_PmenuAll) {
 		update_palette_PmenuAll = update_sprites_palette(&p_rangePmenuAll);

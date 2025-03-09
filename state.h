@@ -4,7 +4,6 @@
 #define STATE_FADE_TIMER (1 * 60)
 
 extern unsigned int g_TransitionTimer;
-
 extern unsigned int g_AttractScreenState;
 
 // each game state has it's own input/update/draw routines
@@ -17,6 +16,7 @@ typedef enum
     GAME_STATE_TITLE_OPTIONS,
     GAME_STATE_TEAM_SELECT,
     GAME_STATE_GAMEPLAY,
+    // GAME_STATE_NAME_ENTRY,
     GAME_STATE_DEMO_LOOP,
     GAME_STATE_CREDITS,
     GAME_STATE_HIGHSCORES,

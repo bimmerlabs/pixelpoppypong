@@ -12,6 +12,7 @@
 
 #define NUM_TITLE_MENU_TEXT 12
 
+#define NUM_GOAL_SPRITES 4
 #define NUM_TIMER_SPRITES 11
 #define NUM_HEART_SPRITES 5
 #define NUM_SHIELD_SPRITES 7
@@ -79,6 +80,12 @@ typedef struct _assets
     int paw11[NUM_PAW_SPRITES];
     
     int pixel_poppy1[NUM_POPPY_SPRITES];
+    
+    int goal1[NUM_GOAL_SPRITES];
+    int goal2[NUM_GOAL_SPRITES];
+    int goal3[NUM_GOAL_SPRITES];
+    int goal4[NUM_GOAL_SPRITES];
+    bool drawSingleGoal[MAX_PLAYERS];
     
     // items
     int bomb[NUM_BOMB_SPRITES];

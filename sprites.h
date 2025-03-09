@@ -80,11 +80,15 @@ extern Sprite player_cursor;
 // game UI
 extern Sprite timer_num1;
 extern Sprite timer_num10;
+extern Sprite timer_num100;
 extern Sprite meter;
 extern Sprite heart;
 extern Sprite star;
+extern Sprite goal[MAX_PLAYERS];
 extern Sprite goal1;
 extern Sprite goal2;
+extern Sprite goal3;
+extern Sprite goal4;
 
 extern Sprite shield1;
 extern Sprite shield2;
@@ -115,7 +119,7 @@ extern Sprite craig_item;
 extern Sprite garfield_item;
 
 // add options input (difficulty, game mode, etc)
-static inline void reset_ball(Sprite *sprite) {
+static inline void reset_ball_movement(Sprite *sprite) {
     sprite->pos.x = toFIXED(0);
     sprite->pos.y = toFIXED(0);
     sprite->vel.x = toFIXED(0);
@@ -127,12 +131,14 @@ static inline void reset_ball(Sprite *sprite) {
 }
 
 static inline void set_item_position(Sprite *sprite) {
-    FIXED px = toFIXED(my_random_range(0, 280));
-    FIXED py = toFIXED(my_random_range(0, 180));
-    if (JO_MOD_POW2(jo_random(9999), 2)) px = -px; // modulus
-    if (JO_MOD_POW2(jo_random(9999), 2)) py = -py; // modulus
-    sprite->pos.x = px;
-    sprite->pos.y = py;
+    sprite->pos.x = toFIXED(my_random_range(-250, 250));
+    sprite->pos.y = toFIXED(my_random_range(-160, 160));
+    if (JO_MOD_POW2(jo_random(9999), 2)) { // sprite flip
+        sprite->flip = sprHflip;
+    }
+    else {
+        sprite->flip = sprNoflip;
+    }
 }
 
 static inline void set_spr_position(Sprite *sprite, int px, int py, int pz) {
@@ -162,14 +168,14 @@ static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
 // sprHflip : Horizontally flipped display.
 // sprHVflip : Flip the display vertically and horizontally.
 
-static inline void	my_sprite_draw(Sprite *sprite) { // note: switched to using 256bnk mode, so all palette indexes are now 0
+static __jo_force_inline void	my_sprite_draw(Sprite *sprite) { // note: switched to using 256bnk mode, so all palette indexes are now 0
 	FIXED pos[XYZSS] = { sprite->pos.x, sprite->pos.y, sprite->pos.z, sprite->scl.x, sprite->scl.y };
 	SPR_ATTR attr = SPR_ATTRIBUTE( sprite->spr_id, 0, No_Gouraud, sprite->mesh | ECdis | CL256Bnk, sprite->flip | sprite->zmode );
 	slDispSpriteHV(pos, &attr, DEGtoANG(sprite->rot.z));
 }
 
 // increments 1 frame
-static inline bool static_animation(Sprite *sprite) {
+static __jo_force_inline bool static_animation(Sprite *sprite) {
     if (JO_MOD_POW2(frame, FRAMERATE1) == 0) { // modulus
         sprite->anim1.frame++;
         sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
@@ -183,7 +189,7 @@ static inline bool static_animation(Sprite *sprite) {
 }
 
 // loops through all frames based on powers of 2
-static inline void looped_animation_pow(Sprite *sprite, unsigned int framerate) {
+static __jo_force_inline void looped_animation_pow(Sprite *sprite, unsigned int framerate) {
         // move to an animation module
         if (JO_MOD_POW2(frame, framerate) == 0) { // modulus
             sprite->anim1.frame++;
@@ -195,7 +201,7 @@ static inline void looped_animation_pow(Sprite *sprite, unsigned int framerate) 
 }
 
 // loops through second animation based on modulus
-static inline void looped_animation_mod(Sprite *sprite, unsigned int framerate) {
+static __jo_force_inline void looped_animation_mod(Sprite *sprite, unsigned int framerate) {
         // move to an animation module
         if (frame % framerate == 0) { // modulus
             sprite->anim2.frame++;
@@ -206,7 +212,7 @@ static inline void looped_animation_mod(Sprite *sprite, unsigned int framerate) 
         }
 }
 
-static inline bool explode_animation(Sprite *sprite) {
+static __jo_force_inline bool explode_animation(Sprite *sprite) {
     if (frame % 6 == 0) { // modulus
         sprite->anim2.frame++;
     }
@@ -221,7 +227,7 @@ static inline bool explode_animation(Sprite *sprite) {
     return true;
 }
 
-static inline void sprite_frame_reset(Sprite *sprite) {
+static __jo_force_inline void sprite_frame_reset(Sprite *sprite) {
     sprite->anim1.frame = 0;
     sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
     sprite->anim2.frame = 0;

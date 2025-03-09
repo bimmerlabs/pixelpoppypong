@@ -2,27 +2,18 @@
 #include "main.h"
 #include "input.h"
 #include "gameplay.h"
-#include "physics.h"
-#include "assets.h"
 #include "screen_transition.h"
-#include "AI.h"
-#include "BG_DEF/sprite_colors.h"
-unsigned int g_DemoTimer = 0;
+#include "AI.h"
 bool start_timer = false;
 bool round_start = false;
-bool g_RoundOver = false;
 static bool play_battle_is_over = true;
-static bool draw_bomb = true;
-static bool explode_bomb = false;
-Uint16 g_GameBeginTimer = 0;
-Uint16 g_RoundOverTimer = 0;
-
-int player1_score = 0;
-int player2_score = 0;
 
 static bool draw_demo_text = true;
-static bool times_up = false;
+static bool time_over = false;
 
+static unsigned char hunds;
+static unsigned char tens;
+static unsigned char ones;
 static bool isRoundOver(void);
 // static void drawStats(void);
 // static void drawScore(void);
@@ -66,11 +57,12 @@ void gameplay_init() {
     transition_in = true;
 
     resetPlayerScores();
+    setGoalSize();
     
     // collision detection    // sprite_id = 0;
 
     // debug only
-    reset_ball(&pixel_poppy);
+    reset_ball_movement(&pixel_poppy);
     
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
@@ -89,6 +81,7 @@ void gameplay_init() {
     reset_sprites();
     do_update_shroom = true;
     do_update_PmenuAll = true;
+    initPlayerGoals();
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -97,15 +90,20 @@ void gameplay_init() {
     
     g_Game.isPaused = false;
     g_Game.isActive = false;
-    g_GameTimer = TIMEOUT;
-    timer_num1.spr_id = timer_num1.anim1.asset[9];
-    timer_num10.spr_id = timer_num10.anim1.asset[9];
+    // reset timer
+    g_Game.GameTimer = TIMEOUT;
+    g_Game.BombTimer = BOMB_TIMER;
+    convertNumberToDigits(g_Game.GameTimer, &hunds, &tens, &ones);
+    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
+    timer_num10.spr_id = timer_num10.anim1.asset[tens];
+    timer_num1.spr_id = timer_num1.anim1.asset[ones];
     // NEED BETTER NAMES FOR THESE
     start_timer = false;
-    g_GameBeginTimer = 0;
-    times_up = false;
+    g_Game.BeginTimer = 0;
+    time_over = false;
     round_start = false;
-    g_RoundOver = false;
+    g_Game.isRoundOver = false;
+    g_Game.isGoalScored = false;
     
     slScrPosNbg1(toFIXED(0), toFIXED(0));
     
@@ -130,7 +128,53 @@ void demo_init(void) {
     loadCharacterAssets();
     loadGameAssets();
     initDemoPlayers();
+    g_Game.DemoTimer = 0;
     g_Game.gameMode = GAME_MODE_BATTLE;
+}void setGoalSize(void)
+{
+    switch(g_Game.gameMode)
+    {
+        case GAME_MODE_CLASSIC:
+            g_Game.goalYPosTop = GOAL_Y_POS_MEDIUM;
+            g_Game.goalYPosMid = GOAL_CENTER_POS;
+            g_Game.goalYPosBot = GOAL_Y_POS_MEDIUM;
+            g_Game.goalScale = GOAL_SCALE_MEDIUM;
+            break;
+        case GAME_MODE_STORY: {
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    g_Game.goalYPosTop = GOAL_Y_POS_EASY;
+                    g_Game.goalYPosMid = GOAL_CENTER_POS;
+                    g_Game.goalYPosBot = GOAL_Y_POS_EASY;
+                    g_Game.goalScale = GOAL_SCALE_EASY;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    g_Game.goalYPosTop = GOAL_Y_POS_MEDIUM;
+                    g_Game.goalYPosMid = GOAL_CENTER_POS;
+                    g_Game.goalYPosBot = GOAL_Y_POS_MEDIUM;
+                    g_Game.goalScale = GOAL_SCALE_MEDIUM;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    g_Game.goalYPosTop = GOAL_Y_POS_HARD;
+                    g_Game.goalYPosMid = GOAL_CENTER_POS;
+                    g_Game.goalYPosBot = GOAL_Y_POS_HARD;
+                    g_Game.goalScale = GOAL_SCALE_HARD;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        }
+        case GAME_MODE_BATTLE:
+            g_Game.goalYPosTop = GOAL_Y_POS_MEDIUM;
+            g_Game.goalYPosMid = GOAL_CENTER_POS;
+            g_Game.goalYPosBot = GOAL_Y_POS_MEDIUM;
+            g_Game.goalScale = GOAL_SCALE_MEDIUM;
+            break;
+        default:
+            break;
+    }
 }
 
 void demo_update(void)
@@ -143,54 +187,61 @@ void demo_update(void)
         draw_demo_text = !draw_demo_text;
     }
     if (draw_demo_text) {
-        jo_nbg0_printf(20, 26, "DEMO!");
+        jo_nbg0_printf(20, 27, "DEMO!");
     }
-    g_DemoTimer++;
+    g_Game.DemoTimer++;
     if (!round_start) {
         playerAI(&pixel_poppy);
         // sweep_and_prune();
         // updatePlayers();
     }
     // check if the frameAnim has expired
-    if(g_DemoTimer > DEMO_TIME)
+    if(g_Game.DemoTimer > DEMO_TIME)
     {
-        g_DemoTimer = 0;
+        g_Game.DemoTimer = 0;
         transitionState(GAME_STATE_UNINITIALIZED);
     }
 }void game_timer(void)
 {
+    // could move to vblank?
     // wait 3 seconds to start the game
-    if (g_GameBeginTimer > GAME_BEGIN_TIME) {
+    if (g_Game.BeginTimer > GAME_BEGIN_TIME) {
         start_timer = true;
     }
     if (!start_timer) {
-        g_GameBeginTimer++;
+        g_Game.BeginTimer++;
         round_start = true;
         return;
     }
     
     // start round    if (round_start) {
-        start_ball_movement(&pixel_poppy);
+        startGameplay();
         g_Game.isActive = true;
         round_start = false;
     }
     
+    if (g_Game.isRoundOver) { // NEED ANOTHER WAY TO STOP THE TIMER
+        return;
+    }
+    
     // game timer
-    Uint8 ones = g_GameTimer % 10; // Extracts the ones place // modulus
-    Uint8 tens = g_GameTimer / 10; // Extracts the tens place
-        
+    convertNumberToDigits(g_Game.GameTimer, &hunds, &tens, &ones);
+    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
     
-    if (g_GameTimer > 0 && frame % 60 == 0) { // modulus
-        g_GameTimer--;
+    if (g_Game.GameTimer > 0 && frame % 60 == 0) { // modulus
+        g_Game.GameTimer--;
     }
-    else if (g_GameTimer == 0) {
-        times_up = true;
+    else if (g_Game.GameTimer == 0) {
+        time_over = true;
     }
     // test
-    if (g_GameTimer == 80) {
+    if (g_Game.BombTimer == 0) {
         explode_bomb = true;
+    }
+    else {
+        g_Game.BombTimer--;
     }
     
 }
@@ -200,59 +251,30 @@ void demo_update(void)
     {
         return;
     }
-    if (!g_Game.isPaused && !times_up) {
-                // move to draw/HUD timer function
+    if (!g_Game.isPaused && !time_over) {
+        // move to draw/HUD timer function
         game_timer();
-        
-            // SPRITES
-        my_sprite_draw(&timer_num10); // tens
-        my_sprite_draw(&timer_num1);  // ones
-                // field
-        my_sprite_draw(&goal1);
-        my_sprite_draw(&goal2);
-        
-        drawPlayers();
-        
-        // items
-        if (draw_bomb) {
-            my_sprite_draw(&bomb_item);
-        }
-        if (fishtank_item.visible)
-            my_sprite_draw(&fishtank_item);
-        if (shroom_item.visible)
-            my_sprite_draw(&shroom_item);
-        if (garfield_item.visible)
-            my_sprite_draw(&garfield_item);
-        if (craig_item.visible)
-            my_sprite_draw(&craig_item);
-                
-    //ANIMATIONS
-        if (!explode_bomb) {
-            looped_animation_pow(&bomb_item, 4);
-        }
-        else {
-            explode_bomb = explode_animation(&bomb_item);
-            if (explode_bomb == false) {
-                draw_bomb = false;
-            }
-        }
-        looped_animation_pow(&fishtank_item, 8);
-        looped_animation_pow(&shroom_item, 4);
-        hsl_incSprites.h += 2;
-        do_update_shroom = true;
-                
-        update_ball(&pixel_poppy);
-        my_sprite_draw(&pixel_poppy);
-        
-    // TEXT / UI
-        for(unsigned int i = 0; i < (g_Game.numPlayers+1); i++)
+        switch(g_Game.gameMode)
         {
-            PPLAYER player = &g_Players[i];
-            looped_animation_pow(player->_sprite, 4);
-            player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];            gameplayUI_draw(player);
+            case GAME_MODE_BATTLE:
+                drawVsMode();
+                drawGameUI();
+                break;
+            case GAME_MODE_CLASSIC: {
+                drawClassicMode();
+                drawGameUI();
+                break;
+            }
+            case GAME_MODE_STORY: {
+                drawStoryMode();
+                drawGameUI();
+                break;
+            }
+            default:
+                break;
         }
     }
-    else if (!g_Game.isPaused && times_up) {
+    else if (!g_Game.isPaused && time_over) {
         if (play_battle_is_over) {
             #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
             pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 6);
@@ -261,8 +283,11 @@ void demo_update(void)
             #endif
             play_battle_is_over = false;
         }
-        jo_nbg0_printf(17, 14, "TIME OUT");
-        // transition?  end game?  add scores?  enter initials?
+        jo_nbg0_printf(17, 14, "GAME OVER!");
+        // transition?  
+        // add scores?
+        // enter initials?
+        // end game?
     }
 }
 
@@ -271,7 +296,7 @@ void gameScore_draw(void) {
     {
         return;
     }
-    if (!g_Game.isPaused && !times_up) {
+    if (!g_Game.isPaused && !time_over) {
         for(unsigned int i = 0; i <= (g_Game.numPlayers); i++)
         {
             PPLAYER player = &g_Players[i];
@@ -280,22 +305,22 @@ void gameScore_draw(void) {
     }
 }
 
+// todo: move things from switch statement that are the same in each case to the end
 void gameplayUI_draw(PPLAYER player) {
-    static int portrait_x = 300;
-    static int portrait_y = 190;
     static int color_multiplier = 5;
     static int power_meter_height = 3;
+    
     switch (player->teamChoice) 
     {
         case TEAM_1: {
-            int heart_x = -(portrait_x - 40);
-            int heart_y = -(portrait_y - 12);
-            int star_y = -(portrait_y + 12);
+            int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
+            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
+            int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
             set_shield_position(player->_sprite, &shield1, player->shield_pos);
             looped_animation_pow(&shield1, 4);
             my_sprite_draw(&shield1);
-
-            set_spr_position(player->_portrait, -portrait_x, -portrait_y, 90);
+                        // If speed is an issue, can create a sprite object for each portrait during gameplay
+            set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
             
@@ -304,19 +329,19 @@ void gameplayUI_draw(PPLAYER player) {
             
             player->_bg->spr_id = player->_bg->anim1.asset[0];
             set_spr_scale(player->_bg, player->shield.power, power_meter_height);
-            set_spr_position(player->_bg, (-portrait_x-25), (-portrait_y+24), 80);
-            my_sprite_draw(player->_bg); // have a shield meter for each player?
+            set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
+            // my_sprite_draw(player->_bg); // have a shield meter for each player?
             break;
         }
         case TEAM_2: {
-            int heart_x = portrait_x - 40;
-            int heart_y = -(portrait_y - 12);
-            int star_y = -(portrait_y + 12);
+            int heart_x = GAMEPLAY_PORTRAIT_X - 40;
+            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
+            int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
             set_shield_position(player->_sprite, &shield2, player->shield_pos);
             looped_animation_pow(&shield2, 4);
             my_sprite_draw(&shield2);
 
-            set_spr_position(player->_portrait, portrait_x, -portrait_y, 90);
+            set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
             
@@ -327,19 +352,19 @@ void gameplayUI_draw(PPLAYER player) {
             
             player->_bg->spr_id = player->_bg->anim1.asset[1];
             set_spr_scale(player->_bg, player->shield.power, power_meter_height);
-            set_spr_position(player->_bg, (portrait_x-25), (-portrait_y+24), 80);
-            my_sprite_draw(player->_bg);
+            set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
+            // my_sprite_draw(player->_bg);
             break;
         }
         case TEAM_3: {
-            int heart_x = -(portrait_x - 40);
-            int heart_y = portrait_y + 12;
-            int star_y = portrait_y - 12;
+            int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
+            int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
+            int star_y = GAMEPLAY_PORTRAIT_Y - 12;
             set_shield_position(player->_sprite, &shield3, player->shield_pos);
             looped_animation_pow(&shield3, 4);
             my_sprite_draw(&shield3);
 
-            set_spr_position(player->_portrait, -portrait_x, portrait_y, 90);
+            set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
             
@@ -350,19 +375,19 @@ void gameplayUI_draw(PPLAYER player) {
             
             player->_bg->spr_id = player->_bg->anim1.asset[2];
             set_spr_scale(player->_bg, player->shield.power, power_meter_height);
-            set_spr_position(player->_bg, (-portrait_x-25), (portrait_y+24), 80);
-            my_sprite_draw(player->_bg);
+            set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
+            // my_sprite_draw(player->_bg);
             break;
         }
         case TEAM_4: {
-            int heart_x = portrait_x - 40;
-            int heart_y = portrait_y + 12;
-            int star_y = portrait_y - 12;
+            int heart_x = GAMEPLAY_PORTRAIT_X - 40;
+            int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
+            int star_y = GAMEPLAY_PORTRAIT_Y - 12;
             set_shield_position(player->_sprite, &shield4, player->shield_pos);
             looped_animation_pow(&shield4, 4);
             my_sprite_draw(&shield4);
 
-            set_spr_position(player->_portrait, portrait_x, portrait_y, 90);
+            set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
             
@@ -373,18 +398,22 @@ void gameplayUI_draw(PPLAYER player) {
             
             player->_bg->spr_id = player->_bg->anim1.asset[3];
             set_spr_scale(player->_bg, player->shield.power, power_meter_height);
-            set_spr_position(player->_bg, (portrait_x-25), (portrait_y+24), 80);
-            my_sprite_draw(player->_bg);
+            set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
+            // my_sprite_draw(player->_bg);
             break;
         }
         default:
             break;
     }
+    set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+    my_sprite_draw(player->_bg);
     my_sprite_draw(player->_portrait);
 }
 
 static bool isRoundOver(void)
 {
+    // count number of players still active?
+    
     // int numTeams = 0;
     // int numSquares = 0;
 
@@ -429,19 +458,19 @@ void gameplay_update(void)
     playerAI(&pixel_poppy);
     // sweep_and_prune();
     
-    if(g_RoundOver == true)
+    if(g_Game.isRoundOver == true)
     {
-        g_RoundOverTimer--;
+        g_Game.RoundOverTimer--;
 
         // check if it's time to go to the pause screen
-        if(g_RoundOverTimer <= 0)
+        if(g_Game.RoundOverTimer <= 0)
         {
             g_Game.isPaused = true;
         }
         return;
     }
 
-    g_RoundOver = isRoundOver();
+    g_Game.isRoundOver = isRoundOver();
 }
 void gameplay_input(void)
 {
@@ -457,6 +486,6 @@ void    demo_input(void)	{
     if (jo_is_pad1_key_down(JO_KEY_START)) {
         g_Game.lastState = GAME_STATE_DEMO_LOOP;
         transitionState(GAME_STATE_TITLE_SCREEN);
-        g_DemoTimer = 0;
+        g_Game.DemoTimer = 0;
     }
 }

@@ -51,7 +51,7 @@ ASSETS g_Assets = {0};
 jo_datetime now;
 
 Uint8 frame = 0;
-Uint8 g_GameTimer = TIMEOUT;
+// Uint16 g_GameTimer = TIMEOUT;
 
 // explcitly create callback names so they can be added / removed as neccesary?
 int run_once_callback = 0;

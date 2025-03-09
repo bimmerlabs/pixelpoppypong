@@ -1,13 +1,10 @@
 #include <jo/jo.h>
 #include "physics.h"
 #include "audio.h"
-#include "objects/player.h"
-#include "main.h"
 #include "math.h"
 #include "gameplay.h"
 #include "highscores.h"
 #include "screen_transition.h"
-#include "objects/player.h"
 
 FIXED impulse = toFIXED(0);
 
@@ -25,14 +22,12 @@ void initTouchCounter(void) {
     }
 }
 
-// inline?
 // Function to initialize the ball's movement
 void start_ball_movement(Sprite *ball) {
-    // ball->pos.r = BALL_RADIUS;
-    // Set random velocity (fixed-point values)
-    // magic numbers
-    // set based on difficulty / game mode
-    ball->vel.x = toFIXED(my_random_range(5, 12)); // Random velocity between 1 and 5
+    // this works as is because I can set a minimum in the range
+    
+    // TODO: set based on difficulty / game mode
+    ball->vel.x = toFIXED(my_random_range(5, 12));
     ball->vel.y = toFIXED(my_random_range(4, 10));
     ball->vel.z = my_random_range(1, 5);
            
@@ -40,7 +35,6 @@ void start_ball_movement(Sprite *ball) {
     if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.x = -ball->vel.x; // modulus
     if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.y = -ball->vel.y; // modulus
     if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.z = -ball->vel.z; // modulus
-    // if (jo_random(99) % 2) ball->vel.z = -ball->vel.z; // modulus
 }
 
 // inline?
@@ -109,9 +103,10 @@ void update_ball(Sprite *ball) {
 
         // Adjust Z velocity for horizontal collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
-        if (ball->pos.y > GOAL_TOP && ball->pos.y < GOAL_BOTTOM) {
-            updateScoreLeft(ball);            
-        }
+        
+        // switch for number of teams
+        checkLeftWallScore(ball);
+        
     }
     else if (ball->pos.x <= SCREEN_LEFT + ball->pos.r) {
         ball->vel.x = -ball->vel.x; // Reverse X velocity
@@ -126,9 +121,9 @@ void update_ball(Sprite *ball) {
 
         // Adjust Z velocity for horizontal collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
-        if (ball->pos.y > GOAL_TOP && ball->pos.y < GOAL_BOTTOM) {
-            updateScoreRight(ball);
-        }
+        
+        checkRightWallScore(ball);
+        
     }
     if (ball->pos.y >= SCREEN_BOTTOM - ball->pos.r || ball->pos.y <= SCREEN_TOP + ball->pos.r) {
         ball->vel.y = -ball->vel.y; // Reverse Y velocity

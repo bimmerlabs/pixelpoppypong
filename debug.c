@@ -147,6 +147,21 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 8, "POPPY.X:%i", pixel_poppy.pos.x);
                 // jo_nbg0_printf(20, 9, "POPPY.Y:%i", pixel_poppy.pos.y);
                 // jo_nbg0_printf(20, 10, "COLLIDING:%i", pixel_poppy.isColliding);
+                
+                jo_nbg0_printf(2, 12, "P1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[0]);
+                jo_nbg0_printf(2, 13, "P2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[1]);
+                jo_nbg0_printf(2, 14, "P3 SINGLE GOAL:%i", g_Assets.drawSingleGoal[2]);
+                jo_nbg0_printf(2, 15, "P4 SINGLE GOAL:%i", g_Assets.drawSingleGoal[3]);
+                
+                if (g_Game.numPlayers == ONE_PLAYER)
+                    jo_nbg0_printf(2, 21, "ONE_PLAYER");
+                else if (g_Game.numPlayers == TWO_PLAYER)
+                    jo_nbg0_printf(2, 21, "TWO_PLAYER");
+                else if (g_Game.numPlayers == THREE_PLAYER)
+                    jo_nbg0_printf(2, 21, "THREE_PLAYER");
+                else
+                    jo_nbg0_printf(2, 21, "FOUR_PLAYER");
+                jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Game.numTeams);
                 break;
                 
             case GAME_STATE_GAMEPLAY:
@@ -168,18 +183,18 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 11, "SPR0 ACTIVE:%i", sprite_list[0].active);
                 // jo_nbg0_printf(20, 12, "SPR1 ACTIVE:%i", sprite_list[1].active);
                 
-                if (g_Players[0].isPlaying) {
-                    jo_nbg0_printf(2, 17, "P1 TEAM:%i", g_Players[0].teamChoice);
-                }
-                if (g_Players[1].isPlaying) {
-                    jo_nbg0_printf(2, 18, "P2 TEAM:%i", g_Players[1].teamChoice);
-                }
-                if (g_Players[2].isPlaying) {
-                    jo_nbg0_printf(2, 19, "P3 TEAM:%i", g_Players[2].teamChoice);
-                }
-                if (g_Players[3].isPlaying) {
-                    jo_nbg0_printf(2, 20, "P4 TEAM:%i", g_Players[3].teamChoice);
-                }
+                // if (g_Players[0].isPlaying) {
+                    // jo_nbg0_printf(2, 17, "P1 TEAM:%i", g_Players[0].teamChoice);
+                // }
+                // if (g_Players[1].isPlaying) {
+                    // jo_nbg0_printf(2, 18, "P2 TEAM:%i", g_Players[1].teamChoice);
+                // }
+                // if (g_Players[2].isPlaying) {
+                    // jo_nbg0_printf(2, 19, "P3 TEAM:%i", g_Players[2].teamChoice);
+                // }
+                // if (g_Players[3].isPlaying) {
+                    // jo_nbg0_printf(2, 20, "P4 TEAM:%i", g_Players[3].teamChoice);
+                // }
                 if (g_Game.numPlayers == ONE_PLAYER)
                     jo_nbg0_printf(2, 21, "NUMPLAYERS:%i", 1);
                 else if (g_Game.numPlayers == TWO_PLAYER)
@@ -195,15 +210,15 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", teamAvailable[3]);
                 // jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", teamAvailable[4]);   
                                              
-                // jo_nbg0_printf(2, 12, "TOUCHEDBY 1:%i", touchedBy[0].hasTouched);
-                // jo_nbg0_printf(2, 13, "TOUCHEDBY 2:%i", touchedBy[1].hasTouched);
-                // jo_nbg0_printf(2, 14, "TOUCHEDBY 3:%i", touchedBy[2].hasTouched);
-                // jo_nbg0_printf(2, 15, "TOUCHEDBY 4:%i", touchedBy[3].hasTouched);
+                jo_nbg0_printf(2, 12, "TOUCHEDBY 1:%i", touchedBy[0].hasTouched);
+                jo_nbg0_printf(2, 13, "TOUCHEDBY 2:%i", touchedBy[1].hasTouched);
+                jo_nbg0_printf(2, 14, "TOUCHEDBY 3:%i", touchedBy[2].hasTouched);
+                jo_nbg0_printf(2, 15, "TOUCHEDBY 4:%i", touchedBy[3].hasTouched);
                                              
-                // jo_nbg0_printf(20, 12, "TOUCHCOUNT 1:%i", touchedBy[0].touchCount);
-                // jo_nbg0_printf(20, 13, "TOUCHCOUNT 2:%i", touchedBy[1].touchCount);
-                // jo_nbg0_printf(20, 14, "TOUCHCOUNT 3:%i", touchedBy[2].touchCount);
-                // jo_nbg0_printf(20, 15, "TOUCHCOUNT 4:%i", touchedBy[3].touchCount);
+                jo_nbg0_printf(20, 12, "TOUCHCOUNT 1:%i", touchedBy[0].touchCount);
+                jo_nbg0_printf(20, 13, "TOUCHCOUNT 2:%i", touchedBy[1].touchCount);
+                jo_nbg0_printf(20, 14, "TOUCHCOUNT 3:%i", touchedBy[2].touchCount);
+                jo_nbg0_printf(20, 15, "TOUCHCOUNT 4:%i", touchedBy[3].touchCount);
                                              
                 
                 break;

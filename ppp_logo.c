@@ -266,7 +266,7 @@ void pppLogo_update(void)
     // }
 }
 
-#define X_RADIUS toFIXED(160)
+#define X_RADIUS toFIXED(155)
 #define Y_RADIUS toFIXED(80)
 static int lightAngle = 360;
     

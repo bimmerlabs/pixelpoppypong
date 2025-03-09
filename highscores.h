@@ -2,12 +2,22 @@
 
 #include "physics.h"
 #include "gameplay.h"
+#include "physics.h"
 #include "objects/player.h"
 
 #define SCORE_DISPLAY_TIME (30 * 60)
 
 #define INITIALS_LENGTH 3  // Three-letter initials like "ABC"
 #define SCORE_ENTRIES 10
+
+typedef enum _TEAMS_FOR_SCORING
+{
+    ONE_TEAM = 1,
+    TWO_TEAMS = 2,
+    THREE_TEAMS = 3,
+    FOUR_TEAMS = 4,
+} TEAMS_FOR_SCORING;
+    
 
 extern unsigned int g_ScoreTimer;
 
@@ -41,7 +51,7 @@ void update_bg_position(void);
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
-static inline void updateScoreLeft(Sprite *ball) {
+static __jo_force_inline void updateScoreLeft(Sprite *ball) {
     int lastTouchPlayerID = -1;
     // Find the last player who touched the ball
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -56,10 +66,12 @@ static inline void updateScoreLeft(Sprite *ball) {
                             + (JO_ABS(toINT(ball->vel.y)) * 100) 
                             + (JO_ABS(toINT(ball->vel.z)) * 500);
         g_Players[lastTouchPlayerID].score.points += points;
-    }    
+        g_Game.isGoalScored = true;
+    }
+    // subtract hearts from player who was scored on?
 }
 
-static inline void updateScoreRight(Sprite *ball) {
+static __jo_force_inline void updateScoreRight(Sprite *ball) {
     int lastTouchPlayerID = -1;
     // Find the last player who touched the ball
     for (int i = 0; i < MAX_PLAYERS; i++) {
@@ -74,5 +86,62 @@ static inline void updateScoreRight(Sprite *ball) {
                             + (JO_ABS(toINT(ball->vel.y)) * 100) 
                             + (JO_ABS(toINT(ball->vel.z)) * 500);
         g_Players[lastTouchPlayerID].score.points += points;
-    }     
+        g_Game.isGoalScored = true;
+    }
+    // subtract hearts from player who was scored on?
+    // assign a playerID to each team? (teamselect.h)
+}
+
+static __jo_force_inline void checkLeftWallScore(Sprite *ball) {
+    // switch for number of teams
+    // possible cases: 1 player, 3 players
+    switch (g_Game.numTeams) {
+        case ONE_TEAM:
+        case TWO_TEAMS: {
+            if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) && ball->pos.y < toFIXED(g_Game.goalYPosTop)) {
+                updateScoreLeft(ball); // scored on TEAM_1
+            }
+            break;
+        }
+        case THREE_TEAMS:
+        case FOUR_TEAMS: {
+            // if there are 3 teams, then we need to check the bounds of both the upper & lower goals
+            if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) && ball->pos.y < -toFIXED(GOAL_Y_POS_BOT_VS_MODE)) {
+                updateScoreLeft(ball); // scored on TEAM_1
+            }
+            else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE)) {
+                updateScoreLeft(ball); // scored on TEAM_3
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+static __jo_force_inline void checkRightWallScore(Sprite *ball) {
+    // switch for number of teams
+    // possible cases: 2 player, 4 players
+    switch (g_Game.numTeams) {
+        case ONE_TEAM:
+        case TWO_TEAMS: {
+            if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) && ball->pos.y < toFIXED(g_Game.goalYPosTop)) {
+                updateScoreRight(ball); // scored on TEAM_2
+            }
+            break;
+        }
+        case THREE_TEAMS:
+        case FOUR_TEAMS: {
+            // if there are 4 teams, then we need to check the bounds of both the upper & lower goals
+            if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) && ball->pos.y < -toFIXED(GOAL_Y_POS_BOT_VS_MODE)) {
+                updateScoreRight(ball); // scored on TEAM_2
+            }
+            else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE)) {
+                updateScoreRight(ball); // scored on TEAM_4
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }

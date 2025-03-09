@@ -4,8 +4,9 @@
 #include "state.h"
 #include "util.h"
 #include "audio.h"
+#include "audio.h"
 
-#define VERSION "0.49"
+#define VERSION "0.50"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -21,7 +22,7 @@
 
 extern jo_datetime now;
 extern Uint8 frame;
-extern Uint8 g_GameTimer;
+// extern Uint16 g_GameTimer; // put in game struct?
 extern Uint16 cursor_angle; // for title & pawsed menus
 
 typedef struct {
@@ -70,6 +71,28 @@ typedef enum _GAME_RESOLUTION
     RESOLUTION_WIDE   = TV_704x240,
 } GAME_RESOLUTION;
 
+#define GOAL_X_POS 330
+#define GOAL_CENTER_POS 0
+
+typedef enum _GOAL_SCALE
+{
+    GOAL_SCALE_EASY = 20,
+    GOAL_SCALE_MEDIUM = 16,
+    GOAL_SCALE_HARD = 13,
+    GOAL_SCALE_VS_MODE = 10,
+} GOAL_SCALE;
+
+typedef enum _GOAL_Y_POS
+{
+    GOAL_Y_POS_EASY = 140,
+    GOAL_Y_POS_MEDIUM = 120,
+    GOAL_Y_POS_HARD = 100,
+    GOAL_Y_POS_MID = 0,
+    GOAL_Y_POS_TOP_VS_MODE = 160,
+    GOAL_Y_POS_MID_VS_MODE = 79,
+    GOAL_Y_POS_BOT_VS_MODE = 2,
+} GOAL_Y_POS;
+
 // represents game state
 typedef struct _GAME
 {
@@ -94,6 +117,12 @@ typedef struct _GAME
 
     // easy, medium, hard
     GAME_DIFFICULTY gameDifficulty;
+
+    // easy, medium, hard, vs_mode
+    GOAL_SCALE goalScale;
+    GOAL_Y_POS goalYPosTop;
+    GOAL_Y_POS goalYPosBot;
+    Uint8 goalYPosMid;
     
     // debug level
     int debug;
@@ -102,12 +131,25 @@ typedef struct _GAME
     Uint8 numLives;
     // number of stars (1, 2, 3)
     Uint8 numStars;
+    
+    // TIMERS
+    Uint16 BeginTimer;
+    Uint16 GameTimer;
+    Uint16 BombTimer;
+    Uint16 RoundOverTimer;
+    Uint16 DemoTimer;
 
     // is the game loading?
     bool isLoading;
 
     // is the game is paused?
     bool isPaused;
+
+    // did somebody score a goal?
+    bool isGoalScored;
+
+    // is the game finished?
+    bool isRoundOver;
 
     // is the game finished?
     bool isGameOver;

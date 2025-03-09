@@ -172,7 +172,7 @@ Sprite player_cursor = {
 };
 
 Sprite timer_num1 = {
-    .pos = {toFIXED(0), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
+    .pos = {toFIXED(16), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
     .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
     .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
@@ -187,6 +187,20 @@ Sprite timer_num1 = {
 
 Sprite timer_num10 = {
     .pos = {toFIXED(0), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,       
+    .pal_id = 0,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCT
+};
+
+Sprite timer_num100 = {
+    .pos = {toFIXED(-14), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
     .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
     .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
@@ -299,34 +313,15 @@ Sprite shield4 = {
     .zmode = _ZmCC,
 };
 
-Sprite goal1 = {
-    .pos = {toFIXED(-330.0), toFIXED(0), toFIXED(120)},      // Position x, y, z (all initialized to 0)
-    .scl = {toFIXED(2), toFIXED(2)},                  // Scale x, y, z (all initialized to 1)
-    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
-    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
-    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
-    .spr_id = 0,                                       // Sprite ID initialized to 0
-    .visible = true,       
-    .pal_id = 0,                                       // Palette ID initialized to 0
-    .flip = sprNoflip,
-    .mesh = MESHoff,
-    .zmode = _ZmLC
+Sprite goal[MAX_PLAYERS] = {
+    {
+        .scl = {toFIXED(2), toFIXED(2)},                     // Scale x, y
+        .rot = {0, 0, 0},                                    // Rotation x, y, z
+        .spr_id = 0,                                         // Sprite ID
+        .visible = true,                                     
+        .mesh = MESHoff,
+    }
 };
-
-Sprite goal2 = {
-    .pos = {toFIXED(330.0), toFIXED(0), toFIXED(120)},      // Position x, y, z (all initialized to 0)
-    .scl = {toFIXED(2), toFIXED(2)},                  // Scale x, y, z (all initialized to 1)
-    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
-    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
-    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
-    .spr_id = 0,                                       // Sprite ID initialized to 0
-    .visible = true,       
-    .pal_id = 0,                                       // Palette ID initialized to 0
-    .flip = sprHflip,
-    .mesh = MESHoff,
-    .zmode = _ZmRC
-};
-
 
 // CHARACTER ELEMENTS
 Sprite pixel_poppy = {

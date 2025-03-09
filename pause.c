@@ -36,22 +36,6 @@ static void checkForPauseMenu(void);
 // Pause callbacks
 //
 
-// don't need this in pause - maybe for gameplay?
-void convertNumberToDigits(int number, unsigned char* hunds, unsigned char* tens, unsigned char* ones)
-{
-    if(number == 0)
-    {
-        *hunds = 0;
-        *tens = 0;
-        *ones = 0;
-        return;
-    }
-
-    *hunds = (number / 100);
-    *tens = ((number - ((number/100) * 100))/10);
-    *ones = (number % 10); // modulus
-}
-
 // input for handling pause
 void pause_input(void)
 {

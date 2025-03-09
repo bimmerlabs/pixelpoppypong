@@ -7,6 +7,7 @@
 
 bool do_update_ppplogo = false;
 bool do_update_logo1 = false;
+bool do_update_Goals[MAX_PLAYERS];
 bool do_update_Pmenu[MAX_PLAYERS];
 bool do_update_PmenuAll = false;
 bool do_update_menu1 = false;
@@ -18,6 +19,7 @@ bool do_update_bomb = false;
 bool do_update_shroom = false;
 bool update_palette_ppplogo = false;
 bool update_palette_logo1 = false;
+bool update_palette_Goals[MAX_PLAYERS];
 bool update_palette_Pmenu[MAX_PLAYERS];
 bool update_palette_PmenuAll = false;
 bool update_palette_menu1 = false;
@@ -39,7 +41,7 @@ RgbPalette rgbSprites = {
       {1, 1, 1}, {161, 25, 99}, {213, 77, 153}, {235, 121, 185}, {255, 175, 201}, {40, 130, 200}, {153, 217, 234}, {199, 235, 245}, 
       {205, 205, 205}, {215, 206, 203}, {231, 227, 223}, {255, 255, 255}, {143, 211, 251}, {47, 157, 223}, {39, 123, 173}, {255, 251, 177}, 
       {255, 243, 1}, {243, 231, 1}, {243, 119, 167}, {223, 47, 91}, {173, 39, 107}, {225, 163, 177}, {195, 75, 99}, {149, 51, 71}, 
-      {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, 
+      {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {137, 125, 119}, {195, 195, 195}, {201, 197, 193}, {217, 215, 213}, 
       {255, 255, 255}, {0, 0, 0}, {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {195, 195, 195}, {255, 255, 255}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {137, 125, 119}, {195, 195, 195}, {241, 217, 175}, {243, 209, 159}, 
@@ -142,11 +144,15 @@ HslPalette hslSprites = {
 PaletteRange p_rangeSprites   = { 0, 234 };     // all colors
 PaletteRange p_rangeFont      = { 2, 6 };       // font
 PaletteRange p_rangeLogo      = { 16, 23 };     // logo
+PaletteRange p_rangeGoals[MAX_PLAYERS] = {      // Goal Colors
+    {60, 60}, {61, 61}, {62, 62}, {63, 63}
+};
 PaletteRange p_rangePmenu[MAX_PLAYERS] = {      // pmenu (players)
-    {10, 10}, {11, 11}, {12, 12}, {12, 12}
+    {10, 10}, {11, 11}, {12, 12}, {13, 13}
 };
 PaletteRange p_rangePmenuAll  = { 10, 12 };
-PaletteRange p_rangeMenu1     = { 26, 26 };     // tmenu (ui)
+
+PaletteRange p_rangeMenu1     = { 26, 26 };     // tmenu (title)
 PaletteRange p_rangeMenu2     = { 27, 27 };
 PaletteRange p_rangeMenu3     = { 28, 28 };
 PaletteRange p_rangeMenu4     = { 31, 31 };

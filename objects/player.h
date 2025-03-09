@@ -21,7 +21,7 @@
 
 #define PLAYER_X 350
 #define PLAYER_Y 120
-#define PLAYER_DEPTH 120
+#define PLAYER_DEPTH 110
 #define PLAYER_RADIUS toFIXED(26)
 #define SHIELD_OFFSET toFIXED(36)
 
@@ -152,7 +152,8 @@ typedef struct _PLAYER
 
 } PLAYER, *PPLAYER;
 
-void drawPlayerSprite(PPLAYER player);
+extern PLAYER g_Players[MAX_PLAYERS];
+
 void speedLimitPlayer(PPLAYER player);
 void boundPlayer(PPLAYER player);
 void boundAiPlayer(PPLAYER player);
@@ -160,7 +161,6 @@ void explodeNeighbors(PPLAYER player);
 
 void getPlayersInput(void);
 void updatePlayers(void);
-void drawPlayers(void);
 void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion);
 
 void initPlayers(void);
@@ -168,10 +168,22 @@ void initAiPlayers(void);
 void initStoryCharacters(void);
 void initVsModePlayers(void);
 void initDemoPlayers(void);
+void initPlayerGoals(void);
 
 void resetPlayerScores(void);
 void spawnPlayers(void);
 void cacheInputDirectionPlayer(PPLAYER player, bool* up, bool* down, bool* left, bool *right);
 
+static __jo_force_inline void drawPlayers(void)
+{
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
+    {
+        PPLAYER player = &g_Players[i];
 
-
+        if(player->objectState == OBJECT_STATE_INACTIVE)
+        {
+            continue;
+        }
+        my_sprite_draw(player->_sprite);
+    }
+}

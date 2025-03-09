@@ -14,6 +14,8 @@ jo_tile paw_tileset[NUM_PAW_SPRITES] = {0};
 
 jo_tile pixel_poppy1_tileset[NUM_POPPY_SPRITES] = {0};
 
+jo_tile goal_tileset[NUM_GOAL_SPRITES] = {0};
+
 jo_tile menu_text_tileset[NUM_TITLE_MENU_TEXT] = {0};
 
 jo_tile timer_tileset[NUM_TIMER_SPRITES] = {0};
@@ -175,9 +177,12 @@ void loadGameAssets(void)
     // UI elements
     loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, NUM_TIMER_SPRITES, 16, 16, true);
     timer_num10.anim1.asset = g_Assets.timer;
+    timer_num100.anim1.asset = g_Assets.timer;
 
-    goal1.spr_id = jo_sprite_add_tga(NULL, "GOAL.TGA", palette_transparent_index);
-    goal2.spr_id = goal1.spr_id;
+    loadSprite(&goal[0], g_Assets.goal1, "GOAL1.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
+    loadSprite(&goal[1], g_Assets.goal2, "GOAL2.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
+    loadSprite(&goal[2], g_Assets.goal3, "GOAL3.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
+    loadSprite(&goal[3], g_Assets.goal4, "GOAL4.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
     
     loadSprite(&heart, g_Assets.heart, "HEARTS.TGA", heart_tileset, NUM_HEART_SPRITES, 8, 8, true);
     star.anim1.asset = g_Assets.heart;

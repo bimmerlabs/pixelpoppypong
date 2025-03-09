@@ -90,6 +90,13 @@ void changeState(GAME_STATE newState)
             g_Game.gameState = g_Game.nextState;
             break;
         }
+        // case GAME_STATE_NAME_ENTRY:
+        // {
+            // g_Game.nextState = GAME_STATE_NAME_ENTRY;
+            // // initNameEntry();
+            // g_Game.gameState = g_Game.nextState;
+            // break;
+        // }
         case GAME_STATE_CREDITS:
         {
             g_Game.nextState = GAME_STATE_CREDITS;
