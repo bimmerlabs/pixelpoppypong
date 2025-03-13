@@ -10,10 +10,8 @@ static bool play_battle_is_over = true;
 
 static bool draw_demo_text = true;
 static bool time_over = false;
+static unsigned int endGameTimer = 0;
 
-static unsigned char hunds;
-static unsigned char tens;
-static unsigned char ones;
 static bool isRoundOver(void);
 // static void drawStats(void);
 // static void drawScore(void);
@@ -78,9 +76,9 @@ void gameplay_init() {
     sprite_frame_reset(&shroom_item);
     sprite_frame_reset(&shield1);
 
-    reset_sprites();
-    do_update_shroom = true;
-    do_update_PmenuAll = true;
+    // reset_sprites();
+    // do_update_shroom = true;
+    // do_update_PmenuAll = true;
     initPlayerGoals();
     
     jo_set_default_background_color(JO_COLOR_Black);
@@ -93,7 +91,7 @@ void gameplay_init() {
     // reset timer
     g_Game.GameTimer = TIMEOUT;
     g_Game.BombTimer = BOMB_TIMER;
-    convertNumberToDigits(g_Game.GameTimer, &hunds, &tens, &ones);
+    convertNumberToDigits(g_Game.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
@@ -104,6 +102,7 @@ void gameplay_init() {
     round_start = false;
     g_Game.isRoundOver = false;
     g_Game.isGoalScored = false;
+    endGameTimer = 5*60;
     
     slScrPosNbg1(toFIXED(0), toFIXED(0));
     
@@ -225,7 +224,7 @@ void demo_update(void)
     }
     
     // game timer
-    convertNumberToDigits(g_Game.GameTimer, &hunds, &tens, &ones);
+    convertNumberToDigits(g_Game.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
@@ -284,10 +283,15 @@ void demo_update(void)
             play_battle_is_over = false;
         }
         jo_nbg0_printf(17, 14, "GAME OVER!");
+        
         // transition?  
         // add scores?
         // enter initials?
         // end game?
+        endGameTimer--;        
+        if (endGameTimer == 0) {
+            transitionState(GAME_STATE_NAME_ENTRY);
+        }
     }
 }
 

@@ -62,8 +62,8 @@ void teamSelect_init(void)
     loadCharacterAssets();
     reset_inputs();
     initTouchCounter();
-    reset_sprites();
-    do_update_PmenuAll = true;
+    // reset_sprites();
+    // do_update_PmenuAll = true;
     initPlayers();
     
     initTeams();
@@ -353,6 +353,7 @@ void characterSelect_input(void)
             // CHOOSE CHARACTER
             if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT))
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 do
                 {
                     player->character.choice--;
@@ -364,6 +365,7 @@ void characterSelect_input(void)
             }
             if (jo_is_input_key_down(player->input->id, JO_KEY_RIGHT))
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 do
                 {
                     player->character.choice++;
@@ -381,6 +383,7 @@ void characterSelect_input(void)
             // GO BACK
             if (jo_is_input_key_down(player->input->id, JO_KEY_B) && player->pressedB == false)
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 player->startSelection = false;
                 // player->input->isSelected = false; // only change inputs on state change
                 characterAvailable[player->character.choice] = true;
@@ -397,6 +400,7 @@ void characterSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_A) ||
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // assign to a default team (left vs right)
                 if (i %2 == 0) { // modulus (replace with jo function)
                     player->teamChoice = TEAM_1;
@@ -454,6 +458,7 @@ void characterSelect_input(void)
         if (!player->startSelection) {
             // Once a player starts selection, they shouldn't be able to assign a new id
             if (player->input->isSelected && jo_is_input_key_down(player->input->id, JO_KEY_START)) {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 player->startSelection = true;
                 player->character.choice = CHARACTER_MACCHI;
                 validateCharacters(player);
@@ -467,6 +472,7 @@ void characterSelect_input(void)
                     }
                     if (jo_is_input_key_down(ip, JO_KEY_START))
                     {
+                        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                         player->input = &g_Inputs[ip];
                         player->input->id = ip;
                         player->input->isSelected = true;
@@ -517,6 +523,7 @@ void teamSelect_input(void)
             }
             // CHOOSE A TEAM
             if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 do {
                     player->teamChoice--;
                     if (player->teamChoice < TEAM_1) {
@@ -534,6 +541,7 @@ void teamSelect_input(void)
                 return;
             }
             if (jo_is_input_key_down(player->input->id, JO_KEY_RIGHT) && g_Game.numPlayers != ONE_PLAYER) {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 do {
                     player->teamChoice++;
                     if (player->teamChoice > g_Game.maxTeams) {
@@ -555,6 +563,7 @@ void teamSelect_input(void)
             // GO BACK
             if (jo_is_input_key_down(player->input->id, JO_KEY_B))
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 player->pressedB = true;
                 characterAvailable[player->character.choice] = true;
                 player->character.selected = false;
@@ -566,6 +575,7 @@ void teamSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_A) ||
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 assign_team(player->teamOldTeam, player->teamChoice);
                 player->teamOldTeam = player->teamChoice;
                 player->teamSelected = true;
@@ -592,6 +602,7 @@ void teamSelect_input(void)
                     // jo_audio_play_sound(&g_Assets.crackPCM);
                     return;
                 }
+                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                  player->isReady = true;
                  g_Game.currentNumPlayers++;
                  return;
@@ -600,6 +611,7 @@ void teamSelect_input(void)
             // GO BACK
             if (jo_is_input_key_down(player->input->id, JO_KEY_B))
             {   
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 resetReadyState();
                 all_players_ready = false;
                 player->isReady = false;

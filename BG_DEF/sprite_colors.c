@@ -5,6 +5,8 @@
 #include "../lighting.h"
 #include "../font.h"
 
+bool do_update_All = false;
+bool do_update_font2All = false;
 bool do_update_ppplogo = false;
 bool do_update_logo1 = false;
 bool do_update_Goals[MAX_PLAYERS];
@@ -17,6 +19,9 @@ bool do_update_menu4 = false;
 bool do_update_fish = false;
 bool do_update_bomb = false;
 bool do_update_shroom = false;
+
+bool update_palette_All = false;
+bool update_palette_font2All = false;
 bool update_palette_ppplogo = false;
 bool update_palette_logo1 = false;
 bool update_palette_Goals[MAX_PLAYERS];
@@ -141,8 +146,18 @@ HslPalette hslSprites = {
 };
 
 // palette ranges
-PaletteRange p_rangeSprites   = { 0, 234 };     // all colors
-PaletteRange p_rangeFont      = { 2, 6 };       // font
+PaletteRange p_rangeSpritesAll   = { 0, 234 };     // all colors (excluding normal map colors)
+
+// FONT (start index chosen arbitrarily - don't forget to reset palette after exiting screen!
+PaletteRange p_rangeFont2All  = {64, 93}; // A - END
+PaletteRange p_rangeFont2[FONT_CHARS] = {
+    {64, 64}, {65, 65}, {66, 66}, {67, 67}, {68, 68}, {69, 69}, // A B C D E F
+    {70, 70}, {71, 71}, {72, 72}, {73, 73}, {74, 74}, {75, 75}, // G H I J K L
+    {76, 76}, {77, 77}, {78, 78}, {79, 79}, {80, 80}, {81, 81}, // M N O P Q R
+    {82, 82}, {83, 83}, {84, 84}, {85, 85}, {86, 86}, {87, 87}, // S T U V W X
+    {88, 88}, {89, 89}, {90, 90}, {91, 91}, {92, 92}, {93, 93}, // Y Z ! . < END
+};
+
 PaletteRange p_rangeLogo      = { 16, 23 };     // logo
 PaletteRange p_rangeGoals[MAX_PLAYERS] = {      // Goal Colors
     {60, 60}, {61, 61}, {62, 62}, {63, 63}
@@ -188,11 +203,12 @@ PaletteRange p_rangeNormalMap = { 235, 254 };   // normal map
 GlobalHSL hsl_incSprites = {0, 0, 0};
 
 // initial image setup: hue, saturation, luminance, x_pos, y_pos, x_scale, y_scale, x_scroll (rate), y_scroll (rate), min_sat_id, max_sat_id, min_lum_id, max_lum_id
-ImageAttr attrSprites = { 288, 250, 255, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
+// TODO: adjust attrSprites hue based on time (normal mapping) original was 288
+ImageAttr attrSprites = { 200, 255, 255, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
 
 void init_sprites_img(void) {
-    MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSprites);
-    min_max_sl_id(&hslSprites, &p_rangeSprites, &attrSprites);
+    MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSpritesAll);
+    min_max_sl_id(&hslSprites, &p_rangeSpritesAll, &attrSprites);
     
     for(unsigned int i = 0; i < (MAX_PLAYERS); i++)
     {
@@ -225,9 +241,9 @@ bool update_sprites_palette(PaletteRange *range) {
 
 void reset_sprites (void) {
     // hsl_incSprites = (GlobalHSL){0, 0, 0}; // is this neccesary?
-    MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSprites);
-    min_max_sl_id(&hslSprites, &p_rangeSprites, &attrSprites);
-    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, &p_rangeSprites);
+    MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSpritesAll);
+    min_max_sl_id(&hslSprites, &p_rangeSpritesAll, &attrSprites);
+    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, &p_rangeSpritesAll);
 }
 
 

@@ -1,6 +1,10 @@
 #include <jo/jo.h>
 #include "util.h"
 
+unsigned char hunds = 0;
+unsigned char tens = 0;
+unsigned char ones = 0;
+
 // shuffles an array of integers
 void shuffleArray(unsigned int* array, unsigned int size)
 {
@@ -37,17 +41,17 @@ int minmumValue(int min, int value)
     return value;
 }
 
-void convertNumberToDigits(int number, unsigned char* hunds, unsigned char* tens, unsigned char* ones)
+void convertNumberToDigits(int number)
 {
     if(number == 0)
     {
-        *hunds = 0;
-        *tens = 0;
-        *ones = 0;
+        hunds = 0;
+        tens = 0;
+        ones = 0;
         return;
     }
 
-    *hunds = (number / 100);
-    *tens = ((number - ((number/100) * 100))/10);
-    *ones = (number % 10); // modulus
+    hunds = (number / 100);
+    tens = ((number - ((number/100) * 100))/10);
+    ones = (number % 10); // modulus
 }

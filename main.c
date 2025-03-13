@@ -44,6 +44,7 @@
 #include "BG_DEF/sprite_colors.h"
 #include "credits.h"
 #include "highscores.h"
+#include "name_entry.h"
 
 GAME g_Game = {0};
 ASSETS g_Assets = {0};
@@ -139,6 +140,9 @@ void my_input_callback(void) {
         case GAME_STATE_GAMEPLAY:
             gameplay_input();
             break;
+        case GAME_STATE_NAME_ENTRY:
+            nameEntryInput();
+            break;
         default:
             break;
     }
@@ -216,6 +220,10 @@ void my_color_calc(void)
             updateGameColors();
             break;
         }
+        case GAME_STATE_NAME_ENTRY: {
+            updateNameEntryColors();
+            break;
+        }
         default:
         {
             return;
@@ -252,6 +260,10 @@ void my_palette_update(void)
         }
         case GAME_STATE_GAMEPLAY: {
             updateGamePalette();
+            break;
+        }
+        case GAME_STATE_NAME_ENTRY: {
+            updateNameEntryPalette();
             break;
         }
         default:
@@ -319,6 +331,8 @@ void			jo_main(void)
     
     jo_core_add_callback(gameplay_draw);
     jo_core_add_callback(gameplay_update);
+    
+    jo_core_add_callback(nameEntryUpdate);
     
     jo_core_add_callback(demo_update);
     

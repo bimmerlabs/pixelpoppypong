@@ -1,6 +1,7 @@
 #include <jo/jo.h>
 #include "main.h"
 #include "input.h"
+#include "assets.h"
 #include "objects/player.h"
 INPUT g_Inputs[MAX_INPUTS] = {0};
 
@@ -96,11 +97,15 @@ void check_inputs(void) {
             continue;
         }
         if (jo_get_input_type(i) == JoNightsPad) {
-            if (jo_is_input_key_pressed(i, JO_KEY_LEFT) && input->sensitivity > ANALOG_MIN)
-            input->sensitivity -= toFIXED(0.01);
-            if (jo_is_input_key_pressed(i, JO_KEY_RIGHT) && input->sensitivity < ANALOG_MAX)
+            if (jo_is_input_key_pressed(i, JO_KEY_LEFT) && input->sensitivity > ANALOG_MIN) {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
+                input->sensitivity -= toFIXED(0.01);
+            }
+            if (jo_is_input_key_pressed(i, JO_KEY_RIGHT) && input->sensitivity < ANALOG_MAX) {
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
                 input->sensitivity += toFIXED(0.01);
             }
+        }
     }
 }
 void analogAdjustmentScreen_draw(int input_x, int input_y) {

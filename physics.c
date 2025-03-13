@@ -169,7 +169,7 @@ void update_ball(Sprite *ball) {
     {
         #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
         pcm_parameter_change(g_Assets.bumpPcm16, 6, PCM_PAN_RIGHT);
-        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 6);
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         #else
         jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 6);
         #endif
@@ -180,7 +180,7 @@ void update_ball(Sprite *ball) {
     {
         #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
         pcm_parameter_change(g_Assets.bumpPcm16, 6, PCM_PAN_LEFT);
-        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 6);
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         #else
         jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 6);
         #endif
@@ -190,7 +190,7 @@ void update_ball(Sprite *ball) {
     if(ball->pos.y > SCREEN_BOTTOM - ball->pos.r)
     {
         #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 5);
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         #else
         jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 5);
         #endif
@@ -200,7 +200,7 @@ void update_ball(Sprite *ball) {
     if(ball->pos.y < SCREEN_TOP + ball->pos.r)
     {
         #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        pcm_play(g_Assets.bumpPcm16, PCM_SEMI, 5);
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         #else
         jo_audio_play_sound_on_channel(&g_Assets.bumpPcm16, 5);
         #endif

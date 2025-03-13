@@ -87,7 +87,6 @@ void pauseGame(void)
 {
 
     g_PauseChoice = 0;
-    
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
@@ -104,6 +103,7 @@ void pauseGame(void)
     #else
     jo_audio_set_volume(volume);
     #endif
+    pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
     // TODO:
     // playCDTrack(track);
     // maybe reduce the audio volume instead
@@ -131,12 +131,14 @@ static void checkForPauseMenu(void)
 {
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
-            g_PauseChoice--;
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        g_PauseChoice--;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
-            g_PauseChoice++;
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        g_PauseChoice++;
     } 
      
     if (jo_is_pad1_key_down(JO_KEY_LEFT))
@@ -144,6 +146,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 game_options.debug_display = !game_options.debug_display;
                 break;
             default:
@@ -155,6 +158,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 game_options.debug_display = !game_options.debug_display;
                 break;
             default:
@@ -170,6 +174,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_RESUME:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (game_options.mosaic_display) {
@@ -186,6 +191,7 @@ static void checkForPauseMenu(void)
                 break;
 
             case PAUSE_OPTIONS_RESTART:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // start a new game without going to title or team select
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (game_options.mosaic_display) {
@@ -196,10 +202,12 @@ static void checkForPauseMenu(void)
                 break;
 
             case PAUSE_OPTIONS_QUIT:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 transitionState(GAME_STATE_UNINITIALIZED);
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (game_options.mosaic_display) {
@@ -215,6 +223,7 @@ static void checkForPauseMenu(void)
                 #endif
                 break;
             case PAUSE_OPTIONS_ANALOG:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (game_options.mosaic_display) {
@@ -233,6 +242,7 @@ static void checkForPauseMenu(void)
     }
     else if (jo_is_pad1_key_down(JO_KEY_B))
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         // simply unpause
         mosaic_in_rate = MOSAIC_FAST_RATE;
         if (game_options.mosaic_display) {

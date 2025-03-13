@@ -3,7 +3,6 @@
 #include <jo/jo.h>
 
 #define MAX_PALETTE_ENTRIES 256
-// #define MAX_PALETTE_GROUPS 8 // adding more groups reduces how many colors you can have in the normal map
 
 // Struct definitions
 typedef struct {

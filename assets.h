@@ -10,6 +10,8 @@
 #define NUM_CHARACTER_SPRITES 12
 #define NUM_PCURSOR_SPRITES 4
 
+#define NUM_FONT_CHARS 40
+
 #define NUM_TITLE_MENU_TEXT 12
 
 #define NUM_GOAL_SPRITES 4
@@ -52,6 +54,8 @@ typedef struct _assets
 {
     // title screen
     int title;
+    
+    int font[NUM_FONT_CHARS]; // VDP1 font
     
     int menu[NUM_TITLE_MENU_TEXT];
     
@@ -115,6 +119,9 @@ void loadCommonAssets(void);
 
 void loadPPPLogoAssets(void);
 void unloadPPPLogoAssets(void);
+
+void loadNameEntryAssets(void);
+void unloadNameEntryAssets(void);
 
 void loadTitleScreenAssets(void);
 void unloadTitleScreenAssets(void);

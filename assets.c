@@ -16,6 +16,8 @@ jo_tile pixel_poppy1_tileset[NUM_POPPY_SPRITES] = {0};
 
 jo_tile goal_tileset[NUM_GOAL_SPRITES] = {0};
 
+jo_tile font_char_tileset[NUM_FONT_CHARS] = {0};
+
 jo_tile menu_text_tileset[NUM_TITLE_MENU_TEXT] = {0};
 
 jo_tile timer_tileset[NUM_TIMER_SPRITES] = {0};
@@ -122,6 +124,20 @@ void unloadPPPLogoAssets(void)
     g_Game.isLoading = true;
     // unloads everything after this point
     jo_sprite_free_from(ppplogo.spr_id);
+    
+}
+
+void loadNameEntryAssets(void)
+{        
+    loadSprite(&font, g_Assets.font, "FONT2.TGA", font_char_tileset, NUM_FONT_CHARS, 24, 24, true);
+    g_Game.isLoading = false;
+}
+
+void unloadNameEntryAssets(void)
+{
+    g_Game.isLoading = true;
+    // unloads everything after this point
+    jo_sprite_free_from(font.spr_id);
     
 }
 

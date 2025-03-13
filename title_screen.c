@@ -121,6 +121,7 @@ void titleScreen_input(void)
 {
     // select an option here
     if (jo_is_pad1_key_down(JO_KEY_START)) {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         changeState(GAME_STATE_TITLE_MENU);
         if (game_options.mosaic_display) {
             mosaic_out = true;
@@ -308,6 +309,7 @@ void menuScreen_input(void)
 {
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         h_value = 0;
         reset_sprites();
         do_update_menu3 = true;
@@ -341,6 +343,7 @@ void menuScreen_input(void)
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         h_value = 0;
         reset_sprites();
         do_update_menu3 = true;
@@ -377,18 +380,21 @@ void menuScreen_input(void)
         switch(g_TitleScreenChoice)
         {
             case TITLE_OPTION_GAME_MODE:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.gameMode--;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
                 selectGameMode();
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.numPlayers--;
                 sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, (g_Game.maxPlayers+1));
                 selectNumPlayers();
                 break;
 
             case TITLE_OPTION_GAME_DIFFICULTY:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.gameDifficulty--;
                 sanitizeValue((int*)&g_Game.gameDifficulty, 0, GAME_DIFFICULTY_MAX);
                 break;
@@ -403,18 +409,21 @@ void menuScreen_input(void)
         switch(g_TitleScreenChoice)
             {
             case TITLE_OPTION_GAME_MODE:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.gameMode++;
                 sanitizeValue((int*)&g_Game.gameMode, 0, GAME_MODE_MAX);
                 selectGameMode();
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.numPlayers++;
                 sanitizeValue((int*)&g_Game.numPlayers, g_Game.minPlayers, (g_Game.maxPlayers+1));
                 selectNumPlayers();
                 break;
             
             case TITLE_OPTION_GAME_DIFFICULTY:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_Game.gameDifficulty++;
                 sanitizeValue((int*)&g_Game.gameDifficulty, 0, GAME_DIFFICULTY_MAX);
                 break;
@@ -432,6 +441,7 @@ void menuScreen_input(void)
         jo_is_pad1_key_down(JO_KEY_A) ||
         jo_is_pad1_key_down(JO_KEY_C))
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         switch(g_TitleScreenChoice)
         {
             case TITLE_OPTION_GAME_MODE:
@@ -481,18 +491,22 @@ void menuScreen_input(void)
                 break;
 
             case TITLE_OPTION_GAME_PLAYERS:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_TitleScreenChoice--;
                 break;
             
             case TITLE_OPTION_GAME_DIFFICULTY:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_TitleScreenChoice--;
                 break;
                 
             case TITLE_OPTION_GAME_START:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 g_TitleScreenChoice--;
                 break;
                 
             case TITLE_OPTION_GAME_OPTIONS:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 h_value = 0;
                 game_palette.data[28] = JO_COLOR_White;
                 g_TitleScreenChoice = g_TitleScreenLastChoice;
@@ -750,12 +764,14 @@ void optionsScreen_input(void)
 {
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
-            g_OptionScreenChoice--;
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        g_OptionScreenChoice--;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
-            g_OptionScreenChoice++;
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        g_OptionScreenChoice++;
     }
 
     if (g_OptionScreenChoice == OPTION_ANALOG) {
@@ -768,18 +784,23 @@ void optionsScreen_input(void)
         {
             case OPTION_DEBUG_MODE:
                 game_options.debug_mode = !game_options.debug_mode;
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 break;
             case OPTION_DEBUG_TEXT:
                 game_options.debug_display = !game_options.debug_display;
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 break;
             case OPTION_DRAWMESH:
                 game_options.mesh_display = !game_options.mesh_display;
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 break;
             case OPTION_DRAWMOSAIC:
                 game_options.mosaic_display = !game_options.mosaic_display;
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 break;
             case OPTION_USE_RTC:
                 game_options.use_rtc = !game_options.use_rtc;
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 break;
             default:
                 break;
@@ -797,6 +818,7 @@ void optionsScreen_input(void)
         switch(g_OptionScreenChoice)
         {
             case OPTION_EXIT:
+                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 save_game_backup();
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 changeState(GAME_STATE_TITLE_MENU);
@@ -808,6 +830,7 @@ void optionsScreen_input(void)
     }
     if (jo_is_pad1_key_down(JO_KEY_B) )
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         save_game_backup();
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
         changeState(GAME_STATE_TITLE_MENU);

@@ -11,6 +11,7 @@
 #include "audio.h"
 #include "credits.h"
 #include "highscores.h"
+#include "name_entry.h"
 
 Uint16 state_fade_timer = STATE_FADE_TIMER;
 
@@ -90,13 +91,13 @@ void changeState(GAME_STATE newState)
             g_Game.gameState = g_Game.nextState;
             break;
         }
-        // case GAME_STATE_NAME_ENTRY:
-        // {
-            // g_Game.nextState = GAME_STATE_NAME_ENTRY;
-            // // initNameEntry();
-            // g_Game.gameState = g_Game.nextState;
-            // break;
-        // }
+        case GAME_STATE_NAME_ENTRY:
+        {
+            g_Game.nextState = GAME_STATE_NAME_ENTRY;
+            nameEntryInit();
+            g_Game.gameState = g_Game.nextState;
+            break;
+        }
         case GAME_STATE_CREDITS:
         {
             g_Game.nextState = GAME_STATE_CREDITS;
@@ -114,6 +115,10 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_UNINITIALIZED:
         {
             jo_core_tv_off();
+            reset_sprites();
+            do_update_All = true;
+            updateAllColors();
+            updateAllPalette();
             g_Game.isLoading = true;
             loadCommonAssets();
             frame = 1;

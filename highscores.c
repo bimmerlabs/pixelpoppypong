@@ -25,7 +25,7 @@ void highScore_init(void) {
 
 void init_scores(void)
 {
-    music_in = true;
+    // music_in = true;
     fade_in = true;
     transition_in = true;
 
@@ -46,6 +46,8 @@ void init_scores(void)
     
     sortHighScores(highScores);
 
+    volume = MAX_VOLUME;
+    CDDA_SetVolume(volume >> 4);
     playCDTrack(BEGIN_GAME_TRACK, false);
 }
 
