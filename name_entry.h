@@ -1,6 +1,7 @@
 #pragma once
 
 #include "assets.h"
+#include "BG_DEF/sprite_colors.h"
 
 #define NAME_ENTRY_TIMER 99
 
@@ -47,6 +48,7 @@ static inline int snap_to_nearest_12(int angle, bool pressedLeft, bool pressedRi
 
 static bool rotateLeft = false;
 static bool rotateRight = false;
+
 static inline int snap_to_end(int angle, bool *isAngleSnapped) {
     // If already snapped, do nothing
     if (*isAngleSnapped) {
@@ -82,4 +84,17 @@ static inline int snap_to_end(int angle, bool *isAngleSnapped) {
     }
 
     return angle;
+}
+
+static inline void reset_name_entry_settings(void) {
+    if (game_options.debug_mode && g_Game.lastState == GAME_STATE_NAME_ENTRY) { // only needed if manually changing states
+        reset_sprites();
+        do_update_All = true;
+        updateAllColors();
+        updateAllPalette();
+        set_spr_scale(&pixel_poppy, 6, 6);
+        pixel_poppy.rot.z = 0;
+        set_spr_position(&pixel_poppy, 0, 0, 100);
+        sprite_frame_reset(&pixel_poppy);
+    }
 }

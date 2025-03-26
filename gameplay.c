@@ -4,7 +4,7 @@
 #include "gameplay.h"
 #include "screen_transition.h"
 #include "AI.h"
-bool start_timer = false;
+bool start_gameplay_timer = false;
 bool round_start = false;
 static bool play_battle_is_over = true;
 
@@ -34,14 +34,12 @@ void gameplay_init() {
             case GAME_MODE_BATTLE:
                 initVsModePlayers();
                 break;
-            case GAME_MODE_CLASSIC: {
+            case GAME_MODE_CLASSIC:
                 initVsModePlayers();
                 break;
-            }
-            case GAME_MODE_STORY: {
+            case GAME_MODE_STORY:
                 initStoryMode();
                 break;
-            }
             default:
                 break;
         }
@@ -56,10 +54,10 @@ void gameplay_init() {
 
     resetPlayerScores();
     setGoalSize();
+    getContinues();
     
     // collision detection    // sprite_id = 0;
 
-    // debug only
     reset_ball_movement(&pixel_poppy);
     
     sprite_frame_reset(&pixel_poppy);
@@ -88,6 +86,7 @@ void gameplay_init() {
     
     g_Game.isPaused = false;
     g_Game.isActive = false;
+    g_Game.isBallActive = false;
     // reset timer
     g_Game.GameTimer = TIMEOUT;
     g_Game.BombTimer = BOMB_TIMER;
@@ -96,13 +95,15 @@ void gameplay_init() {
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
     // NEED BETTER NAMES FOR THESE
-    start_timer = false;
+    start_gameplay_timer = false;
     g_Game.BeginTimer = 0;
     time_over = false;
     round_start = false;
     g_Game.isRoundOver = false;
+    g_Game.countofRounds = 0;
     g_Game.isGoalScored = false;
     endGameTimer = 5*60;
+    play_battle_is_over = true;
     
     slScrPosNbg1(toFIXED(0), toFIXED(0));
     
@@ -111,12 +112,7 @@ void gameplay_init() {
     set_spr_scale(&menu_bg1, 36, 20);
     
     // set_spr_scale(&goal2, 2, 0.1); // need a different sprite for 4 teams
-
-    set_item_position(&bomb_item);
-    set_item_position(&fishtank_item);
-    set_item_position(&shroom_item);
-    set_item_position(&garfield_item);
-    set_item_position(&craig_item);    
+    setItemPositions();    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
 }
@@ -189,32 +185,37 @@ void demo_update(void)
         jo_nbg0_printf(20, 27, "DEMO!");
     }
     g_Game.DemoTimer++;
-    if (!round_start) {
+    // if (!round_start) {
         playerAI(&pixel_poppy);
         // sweep_and_prune();
         // updatePlayers();
-    }
+    // }
     // check if the frameAnim has expired
     if(g_Game.DemoTimer > DEMO_TIME)
     {
         g_Game.DemoTimer = 0;
         transitionState(GAME_STATE_UNINITIALIZED);
     }
-}void game_timer(void)
+}void gameplay_timer(void)
 {
     // could move to vblank?
     // wait 3 seconds to start the game
-    if (g_Game.BeginTimer > GAME_BEGIN_TIME) {
-        start_timer = true;
+    if (g_Game.BeginTimer > GAME_BEGIN_TIME && !start_gameplay_timer) {
+        start_gameplay_timer = true;
     }
-    if (!start_timer) {
+    if (g_Game.BeginTimer > DROP_BALL_TIME && !g_Game.isBallActive) {
+        g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
+    }
+    if (!start_gameplay_timer) {
         g_Game.BeginTimer++;
         round_start = true;
         return;
     }
     
     // start round    if (round_start) {
-        startGameplay();
+        round_start = startGameplay(); // returns true until ball is active
+    }
+    else {
         g_Game.isActive = true;
         round_start = false;
     }
@@ -252,23 +253,21 @@ void demo_update(void)
     }
     if (!g_Game.isPaused && !time_over) {
         // move to draw/HUD timer function
-        game_timer();
+        gameplay_timer();
         switch(g_Game.gameMode)
         {
             case GAME_MODE_BATTLE:
                 drawVsMode();
                 drawGameUI();
                 break;
-            case GAME_MODE_CLASSIC: {
+            case GAME_MODE_CLASSIC:
                 drawClassicMode();
                 drawGameUI();
                 break;
-            }
-            case GAME_MODE_STORY: {
+            case GAME_MODE_STORY:
                 drawStoryMode();
                 drawGameUI();
                 break;
-            }
             default:
                 break;
         }
@@ -289,7 +288,7 @@ void demo_update(void)
         // enter initials?
         // end game?
         endGameTimer--;        
-        if (endGameTimer == 0) {
+        if (endGameTimer == 0 || g_Game.countofRounds == MAX_ROUNDS) {
             transitionState(GAME_STATE_NAME_ENTRY);
         }
     }
@@ -478,12 +477,20 @@ void gameplay_update(void)
 }
 void gameplay_input(void)
 {
-    if(g_Game.isPaused == true || start_timer == false)
+    // if(g_Game.isPaused == true || start_gameplay_timer == false)
+    if(g_Game.isPaused == true)
     {
         return;
     }
     check_inputs();
-    getPlayersInput();
+    switch (g_Game.gameMode) {
+        case GAME_MODE_CLASSIC:
+            getClassicModeInput();
+            break;
+        default:
+            getPlayersInput();
+            break;
+    }
 }
 
 void    demo_input(void)	{

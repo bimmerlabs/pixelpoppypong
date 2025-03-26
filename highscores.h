@@ -51,8 +51,28 @@ void update_bg_position(void);
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
+static __jo_force_inline void updatePlayerLives(int lastTouchPlayerID, int scoredOnPlayerID)
+{
+    if (g_Players[scoredOnPlayerID].numLives > 0) {
+        g_Players[scoredOnPlayerID].numLives--;
+        if (g_Players[scoredOnPlayerID].numLives == 0) {
+            // kill player?
+            g_Players[scoredOnPlayerID].score.deaths++;
+            if (g_Players[scoredOnPlayerID].score.deaths < g_Game.numContinues) {
+                g_Players[scoredOnPlayerID].numLives = getLives();
+            }
+            else {
+                g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
+            }
+            g_Players[lastTouchPlayerID].score.stars++;
+        }
+    }
+}
+
+// these don't work - need to assign a goal id for the player, instead of trying to calculate it since the player id isn't the same thing as the goal
 static __jo_force_inline void updateScoreLeft(Sprite *ball) {
     int lastTouchPlayerID = -1;
+    int scoredOnPlayerID = -1;
     // Find the last player who touched the ball
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (touchedBy[i].hasTouched) {
@@ -67,12 +87,23 @@ static __jo_force_inline void updateScoreLeft(Sprite *ball) {
                             + (JO_ABS(toINT(ball->vel.z)) * 500);
         g_Players[lastTouchPlayerID].score.points += points;
         g_Game.isGoalScored = true;
+        
     }
-    // subtract hearts from player who was scored on?
+    if (g_Game.numTeams == 4 && ball->pos.y > SCREEN_MIDDLE) {
+        scoredOnPlayerID = 3;
+    }
+    else if (g_Game.numTeams == 4 && ball->pos.y < SCREEN_MIDDLE) {
+        scoredOnPlayerID = 1;
+    }
+    else {
+        scoredOnPlayerID = 1;
+    }
+    updatePlayerLives(lastTouchPlayerID, scoredOnPlayerID);
 }
 
 static __jo_force_inline void updateScoreRight(Sprite *ball) {
     int lastTouchPlayerID = -1;
+    int scoredOnPlayerID = -1;
     // Find the last player who touched the ball
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (touchedBy[i].hasTouched) {
@@ -88,8 +119,16 @@ static __jo_force_inline void updateScoreRight(Sprite *ball) {
         g_Players[lastTouchPlayerID].score.points += points;
         g_Game.isGoalScored = true;
     }
-    // subtract hearts from player who was scored on?
-    // assign a playerID to each team? (teamselect.h)
+    if (g_Game.numTeams > 2 && ball->pos.y > SCREEN_MIDDLE) {
+        scoredOnPlayerID = 2;
+    }
+    else if (g_Game.numTeams > 2 && ball->pos.y < SCREEN_MIDDLE) {
+        scoredOnPlayerID = 0;
+    }
+    else {
+        scoredOnPlayerID = 0;
+    }
+    updatePlayerLives(lastTouchPlayerID, scoredOnPlayerID);
 }
 
 static __jo_force_inline void checkLeftWallScore(Sprite *ball) {

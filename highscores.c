@@ -25,9 +25,23 @@ void highScore_init(void) {
 
 void init_scores(void)
 {
+    if (g_Game.lastState == GAME_STATE_NAME_ENTRY) {
+        unloadNameEntryAssets();
+    }
     // music_in = true;
     fade_in = true;
     transition_in = true;
+    
+    if (game_options.debug_mode) { // only needed if manually changing states
+        reset_sprites();
+        do_update_All = true;
+        updateAllColors();
+        updateAllPalette();
+        set_spr_scale(&pixel_poppy, 6, 6);
+        pixel_poppy.rot.z = 0;
+        set_spr_position(&pixel_poppy, 0, 0, 100);
+        sprite_frame_reset(&pixel_poppy);
+    }
 
     g_Game.lastState = GAME_STATE_HIGHSCORES;
 

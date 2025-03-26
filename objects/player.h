@@ -2,6 +2,7 @@
 #include "../sprites.h"
 #include "../input.h"
 #include "object.h"
+#include "object.h"
 
 #define NOT_PLAYING 0
 #define PLAYING 1
@@ -129,7 +130,12 @@ typedef struct _PLAYER
     // Attributes from the selected character
     FIXED maxSpeed;
     FIXED acceleration;
-    FIXED power;
+    FIXED basePower; // from the character
+    FIXED power; // based on inputs / game factors
+    
+    // FOR GOAL MOVEMENT
+    FIXED goalCenterThresholdMax;
+    FIXED goalCenterThresholdMin;
     
     // SHIELD
     SHIELD shield;
@@ -156,9 +162,9 @@ extern PLAYER g_Players[MAX_PLAYERS];
 
 void speedLimitPlayer(PPLAYER player);
 void boundPlayer(PPLAYER player);
-void boundAiPlayer(PPLAYER player);
 void explodeNeighbors(PPLAYER player);
 
+void getClassicModeInput(void);
 void getPlayersInput(void);
 void updatePlayers(void);
 void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion);
@@ -168,8 +174,14 @@ void initAiPlayers(void);
 void initStoryCharacters(void);
 void initVsModePlayers(void);
 void initDemoPlayers(void);
+
+void assignCharacterSprite(PPLAYER player);
+void assignCharacterStats(PPLAYER player);
 void initPlayerGoals(void);
 
+int getLives(void);
+int getStars(void);
+void getContinues(void);
 void resetPlayerScores(void);
 void spawnPlayers(void);
 void cacheInputDirectionPlayer(PPLAYER player, bool* up, bool* down, bool* left, bool *right);
@@ -180,8 +192,7 @@ static __jo_force_inline void drawPlayers(void)
     {
         PPLAYER player = &g_Players[i];
 
-        if(player->objectState == OBJECT_STATE_INACTIVE)
-        {
+        if (player->objectState == OBJECT_STATE_INACTIVE || player->subState == PLAYER_STATE_DEAD) {
             continue;
         }
         my_sprite_draw(player->_sprite);

@@ -10,29 +10,32 @@
 
 // #define ROUND_OVER_TIME (4 * 60)
 
-#define GAME_BEGIN_TIME (3 * 60)
+#define GAME_BEGIN_TIME (4 * 60)
+#define DROP_BALL_TIME (1.5 * 60)
 #define DEMO_TIME (30 * 60)
 #define BOMB_TIMER (15 * 60)
 #define TIMEOUT 99 // seconds
 
-#define GOAL_TOP toFIXED(-100.0)
-#define GOAL_BOTTOM toFIXED(100.0)
+#define MAX_ROUNDS 3
+
 #define GAMEPLAY_PORTRAIT_X 300
 #define GAMEPLAY_PORTRAIT_Y 190
 #define GAMEPLAY_PORTRAIT_Y 190
 extern PLAYER g_Players[MAX_PLAYERS];
 
+extern Uint8 g_goalPlayerId[MAX_PLAYERS];
+
 extern ANGLE ball_rotation;
-extern bool start_timer;
+extern bool start_gameplay_timer;
 extern bool round_start;
 static bool draw_bomb;
 static bool explode_bomb;
 void gameplay_init(void);
 void demo_init(void);
 void demo_update(void);
-void game_timer(void);
 void setGoalSize(void);
 
+void gameplay_timer(void);
 void gameplay_draw(void);
 void gameScore_draw(void);
 void gameplayUI_draw(PPLAYER player);
@@ -65,7 +68,7 @@ void demo_input(void);
 	player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
 
 	player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-	player->acceleration = characterAttributes[player->character.choice].acceleration;
+	player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
 	player->power = characterAttributes[player->character.choice].power;
 
 	player->objectState = OBJECT_STATE_ACTIVE;
@@ -80,7 +83,16 @@ static __jo_force_inline void initPixelPoppy(void) {
     reset_ball_movement(&pixel_poppy);
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
-}static inline void draw_ui_element(Sprite *sprite, Uint8 num, int x, int y, int offset) {
+    g_Game.isGoalScored = false;
+}
+static __jo_force_inline void setItemPositions(void) {
+    set_item_position(&bomb_item);
+    set_item_position(&fishtank_item);
+    set_item_position(&shroom_item);
+    set_item_position(&garfield_item);
+    set_item_position(&craig_item);
+}
+static inline void draw_ui_element(Sprite *sprite, Uint8 num, int x, int y, int offset) {
     for (int i = 0; i < num; i++) {
         set_spr_position(sprite, x, y, 90);
         my_sprite_draw(sprite);
@@ -135,6 +147,10 @@ static __jo_force_inline void gameplayScores_draw(PPLAYER player) {
 }
 
 static __jo_force_inline void drawGoals(PPLAYER player) {
+    if (player->subState == PLAYER_STATE_DEAD) {
+        return;
+    }
+    
     Uint8 i = player->playerID;
     int x_position = 0;
     int y_position_top = 0;
@@ -146,7 +162,6 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
     int mid_zmode = _ZmRC;
     int bot_zmode = _ZmRB;
     Uint8 goal_scale = 0;
-        
     switch (player->teamChoice) 
     {
         case TEAM_1: {
@@ -291,9 +306,23 @@ static __jo_force_inline void drawGameItems(void) {
         
         drawPlayers();
         drawGameItems();
-        
-        update_ball(&pixel_poppy);
-        my_sprite_draw(&pixel_poppy);
+        // don't draw until poppy is reset
+        if (!g_Game.isGoalScored && !g_Game.isRoundOver) {
+            if (g_Game.isBallActive) {
+                update_ball(&pixel_poppy);
+            }
+            my_sprite_draw(&pixel_poppy);
+            return;
+        }
+        if (g_Game.isGoalScored) {
+            // g_Game.isActive = false;
+            initPixelPoppy();
+            start_gameplay_timer = false;
+            g_Game.isBallActive = false;
+            g_Game.BeginTimer = 0;
+            g_Game.countofRounds++;
+            // setItemPositions();
+        }
 }
 static __jo_force_inline void drawStoryMode(void) {
         // SPRITES
@@ -303,9 +332,23 @@ static __jo_force_inline void drawGameItems(void) {
         
         drawPlayers();
         drawGameItems();
-        
-        update_ball(&pixel_poppy);
-        my_sprite_draw(&pixel_poppy);
+        // don't draw until poppy is reset
+        if (!g_Game.isGoalScored && !g_Game.isRoundOver) {
+            if (g_Game.isBallActive) {
+                update_ball(&pixel_poppy);
+            }
+            my_sprite_draw(&pixel_poppy);
+            return;
+        }
+        if (g_Game.isGoalScored) {
+            // g_Game.isActive = false;
+            initPixelPoppy();
+            start_gameplay_timer = false;
+            g_Game.isBallActive = false;
+            g_Game.BeginTimer = 0;
+            g_Game.countofRounds++;
+            // setItemPositions();
+        }
 }
 static __jo_force_inline void drawClassicMode(void) {
         // SPRITES
@@ -316,12 +359,19 @@ static __jo_force_inline void drawGameItems(void) {
         
         // don't draw until poppy is reset
         if (!g_Game.isGoalScored && !g_Game.isRoundOver) {
-            update_ball(&pixel_poppy);
+            if (g_Game.isBallActive) {
+                update_ball(&pixel_poppy);
+            }
             my_sprite_draw(&pixel_poppy);
             return;
         }
         if (g_Game.isGoalScored) {
+            // g_Game.isActive = false;
             initPixelPoppy();
+            start_gameplay_timer = false;
+            g_Game.isBallActive = false;
+            g_Game.BeginTimer = 0;
+            g_Game.countofRounds++;
         }
 }
 
@@ -339,8 +389,13 @@ static __jo_force_inline void drawGameUI(void) {
     }
 }
 
-static __jo_force_inline void startGameplay(void) {
+static __jo_force_inline bool startGameplay(void) {
+    if (g_Game.isBallActive) {        // g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
         start_ball_movement(&pixel_poppy);
         g_Game.isRoundOver = false;
         g_Game.isGoalScored = false;
+        return false;
+    }
+    return true;
 }
+

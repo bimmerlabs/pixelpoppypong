@@ -135,7 +135,7 @@ void loadNameEntryAssets(void)
 
 void unloadNameEntryAssets(void)
 {
-    g_Game.isLoading = true;
+    // g_Game.isLoading = true;
     // unloads everything after this point
     jo_sprite_free_from(font.spr_id);
     

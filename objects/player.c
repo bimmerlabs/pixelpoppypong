@@ -5,6 +5,7 @@
 #include "player.h"
 #include "../sprites.h"
 #include "../gameplay.h"
+#include "../AI.h"
 #include "../physics.h"
 #include "../team_select.h"
 #include "../BG_DEF/sprite_colors.h"
@@ -21,11 +22,8 @@ int teamCount[MAX_TEAMS+1] = {0};
 
 void respawnPlayer(PPLAYER player, bool deductLife);
 
-static int getLives(void);
-static int getStars(void);
-
 const CHARACTER_ATTRIBUTES characterAttributes[] = {
-   //s  a  p   // speed, acceleration, power - scale 0-100
+  // s   a   p    // speed, acceleration, power - scale 0-100
     {70, 60, 55}, // MACCHI: High speed, medium acceleration, medium power
     {55, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
     {60, 50, 70}, // PENNY: Medium-high speed, medium acceleration, high power
@@ -34,7 +32,7 @@ const CHARACTER_ATTRIBUTES characterAttributes[] = {
     {70, 80, 50}, // SPARTA: High acceleration, high speed, medium power
     {65, 65, 65}, // TJ: Balanced attributes
     {75, 50, 90}, // GEORGE: He's kinda mean
-    {90, 62, 100}, // WUPPY: High power, medium speed, low acceleration
+    {90, 62, 100},// WUPPY: High power, medium speed, low acceleration
     {88, 88, 88}, // THE WALRUS: Above average attributes
     {99, 99, 99}, // GARFIELD: Ultimate attributes
     {60, 60, 60}, // NONE: Medium attributes (for CPU)
@@ -103,7 +101,7 @@ void resetPlayerScores(void)
     }
 }
 
-static int getLives(void)
+int getLives(void)
 {
     int numLives = 0;
     
@@ -140,7 +138,7 @@ static int getLives(void)
 
 }
 
-static int getStars(void)
+int getStars(void)
 {
     int numStars = 0;
     
@@ -161,6 +159,24 @@ static int getStars(void)
 
     return numStars;
 
+}
+
+void getContinues(void)
+{
+    switch(g_Game.gameDifficulty)
+    {
+        case GAME_DIFFICULTY_EASY:
+            g_Game.numContinues = 3;
+            break;
+        case GAME_DIFFICULTY_MEDIUM:
+            g_Game.numContinues = 2;
+            break;
+        case GAME_DIFFICULTY_HARD:
+            g_Game.numContinues = 1;
+            break;
+        default:
+            break;
+    }
 }
 
 void initPlayers(void)
@@ -195,9 +211,10 @@ void initPlayers(void)
         // CHARACTER
         player->character.choice = CHARACTER_NONE;
         player->character.selected = false;
-        player->maxSpeed = 0;
-        player->acceleration = 0;
-        player->power = 0;
+        player->maxSpeed = toFIXED(0);
+        player->acceleration = toFIXED(0);
+        player->basePower = toFIXED(0);
+        player->power = toFIXED(0);
         
         // TEAM
         player->teamChoice = TEAM_UNSELECTED;
@@ -253,56 +270,14 @@ void initAiPlayers(void)
         g_Game.numTeams++;
         g_Game.currentNumPlayers++;
         
+        player->_bg->spr_id = player->_bg->anim1.asset[i];
         player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
         validateCharacters(player);
         characterAvailable[player->character.choice] = false;
+                        
+        assignCharacterSprite(player);        
+        assignCharacterStats(player);
         
-        // SPRITES
-        switch (player->character.choice)
-        {
-            case CHARACTER_MACCHI:
-                player->_sprite = &macchi;
-                break;
-            case CHARACTER_JELLY:
-                player->_sprite = &jelly;
-                break;
-            case CHARACTER_PENNY:
-                player->_sprite = &penny;
-                break;
-            case CHARACTER_POPPY:
-                player->_sprite = &poppy;
-                break;
-            case CHARACTER_POTTER:
-                player->_sprite = &potter;
-                break;
-            case CHARACTER_SPARTA:
-                player->_sprite = &sparta;
-                break;
-            case CHARACTER_TJ:
-                player->_sprite = &tj;
-                break;
-            case CHARACTER_GEORGE:
-                player->_sprite = &george;
-                break;
-            case CHARACTER_WUPPY:
-                player->_sprite = &wuppy;
-                break;
-            case CHARACTER_WALRUS:
-                player->_sprite = &stadler;
-                break;
-            case CHARACTER_GARF:
-                player->_sprite = &garfield;
-                break;
-            default:
-                break;
-        }
-        player->_bg->spr_id = player->_bg->anim1.asset[i];
-        player_bg.mesh = MESHoff;
-        // ASSIGN STATS
-        player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-        player->acceleration = characterAttributes[player->character.choice].acceleration;
-        player->power = characterAttributes[player->character.choice].power;
-
         player->isPlaying = PLAYING;
         player->objectState = OBJECT_STATE_ACTIVE;
         player->isAI = true;
@@ -317,55 +292,13 @@ void initStoryCharacters(void)
     validateTeam(player);
     teamAvailable[player->teamChoice] = false;
     g_Game.numTeams++; 
-
+    
+    player->_bg->spr_id = player->_bg->anim1.asset[1];
     player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
     characterAvailable[player->character.choice] = false;
 
-    // SPRITES
-    switch (player->character.choice)
-    {
-        case CHARACTER_MACCHI:
-            player->_sprite = &macchi;
-            break;
-        case CHARACTER_JELLY:
-            player->_sprite = &jelly;
-            break;
-        case CHARACTER_PENNY:
-            player->_sprite = &penny;
-            break;
-        case CHARACTER_POPPY:
-            player->_sprite = &poppy;
-            break;
-        case CHARACTER_POTTER:
-            player->_sprite = &potter;
-            break;
-        case CHARACTER_SPARTA:
-            player->_sprite = &sparta;
-            break;
-        case CHARACTER_TJ:
-            player->_sprite = &tj;
-            break;
-        case CHARACTER_GEORGE:
-            player->_sprite = &george;
-            break;
-        case CHARACTER_WUPPY:
-            player->_sprite = &wuppy;
-            break;
-        case CHARACTER_WALRUS:
-            player->_sprite = &stadler;
-            break;
-        case CHARACTER_GARF:
-            player->_sprite = &garfield;
-            break;
-        default:
-        break;
-    }
-    player_bg.mesh = MESHoff;
-
-    // ASSIGN STATS
-    player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-    player->acceleration = characterAttributes[player->character.choice].acceleration;
-    player->power = characterAttributes[player->character.choice].power;
+    assignCharacterSprite(player);
+    assignCharacterStats(player);
 
     player->isPlaying = PLAYING;
     player->objectState = OBJECT_STATE_ACTIVE;
@@ -385,51 +318,74 @@ void initVsModePlayers(void)
         set_spr_scale(player->_portrait, 1.1, 1);
         player->_bg->spr_id = player->_bg->anim1.asset[i];
         player->_sprite->isColliding = false;
-        player_bg.mesh = MESHoff;
+        
+        // assignCharacterStats(player);
+        
+        // player_bg.mesh = MESHoff;
         // add_sprite_to_sweep_and_prune(player->_sprite);
         
+
+        
         // PLAYER SPECIFIC ATTRIBUTES
-        // set goal position here??
-        // switch statement
-        if (player->teamChoice == TEAM_1) {
-            player->_sprite->flip = sprNoflip;
-            player->onLeftSide = true;
-            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams == 2) {
-                g_Assets.drawSingleGoal[0] = true;
-                set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+        switch (player->teamChoice) {
+            case TEAM_1: {
+                player->_sprite->flip = sprNoflip;
+                player->onLeftSide = true;
+                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams == 2) {
+                    g_Assets.drawSingleGoal[0] = true;
+                    player->goalCenterThresholdMax = LARGE_GOAL_THRESHOLD_MAX;
+                    player->goalCenterThresholdMin = LARGE_GOAL_THRESHOLD_MIN;
+                    set_spr_position(player->_sprite, -1*PLAYER_X, 0, PLAYER_DEPTH);
+                }
+                else {
+                    g_Assets.drawSingleGoal[0] = false;
+                    set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+                    player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
+                    player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
+                }
+                player->shield_pos = SHIELD_OFFSET;
+                break;
+            } 
+            case TEAM_2: {
+                player->_sprite->flip = sprHflip;
+                player->onLeftSide = false;
+                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
+                    g_Assets.drawSingleGoal[1] = true;
+                    player->goalCenterThresholdMax = LARGE_GOAL_THRESHOLD_MAX;
+                    player->goalCenterThresholdMin = LARGE_GOAL_THRESHOLD_MIN;
+                    set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+                }
+                else {
+                    g_Assets.drawSingleGoal[1] = false;
+                    player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
+                    player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
+                    set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+                }
+                player->shield_pos = -SHIELD_OFFSET;
+                break;
             }
-            else {
-                g_Assets.drawSingleGoal[0] = false;
-                set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
+            case TEAM_3: {
+                player->_sprite->flip = sprVflip;
+                player->onLeftSide = true;
+                g_Assets.drawSingleGoal[2] = false;
+                player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
+                player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
+                set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+                player->shield_pos = SHIELD_OFFSET;
+                break;
             }
-            player->shield_pos = SHIELD_OFFSET;
-        } 
-        else if (player->teamChoice  == TEAM_2) {
-            player->_sprite->flip = sprHflip;
-            player->onLeftSide = false;
-            if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams <= 3) {
-                g_Assets.drawSingleGoal[1] = true;
-                set_spr_position(player->_sprite, PLAYER_X, 0, PLAYER_DEPTH);
+            case TEAM_4: {
+                player->_sprite->flip = sprHVflip;
+                player->onLeftSide = false;
+                g_Assets.drawSingleGoal[3] = false;
+                player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
+                player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
+                set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
+                player->shield_pos = -SHIELD_OFFSET;
+                break;
             }
-            else {
-                g_Assets.drawSingleGoal[1] = false;
-                set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
-            }
-            player->shield_pos = -SHIELD_OFFSET;
-        }
-        else if (player->teamChoice  == TEAM_3) {
-            player->_sprite->flip = sprVflip;
-            player->onLeftSide = true;
-            g_Assets.drawSingleGoal[2] = false;
-            set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
-            player->shield_pos = SHIELD_OFFSET;
-        }
-        else if (player->teamChoice  == TEAM_4) {
-            player->_sprite->flip = sprHVflip;
-            player->onLeftSide = false;
-            g_Assets.drawSingleGoal[3] = false;
-            set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
-            player->shield_pos = -SHIELD_OFFSET;
+            default:
+                break;
         }
     }
 }
@@ -542,12 +498,84 @@ void initDemoPlayers(void)
             g_Game.numTeams++;
         }
         
+        assignCharacterStats(player);
+    
+        player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
+        player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
+
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         set_spr_scale(player->_portrait, 1.1, 1);
         player->objectState = OBJECT_STATE_ACTIVE;
         player->isAI = true;
         player->_sprite->isColliding = false;
         boundPlayer(player);
+    }
+}
+
+void assignCharacterSprite(PPLAYER player) {
+    switch (player->character.choice)
+    {
+        case CHARACTER_MACCHI:
+            player->_sprite = &macchi;
+            break;
+        case CHARACTER_JELLY:
+            player->_sprite = &jelly;
+            break;
+        case CHARACTER_PENNY:
+            player->_sprite = &penny;
+            break;
+        case CHARACTER_POPPY:
+            player->_sprite = &poppy;
+            break;
+        case CHARACTER_POTTER:
+            player->_sprite = &potter;
+            break;
+        case CHARACTER_SPARTA:
+            player->_sprite = &sparta;
+            break;
+        case CHARACTER_TJ:
+            player->_sprite = &tj;
+            break;
+        case CHARACTER_GEORGE:
+            player->_sprite = &george;
+            break;
+        case CHARACTER_WUPPY:
+            player->_sprite = &wuppy;
+            break;
+        case CHARACTER_WALRUS:
+            player->_sprite = &stadler;
+            break;
+        case CHARACTER_GARF:
+            player->_sprite = &garfield;
+            break;
+        default:
+        break;
+    }
+    player_bg.mesh = MESHoff;
+}
+
+void assignCharacterStats(PPLAYER player) {
+    player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.1));
+    player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
+    player->basePower = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].power), toFIXED(0.05)); // this could be a difficulty factor?
+    player->power = player->basePower;
+
+    switch (g_Game.gameDifficulty) {
+        case GAME_DIFFICULTY_EASY: {
+            player->acceleration = jo_fixed_mult(player->acceleration, EASY_AI_MOVEMENT_SPEED);
+            break;
+        }
+        case GAME_DIFFICULTY_MEDIUM: {
+            player->acceleration = jo_fixed_mult(player->acceleration, MEDIUM_AI_MOVEMENT_SPEED);
+            break;
+        }
+        case GAME_DIFFICULTY_HARD: {
+            player->acceleration = jo_fixed_mult(player->acceleration, HARD_AI_MOVEMENT_SPEED);
+            break;
+        }
+        default:
+            player->acceleration = jo_fixed_mult(player->acceleration, MEDIUM_AI_MOVEMENT_SPEED);
+            break;
     }
 }
 
@@ -569,7 +597,7 @@ void initPlayerGoals(void)
     }
 }
 
-void getPlayersInput(void)
+void getClassicModeInput(void)
 {
     PPLAYER player = NULL;
 
@@ -583,53 +611,74 @@ void getPlayersInput(void)
             // TODO: hit a button to respawn??
             continue;
         }
+        
+        // switch state for game mode (handle inputs differently)?
+        
+        if (player->input->isAnalog) {
+            player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
+            player->moveVertical = true;
+        }
+        else {
+            player->moveVertical = false;
 
-        // if(player->subState == PLAYER_STATE_EXPLODING ||
-           // player->subState == PLAYER_STATE_EXPLODED ||
-           // player->subState == PLAYER_STATE_TITLE ||
-           // player->subState == PLAYER_STATE_DEAD)
-        // {
-            // // uncontrollable in these states
-            // continue;
-        // }
-
-        // if(player->subState == PLAYER_STATE_LOGO)
-        // {
-            // // moving towards the center
-            // if(toINT(player->curPos.x) < 0)
-            // {
-                // player->curPos.dx += X_SPEED_INC;
-            // }
-            // else if(toINT(player->curPos.x) > 0)
-            // {
-                // player->curPos.dx -= X_SPEED_INC;
-            // }
-
-            // // moving towards the center
-            // if(toINT(player->curPos.y) < 0)
-            // {
-                // player->curPos.dy += X_SPEED_INC;
-            // }
-            // else if(toINT(player->curPos.y) > 0)
-            // {
-                // player->curPos.dy -= Y_SPEED_INC;
-            // }
-
-            // continue;
-        // }
-
-        /*
-        if(player->animation == PLAYER_ANIMATION_ELECTROCUTING ||
-           player->animation == PLAYER_ANIMATION_CRYING ||
-           player->animation == PLAYER_ANIMATION_DROPPING ||
-           player->animation == PLAYER_ANIMATION_EATING )
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_UP))
+            {
+                player->curPos.dy -= X_SPEED_INC;
+                player->moveVertical = true;
+            }
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_DOWN))
+            {
+                player->curPos.dy += X_SPEED_INC;
+                player->moveVertical = true;
+            }
+        }
+        
+        if(player->moveVertical == false)
         {
+            player->curPos.dy = 0;
+            player->_sprite->vel.y = 0;
+        }
+        
+
+        if (!g_Game.isBallActive) {
+            return;
+        }
+        // did the player click
+        if (jo_is_input_key_down(player->input->id, JO_KEY_A) ||
+            jo_is_input_key_down(player->input->id, JO_KEY_C))
+        {
+            // attack?
+
+        }
+        
+        // did the player plant a flag
+        if (jo_is_input_key_down(player->input->id, JO_KEY_B))
+        {
+            // block?
+        }
+    }
+}
+
+void getPlayersInput(void)
+{
+    PPLAYER player = NULL;
+    
+    // check inputs for all players
+    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    {
+        player = &g_Players[i];
+
+        if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == true || player->subState == PLAYER_STATE_DEAD)
+        {
+            // TODO: hit a button to respawn??
             continue;
         }
-        */
+        
+        // switch state for game mode (handle inputs differently)?
         
         if (player->input->isAnalog) {
             player->curPos.dx = player->input->axis_x;
+            // don't process in classic mode?
             player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
             player->moveHorizontal = true;
             player->moveVertical = true;
@@ -637,6 +686,7 @@ void getPlayersInput(void)
         else {
             player->moveHorizontal = false;
             player->moveVertical = false;
+            // don't process in classic mode?
             if (jo_is_input_key_pressed(player->input->id, JO_KEY_LEFT))
             {
                 player->curPos.dx -= X_SPEED_INC;
@@ -670,19 +720,23 @@ void getPlayersInput(void)
             player->curPos.dy = 0;
             player->_sprite->vel.y = 0;
         }
+        
 
+        if (!g_Game.isBallActive) {
+            return;
+        }
         // did the player click
         if (jo_is_input_key_down(player->input->id, JO_KEY_A) ||
             jo_is_input_key_down(player->input->id, JO_KEY_C))
         {
-            start_timer = !start_timer;
+            // attack?
 
         }
         
         // did the player plant a flag
         if (jo_is_input_key_down(player->input->id, JO_KEY_B))
         {
-            start_timer = !start_timer;
+            // block?
         }
     }
 }
@@ -694,7 +748,7 @@ void updatePlayers(void)
     for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
     {
         player = &g_Players[i];
-        if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == true)
+        if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == true || player->subState == PLAYER_STATE_DEAD)
         {
             continue;
         }
@@ -744,14 +798,18 @@ void updatePlayers(void)
 
 void speedLimitPlayer(PPLAYER player)
 {
-    jo_fixed bonusSpeed = 0;
+    FIXED bonusSpeed = toFIXED(0);
     FIXED y_up_speed;
     FIXED y_dn_speed;
     FIXED x_l_speed;
     FIXED x_r_speed;
     if (player->isAI == true) {
-        y_up_speed = AI_X_SPEED;
-        y_dn_speed = -AI_X_SPEED;
+        // y_up_speed = AI_X_SPEED;
+        // y_dn_speed = -AI_X_SPEED;
+        // x_l_speed  = MAX_X_SPEED;
+        // x_r_speed  = -MAX_X_SPEED;
+        y_up_speed = player->maxSpeed;
+        y_dn_speed = -player->maxSpeed;
         x_l_speed  = MAX_X_SPEED;
         x_r_speed  = -MAX_X_SPEED;
     }
@@ -795,17 +853,9 @@ void boundPlayer(PPLAYER player)
 {
     // screen boundaries
     if (player->onLeftSide == true) {
-        if (game_options.debug_mode) {
-            if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
-            {
-                player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
-            }
-        }
-        else {
-            if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
-            {
-                player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
-            }
+        if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
         }
         if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
         {
@@ -831,94 +881,6 @@ void boundPlayer(PPLAYER player)
     if(player->_sprite->pos.y < SCREEN_TOP + PLAYER_HEIGHT)
     {
         player->_sprite->pos.y = SCREEN_TOP + PLAYER_HEIGHT;
-    }
-}
-
-void boundAiPlayer(PPLAYER player)
-{
-    // screen boundaries
-    if (player->onLeftSide == true) {
-        if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
-        {
-            player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
-        }
-        if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
-        {
-            player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
-        }
-    }
-    else {
-        if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
-        {
-            player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
-        }
-        if(player->_sprite->pos.x < SCREEN_QUARTER + PLAYER_WIDTH)
-        {
-            player->_sprite->pos.x = SCREEN_QUARTER + PLAYER_WIDTH;
-        }
-    }
-
-    // needs to account for game modes (1-4 players)
-    switch(player->teamChoice)
-    {
-        case TEAM_1: {
-            int bottom = SCREEN_MIDDLE;
-            if (g_Game.numTeams < 3) {
-                bottom = SCREEN_BOTTOM;
-            }
-            if(player->_sprite->pos.y > bottom - PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = bottom - PLAYER_HEIGHT;
-            }
-
-            if(player->_sprite->pos.y < SCREEN_TOP + PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_TOP + PLAYER_HEIGHT;
-            }
-            break;
-        }
-        case TEAM_2: {
-            int bottom = SCREEN_MIDDLE;
-            if (g_Game.numTeams <= 3) {
-                bottom = SCREEN_BOTTOM;
-            }
-            if(player->_sprite->pos.y > bottom - PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = bottom - PLAYER_HEIGHT;
-            }
-
-            if(player->_sprite->pos.y < SCREEN_TOP + PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_TOP + PLAYER_HEIGHT;
-            }
-            break;
-        }
-        case TEAM_3: {
-            if(player->_sprite->pos.y > SCREEN_BOTTOM - PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_BOTTOM - PLAYER_HEIGHT;
-            }
-
-            if(player->_sprite->pos.y < SCREEN_MIDDLE + PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_MIDDLE + PLAYER_HEIGHT;
-            }
-            break;
-        }
-        case TEAM_4: {
-            if(player->_sprite->pos.y > SCREEN_BOTTOM - PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_BOTTOM - PLAYER_HEIGHT;
-            }
-
-            if(player->_sprite->pos.y < SCREEN_MIDDLE + PLAYER_HEIGHT)
-            {
-                player->_sprite->pos.y = SCREEN_MIDDLE + PLAYER_HEIGHT;
-            }
-            break;
-        }
-        default:
-            break;
     }
 }
 

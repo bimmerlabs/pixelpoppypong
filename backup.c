@@ -9,7 +9,7 @@ SaveGame save_game;
 
 void init_save_game() {
     save_game.game_options = game_options;
-    save_game.characterAvailable = characterAvailable;
+    save_game.characterUnlocked = characterUnlocked;
     for (int i = 0; i < SCORE_ENTRIES; i++) {
         save_game.highScores[i] = highScores[i];
     }
@@ -58,7 +58,7 @@ bool load_game_backup(void) {
         }
         game_options = loaded_save->game_options; 
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
-            characterAvailable[i] = loaded_save->characterAvailable[i];
+            characterUnlocked[i] = loaded_save->characterUnlocked[i];
         }
         for (int i = 0; i < SCORE_ENTRIES; i++) {
             highScores[i] = loaded_save->highScores[i];

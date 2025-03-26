@@ -37,7 +37,8 @@ extern bool g_TeamSelectPressedStart; // for debugging
 extern bool all_players_ready; // for debugging
 
 void resetTeams(void);
-void initCharacters(void);
+void initUnlockedCharacters(void);
+void initAvailableCharacters(void);
 void initTeams(void);
 void drawCharacterSelectGrid(void);  // re-organize these to be in order
 void characterSelect_input(void);

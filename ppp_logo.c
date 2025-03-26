@@ -245,25 +245,14 @@ void pppLogo_update(void)
             jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         }
     }
-
-    // if (!a_pressed && !b_pressed && !c_pressed) {
-        if(g_LogoTimer > PPP_LOGO_TIMER)
-        {
-            jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
-            fade_in_rate = 8;
-            // unloadPPPLogoAssets();
-            changeState(GAME_STATE_TITLE_SCREEN);
-            return;
-        }
-    // }
-    // if (a_pressed && b_pressed && c_pressed) {
-        // if (frame % 10 == 0) { // modulus
-            // draw_start_text = !draw_start_text;
-        // }
-        // if (draw_start_text) {
-            // jo_nbg0_printf(16, 27, "PRESS START");
-        // }
-    // }
+    if(g_LogoTimer > PPP_LOGO_TIMER)
+    {
+        jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
+        fade_in_rate = 8;
+        // unloadPPPLogoAssets();
+        changeState(GAME_STATE_TITLE_SCREEN);
+        return;
+    }
 }
 
 #define X_RADIUS toFIXED(155)

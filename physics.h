@@ -3,7 +3,8 @@
 #include "assets.h"
 #include "objects/player.h"
 
-#define MIN_VELOCITY toFIXED(6)
+#define MIN_VELOCITY_X toFIXED(7)
+#define MIN_VELOCITY_Y toFIXED(5)
 #define MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)
 #define BALL_FRICTION_X toFIXED(1.25)
@@ -19,7 +20,7 @@
 // 0.075
 // 0.2 - too strong
 // 0.3 - causes the ball to spin backwards!
-#define FRICTION_COEFFICIENT toFIXED(4.0) // Adjust this value to alter the ball curve
+#define FRICTION_COEFFICIENT toFIXED(2.5) // Adjust this value to alter the ball curve
 
 typedef struct {
     // int playerID;
@@ -49,23 +50,7 @@ void start_ball_movement(Sprite *ball);
 
 void adjust_xy_velocity_based_on_spin(Sprite *ball);
 
-// Function to calculate rotation based on velocity
-// not currently used
-static inline int calculate_rotation(FIXED vx, FIXED vy) {
-    // Convert velocity from fixed-point to float
-    float fx = (float)(vx) / (1 << 16);
-    float fy = (float)(vy) / (1 << 16);
-
-    // Calculate angle in radians and convert to degrees
-    // float angle = JO_RAD_TO_DEG(jo_atan2f(fy, fx));
-    float angle = jo_atan2f(fy, fx);
-
-    // Return angle as an integer
-    return (int)angle;
-}
-
 // Function to calculate Z velocity based on X and Y velocity
-// doesn't apply to paddle hits currently
 // tried to convert to fixed - doesn't work - maybe it overflows?
 static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_collision) {
     // Convert velocity from fixed-point to float
@@ -79,9 +64,7 @@ static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_colli
 
     // Scale rotation velocity based on speed
     int z_velocity = (int)(speed * BALL_ROTATION); // Scale factor can be adjusted to match gameplay
-    // int z_velocity = toINT(jo_fixed_mult(speed, toFIXED(0.005))); // Scale factor can be adjusted to match gameplay
 
-    // this needs to use the actual vector instead of a boolean
     // Determine rotation direction based on the type of collision and vector
     if (horizontal_collision) {
         // Horizontal wall collision: reverse direction if Y velocity is positive
@@ -93,6 +76,10 @@ static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_colli
 
     // Ensure z_velocity is at least 1 in magnitude
     if (z_velocity == 0) {
+        z_velocity = 1;
+    }
+    // speed limit z_velocity
+    else if (z_velocity > 10) {
         z_velocity = 1;
     }
 
@@ -117,6 +104,8 @@ void update_ball(Sprite *ball);
 
 void handle_elastic_collision(Sprite *ball, PPLAYER player, FIXED dx, FIXED dy, FIXED distance_squared);
 
+void handle_ball_player_collision(Sprite *ball, PPLAYER player);
+
 // // Function to detect and handle ball-player collision
 bool detect_player_ball_collision(Sprite *ball, PPLAYER player);
 
@@ -135,8 +124,8 @@ void sort_sprites_by_min_x(void);
 // Perform sweep and prune collision detection
 void sweep_and_prune(void);
 
-// Example collision handler function
-void handle_collision(Sprite *a, Sprite *b);
+// // Example collision handler function
+// void handle_collision(Sprite *a, Sprite *b);
 
 // // Update bounding boxes whenever an object's position changes
 // void update_bounding_box(Sprite *sprite);

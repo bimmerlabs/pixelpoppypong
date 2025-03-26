@@ -17,7 +17,7 @@ static int char_id[3];
 #define NAME_X_RADIUS toFIXED(140)
 #define NAME_Y_RADIUS toFIXED(50)
 #define NAME_Y_POS 170
-#define END_RADIUS toFIXED(600)
+#define END_RADIUS toFIXED(-1400)
 #define GAP_ANGLE 12
 static FIXED xRadius = NAME_X_RADIUS;
 static FIXED yRadius = NAME_Y_RADIUS;
@@ -221,11 +221,11 @@ void nameEntryUpdate(void)
         font.zmode = _ZmLC;
         my_sprite_draw(&font);
     }
-    if (endNameEntry && xRadius < END_RADIUS) {
+    if (endNameEntry && xRadius > END_RADIUS) {
         pixel_poppy.spr_id = pixel_poppy.anim1.asset[3];
-        xRadius += toFIXED(2);
-        yRadius += toFIXED(2);
-        nameEntryAngle += 2;
+        xRadius -= toFIXED(6);
+        yRadius -= toFIXED(4);
+        nameEntryAngle += 3;
         if (nameEntryAngle > 360)
             nameEntryAngle -= 360;
         if (yPos > 0)
@@ -242,10 +242,8 @@ void nameEntryUpdate(void)
     initials[3] = '\0';
     // jo_nbg0_printf(17, 27, "TEST:%s", initials); // FOR DEBUG
     
-    if(g_NameEntryTimer == 0 || xRadius == END_RADIUS)
+    if(g_NameEntryTimer == 0 || xRadius <= END_RADIUS)
     {
-        // TODO: set default initials?  (AAA?)
-        // unloadNameEntryAssets();
         transitionState(GAME_STATE_HIGHSCORES);
         return;
     }

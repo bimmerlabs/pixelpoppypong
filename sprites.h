@@ -63,6 +63,7 @@ typedef struct {
     Animation anim2;
 } Sprite;
 
+extern Sprite font; // VDP1 font
 extern Sprite ppplogo;
 extern Sprite pppshadow;
 
@@ -118,16 +119,94 @@ extern Sprite shroom_item;
 extern Sprite craig_item;
 extern Sprite garfield_item;
 
+static int ball_velocity = 0;
+static bool ball_falling = false;
+static bool ball_bounce = false;
+
 // add options input (difficulty, game mode, etc)
-static inline void reset_ball_movement(Sprite *sprite) {
-    sprite->pos.x = toFIXED(0);
-    sprite->pos.y = toFIXED(0);
-    sprite->vel.x = toFIXED(0);
-    sprite->vel.y = toFIXED(0);
-    sprite->vel.z = 0;
-    sprite->scl.x = toFIXED(1.0);
-    sprite->scl.y = toFIXED(1.1);
-    sprite->pos.r = BALL_RADIUS;
+static inline void reset_ball_movement(Sprite *ball) {
+    ball_velocity = 0;
+    ball_falling = true;
+    ball_bounce = false;
+    ball->pos.x = toFIXED(0);
+    ball->pos.y = toFIXED(-260);
+    ball->rot.z = 0;
+    ball->vel.x = toFIXED(0);
+    ball->vel.y = toFIXED(0);
+    ball->vel.z = 0;
+    ball->scl.x = toFIXED(1.0); // BASE ON DIFFFICULTY?
+    ball->scl.y = toFIXED(1.1);
+    // ball->scl.x = toFIXED(1.0);
+    // ball->scl.y = toFIXED(1.1);
+    ball->pos.r = BALL_RADIUS;
+}
+
+#define BALL_VELOCITY toFIXED(10)
+extern int ball_velocity;
+extern bool ball_falling;
+extern bool ball_bounce;
+
+static __jo_force_inline bool drop_ball_animation(Sprite *ball) {    
+    // jo_nbg0_printf(2, 17, "BALL_FALLING:%i", ball_falling);
+    // jo_nbg0_printf(2, 18, "BALL_BOUNCE:%i", ball_bounce);
+    // jo_nbg0_printf(2, 19, "BALL_VELOCITY:%i", ball_velocity); 
+    // jo_nbg0_printf(2, 20, "BALLPOS.Y:%i", ball->pos.y);
+    // ball is falling
+    if (ball_falling && !ball_bounce) {
+        if (ball_velocity < BALL_VELOCITY) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                ball_velocity += toFIXED(1);
+            }
+        }              
+        if (ball->pos.y < toFIXED(0)) {
+            ball->pos.y += ball_velocity;
+        }
+        // ball has hit the "ground"
+        else {
+            // ball_velocity = 0;
+            ball_falling = false;
+            ball_bounce = true;
+        }
+        return false;
+    }
+    // ball is bouncing
+    if (ball_bounce && !ball_falling) {
+        ball->pos.y -= ball_velocity;
+        if (ball_velocity > 0) {
+            ball_velocity -= toFIXED(1.5);
+        }
+        else {
+            // ball_velocity = 0;
+            // pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
+            ball_falling = true;
+            ball_bounce = true;
+        }
+        return false;
+    }
+    // first bounce has already happened
+    else if (ball_bounce && ball_falling) {
+        ball_falling = false;
+        ball_bounce = false;
+        return false;
+    }
+    // falling again
+    else if (!ball_bounce && !ball_falling) {
+        if (ball_velocity < BALL_VELOCITY) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                ball_velocity += toFIXED(1.5);
+            }
+            
+        }
+        // final resting place
+        if (ball->pos.y < toFIXED(0)) {
+            ball->pos.y += ball_velocity;
+        }
+        else {
+            // pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
+            return true;
+        }
+    }
+    return false;
 }
 
 static inline void set_item_position(Sprite *sprite) {

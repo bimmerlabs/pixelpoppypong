@@ -5,6 +5,8 @@ SET PATH=%COMPILER_DIR%\WINDOWS\Other Utilities;%PATH%
 
 rm -f ./cd/0.bin
 rm -f *.o
+rm -f ./objects/*.o
+rm -f ./BG_DEF/*.o
 rm -f %JO_ENGINE_SRC_DIR%/*.o
 rm -f ./*.bin
 rm -f ./*.coff

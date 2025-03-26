@@ -8,7 +8,7 @@ extern Uint8 backup_device;
 typedef struct _SAVEGAME 
 {
     GameOptions game_options;
-    bool *characterAvailable;
+    bool *characterUnlocked;
     HighScoreEntry highScores[SCORE_ENTRIES];
     INPUT inputSettings[MAX_INPUTS];
 } SaveGame;

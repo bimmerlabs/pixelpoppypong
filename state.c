@@ -71,11 +71,11 @@ void changeState(GAME_STATE newState)
             g_Game.gameState = g_Game.nextState;
             break;
         }
-        case GAME_STATE_CHARACTER_PORTRAITS:
-        {
-            changeState(GAME_STATE_UNINITIALIZED);
-            break;
-        }
+        // case GAME_STATE_CHARACTER_PORTRAITS:
+        // {
+            // changeState(GAME_STATE_UNINITIALIZED);
+            // break;
+        // }
         case GAME_STATE_TEAM_SELECT:
         {
             reset_audio(HALF_VOLUME);
@@ -149,6 +149,7 @@ void changeState(GAME_STATE newState)
 
 void transitionState(GAME_STATE newState)
 {
+    
     g_Game.gameState = GAME_STATE_TRANSITION;
     g_Game.nextState = newState;
     g_TransitionTimer = 0;

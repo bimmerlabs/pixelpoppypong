@@ -6,7 +6,7 @@
 #include "audio.h"
 #include "audio.h"
 
-#define VERSION "0.50"
+#define VERSION "0.53"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -150,12 +150,17 @@ typedef struct _GAME
 
     // is the game finished?
     bool isRoundOver;
+    Uint8 countofRounds;
+    Uint8 numContinues;
 
     // is the game finished?
     bool isGameOver;
     
     // is the game playing?
     bool isActive;
+    
+    // is the game playing?
+    bool isBallActive;
 
     // how many frames since all players were dead
     int gameOverFrames;

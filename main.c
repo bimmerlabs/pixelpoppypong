@@ -110,7 +110,39 @@ void main_loop(void) {
     loading_screen();
 }
 
+// returns to title screen if player one presses ABC+Start
+void abcStart_callback(void)
+{
+    if (game_options.debug_mode) {
+        // manually switch states
+        if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
+            g_Game.nextState = g_Game.gameState +1;
+            if (g_Game.nextState == GAME_STATE_TRANSITION) {
+                g_Game.nextState = GAME_STATE_UNINITIALIZED;
+            }
+            transitionState(g_Game.nextState);
+        }
+    }
+    if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
+    {        
+        return;
+    }
+    if ((jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_X)) // X for retrobit controller testing only
+        && jo_is_pad1_key_pressed(JO_KEY_A)  
+        && jo_is_pad1_key_pressed(JO_KEY_B)  
+        && jo_is_pad1_key_pressed(JO_KEY_C)) {
+        if(g_Game.gameState == GAME_STATE_PPP_LOGO)
+        {
+            jo_goto_boot_menu();
+        }
+        else {
+            transitionState(GAME_STATE_UNINITIALIZED);
+        }
+    }
+}
+
 void my_input_callback(void) {
+    abcStart_callback();
     switch (g_Game.gameState) {
         case GAME_STATE_PPP_LOGO:
             pppLogo_input();
@@ -145,43 +177,6 @@ void my_input_callback(void) {
             break;
         default:
             break;
-    }
-}
-
-// returns to title screen if player one presses ABC+Start
-void abcStart_callback(void)
-{
-    if (game_options.debug_mode) {
-        if (jo_is_pad1_key_down(JO_KEY_Z)) {
-            g_Game.nextState = g_Game.gameState +1;
-            if (g_Game.nextState == GAME_STATE_TRANSITION) {
-                g_Game.nextState = GAME_STATE_UNINITIALIZED;
-            }
-            transitionState(g_Game.nextState);
-        }
-        if (jo_is_pad1_key_down(JO_KEY_Y)) {
-            g_Game.nextState = g_Game.gameState +1;
-            if (g_Game.nextState == GAME_STATE_TRANSITION) {
-                g_Game.nextState = GAME_STATE_UNINITIALIZED;
-            }
-            changeState(g_Game.nextState);
-        }
-    }
-    if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
-    {        
-        return;
-    }
-    if ((jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_X)) // X for retrobit controller testing only
-        && jo_is_pad1_key_pressed(JO_KEY_A)  
-        && jo_is_pad1_key_pressed(JO_KEY_B)  
-        && jo_is_pad1_key_pressed(JO_KEY_C)) {
-        if(g_Game.gameState == GAME_STATE_PPP_LOGO)
-        {
-            jo_goto_boot_menu();
-        }
-        else {
-            transitionState(GAME_STATE_UNINITIALIZED);
-        }
     }
 }
 
@@ -307,7 +302,7 @@ void			jo_main(void)
     loadSoundAssets();
     init_sprites_img();
     
-    initCharacters();
+    initUnlockedCharacters();
     init_inputs();
     highScore_init();
     run_once_callback = jo_core_add_callback(run_once);
@@ -339,7 +334,6 @@ void			jo_main(void)
     jo_core_add_callback(display_credits);
     jo_core_add_callback(display_scores);
     
-    jo_core_add_callback(abcStart_callback);
     jo_core_add_vblank_callback(main_loop);
     
     // do this last?

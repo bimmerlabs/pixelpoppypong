@@ -23,12 +23,11 @@ void initTouchCounter(void) {
 }
 
 // Function to initialize the ball's movement
-void start_ball_movement(Sprite *ball) {
-    // this works as is because I can set a minimum in the range
-    
+void start_ball_movement(Sprite *ball) {    
+    // this works as is because I can set a minimum in the range    
     // TODO: set based on difficulty / game mode
-    ball->vel.x = toFIXED(my_random_range(5, 12));
-    ball->vel.y = toFIXED(my_random_range(4, 10));
+    ball->vel.x = toFIXED(my_random_range(5, 10));
+    ball->vel.y = toFIXED(my_random_range(4, 9));
     ball->vel.z = my_random_range(1, 5);
            
     // Randomize direction
@@ -93,12 +92,16 @@ void update_ball(Sprite *ball) {
     if (ball->pos.x >= SCREEN_RIGHT - ball->pos.r) {
         ball->vel.x = -ball->vel.x; // Reverse X velocity
         // moving right
-        if (ball->vel.x > MIN_VELOCITY) {
+        if (ball->vel.x > MIN_VELOCITY_X) {
             ball->vel.x -= BALL_FRICTION_X;
+            if (ball->vel.x < MIN_VELOCITY_X)
+                ball->vel.x = MIN_VELOCITY_X;
         }
         // moving left
-        else if (ball->vel.x < -MIN_VELOCITY) {
+        else if (ball->vel.x < -MIN_VELOCITY_X) {
             ball->vel.x += BALL_FRICTION_X;
+            if (ball->vel.x > MIN_VELOCITY_X)
+                ball->vel.x = -MIN_VELOCITY_X;
         }
 
         // Adjust Z velocity for horizontal collision
@@ -111,12 +114,16 @@ void update_ball(Sprite *ball) {
     else if (ball->pos.x <= SCREEN_LEFT + ball->pos.r) {
         ball->vel.x = -ball->vel.x; // Reverse X velocity
         // moving right
-        if (ball->vel.x > MIN_VELOCITY) {
+        if (ball->vel.x > MIN_VELOCITY_X) {
             ball->vel.x -= BALL_FRICTION_X;
+            if (ball->vel.x < MIN_VELOCITY_X)
+                ball->vel.x = MIN_VELOCITY_X;
         }
         // moving left
-        else if (ball->vel.x < -MIN_VELOCITY) {
+        else if (ball->vel.x < -MIN_VELOCITY_X) {
             ball->vel.x += BALL_FRICTION_X;
+            if (ball->vel.x > MIN_VELOCITY_X)
+                ball->vel.x = -MIN_VELOCITY_X;
         }
 
         // Adjust Z velocity for horizontal collision
@@ -128,21 +135,25 @@ void update_ball(Sprite *ball) {
     if (ball->pos.y >= SCREEN_BOTTOM - ball->pos.r || ball->pos.y <= SCREEN_TOP + ball->pos.r) {
         ball->vel.y = -ball->vel.y; // Reverse Y velocity
         // moving down
-        if (ball->vel.y > MIN_VELOCITY) {
+        if (ball->vel.y > MIN_VELOCITY_Y) {
             ball->vel.y -= BALL_FRICTION_Y;
+            if (ball->vel.y < MIN_VELOCITY_Y)
+                ball->vel.y = MIN_VELOCITY_Y;
         }
         // moving up
-        else if (ball->vel.y < -MIN_VELOCITY) {
+        else if (ball->vel.y < -MIN_VELOCITY_Y) {
             ball->vel.y += BALL_FRICTION_Y;
+            if (ball->vel.y > MIN_VELOCITY_Y)
+                ball->vel.y = -MIN_VELOCITY_Y;
         }
-        // moving right
-        if (ball->vel.x > MIN_VELOCITY) {
-            ball->vel.x -= BALL_FRICTION_X;
-        }
-        // moving left
-        else if (ball->vel.x < -MIN_VELOCITY) {
-            ball->vel.x += BALL_FRICTION_X;
-        }
+        // // moving right
+        // if (ball->vel.x > MIN_VELOCITY_X) {
+            // ball->vel.x -= BALL_FRICTION_X;
+        // }
+        // // moving left
+        // else if (ball->vel.x < -MIN_VELOCITY_X) {
+            // ball->vel.x += BALL_FRICTION_X;
+        // }
 
         // Adjust Z velocity for vertical collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, false);
@@ -218,9 +229,8 @@ void update_ball(Sprite *ball) {
 // inline?
 void handle_elastic_collision(Sprite *ball, PPLAYER player, FIXED dx, FIXED dy, FIXED distance_squared) {
     // placeholder values (will be set by difficulty/character selection)
-    ball->mass = toFIXED(1.0);
-    player->_sprite->mass = toFIXED(2.0);
-    player->power = toFIXED(2.0); // how fast the player hits the ball
+    ball->mass = toFIXED(0.001);
+    player->_sprite->mass = toFIXED(0.1); // I don't think I need this?
     
     // Collision normal (unit vector)
     FIXED collision_normal_x = jo_fixed_div(dx, jo_fixed_sqrt(distance_squared));
@@ -230,10 +240,10 @@ void handle_elastic_collision(Sprite *ball, PPLAYER player, FIXED dx, FIXED dy, 
     FIXED velocity = jo_fixed_sqrt(vel_squared);
     
     impulse = jo_fixed_mult(ball->mass, (jo_fixed_mult(velocity, REBOUND) - velocity));
-
+    FIXED momentumChange = jo_fixed_mult(jo_fixed_mult(impulse, player->_sprite->mass), player->power);
     // Update ball's velocity
-    ball->vel.x -= jo_fixed_mult((jo_fixed_mult((impulse), player->_sprite->mass) - player->power), collision_normal_x);
-    ball->vel.y -= jo_fixed_mult(jo_fixed_mult((impulse), player->_sprite->mass), collision_normal_y);
+    ball->vel.x -= jo_fixed_mult(momentumChange, collision_normal_x);
+    ball->vel.y -= jo_fixed_mult(momentumChange, collision_normal_y);
 
 
     // control ball speed
@@ -313,7 +323,8 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
             distance_squared = toFIXED(0.001);
         }
 
-        handle_elastic_collision(ball, player, toFIXED(dx), toFIXED(dy), toFIXED(distance_squared));
+        handle_ball_player_collision(ball, player);
+        // handle_collision(ball, player, toFIXED(dx), toFIXED(dy), toFIXED(distance_squared));
        
         ball->isColliding = true;
         player->_sprite->isColliding = true;
@@ -328,41 +339,56 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 }
 
 
-// UNUSED
-// void handle_ball_player_collision(Sprite *ball, Sprite *player) {
-    // // Calculate relative position vector
-    // FIXED dx = ball->pos.x - player->pos.x;
-    // FIXED dy = ball->pos.y - player->pos.y;
+// SIMPLER / BETTER?
+void handle_ball_player_collision(Sprite *ball, PPLAYER player) {
+    // Calculate relative position vector
+    FIXED dx = ball->pos.x - player->_sprite->pos.x;
+    FIXED dy = ball->pos.y - player->_sprite->pos.y;
 
-    // // Calculate squared distance to avoid sqrt unless necessary
-    // FIXED distance_squared = jo_fixed_mult(dx, dx) + jo_fixed_mult(dy, dy);
+    // Calculate squared distance to avoid sqrt unless necessary
+    FIXED distance_squared = jo_fixed_mult(dx, dx) + jo_fixed_mult(dy, dy);
 
-    // if (distance_squared == 0) {
-        // // Prevent division by zero (objects are on top of each other)
-        // return;
-    // }
+    if (distance_squared == 0) {
+        // Prevent division by zero (objects are on top of each other)
+        return;
+    }
 
-    // // Compute collision normal (unit vector)
-    // FIXED collision_normal_x = jo_fixed_div(dx, jo_fixed_sqrt(distance_squared));
-    // FIXED collision_normal_y = jo_fixed_div(dy, jo_fixed_sqrt(distance_squared));
+    // Compute collision normal (unit vector)
+    FIXED collision_normal_x = jo_fixed_div(dx, jo_fixed_sqrt(distance_squared));
+    FIXED collision_normal_y = jo_fixed_div(dy, jo_fixed_sqrt(distance_squared));
 
-    // // Compute the dot product of velocity and collision normal
-    // FIXED dot_product = jo_fixed_mult(ball->vel.x, collision_normal_x) +
-                        // jo_fixed_mult(ball->vel.y, collision_normal_y);
+    // Compute the dot product of relative velocity and collision normal
+    FIXED dot_product = jo_fixed_mult(ball->vel.x, collision_normal_x) +
+                        jo_fixed_mult(ball->vel.y, collision_normal_y);
 
-    // if (dot_product > 0) {
-        // // Ball is moving away from the player; no need to adjust velocity
-        // return;
-    // }
+    if (dot_product > 0) { // remove?
+        // Ball is moving away from the player; no need to adjust velocity
+        return;
+    }
 
-    // // Reflect the ball's velocity along the collision normal
-    // ball->vel.x -= jo_fixed_mult(dot_product, collision_normal_x) * 2;
-    // ball->vel.y -= jo_fixed_mult(dot_product, collision_normal_y) * 2;
+    // Reflect the ball's velocity along the collision normal, factoring in player's movement
+    ball->vel.x -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_x), player->power);
+    ball->vel.y -= jo_fixed_mult(dot_product, collision_normal_y) * 2;
+    
+    // Compute relative velocity (ball velocity - player velocity)
+    FIXED rel_vel_x = jo_fixed_mult(player->_sprite->vel.x, toFIXED(0.35));
+    FIXED rel_vel_y = jo_fixed_mult(player->_sprite->vel.y, toFIXED(0.05));
 
-    // // Optional: Slightly offset the ball to prevent overlapping
-    // ball->pos.x += jo_fixed_mult(collision_normal_x, toFIXED(2)); // Adjust as needed
-    // ball->pos.y += jo_fixed_mult(collision_normal_y, toFIXED(2)); // Adjust as needed
-// }
+    // Apply additional influence from player's velocity
+    switch (player->onLeftSide) {
+        case true:
+            if (player->_sprite->vel.x > toFIXED(0)) {
+                ball->vel.x += rel_vel_x;
+            }
+            break;
+        default:
+            if (player->_sprite->vel.x < toFIXED(0)) {
+                ball->vel.x += rel_vel_x;
+            }
+            break;
+    }
+    // ball->vel.y += rel_vel_y;
+}
 
 // // Returns true if two circles intersect and are moving toward each other
 // // uses the distance formula without using sqrt
@@ -536,13 +562,13 @@ void sweep_and_prune(void) {
     }
 }
 
-// Example collision handler function
-void handle_collision(Sprite *a, Sprite *b) {
-    a->isColliding = true;
-    b->isColliding = true;
+// // Example collision handler function
+// void handle_collision(Sprite *a, Sprite *b) {
+    // a->isColliding = true;
+    // b->isColliding = true;
     
-    // handle_elastic_collision(ball, player, toFIXED(dx), toFIXED(dy), toFIXED(distance_squared));
-}
+    // // handle_elastic_collision(ball, player, toFIXED(dx), toFIXED(dy), toFIXED(distance_squared));
+// }
 
 // // Update bounding boxes whenever an object's position changes
 // void update_bounding_box(Sprite *sprite) {

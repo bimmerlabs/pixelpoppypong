@@ -32,19 +32,25 @@ const char *characterNames[] = {
     "CPU"
 };
 
-void initCharacters(void) {
-    // eventually some will be able to be unlocked based on saved score, playtime, etc
-    characterAvailable[CHARACTER_MACCHI] = true;
-    characterAvailable[CHARACTER_JELLY]  = true;
-    characterAvailable[CHARACTER_PENNY]  = true;
-    characterAvailable[CHARACTER_POTTER] = true;
-    characterAvailable[CHARACTER_SPARTA] = false;
-    characterAvailable[CHARACTER_POPPY]  = false;
-    characterAvailable[CHARACTER_TJ]     = false;
-    characterAvailable[CHARACTER_GEORGE] = false;
-    characterAvailable[CHARACTER_WUPPY]  = false;
-    characterAvailable[CHARACTER_WALRUS] = false;
-    characterAvailable[CHARACTER_GARF]   = false;
+void initUnlockedCharacters(void) {
+    // Unlock the first four characters by default, others remain locked
+    for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+        characterUnlocked[i] = (i <= CHARACTER_POTTER);
+    }
+}
+
+void initAvailableCharacters(void) {
+    if (game_options.debug_mode) {
+        for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+            characterAvailable[i] = true;
+        }
+    }
+    // Copy values from characterUnlocked to characterAvailable
+    else {
+        for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+            characterAvailable[i] = characterUnlocked[i];
+        }
+    }
 }
 
 void initTeams(void) {
@@ -65,19 +71,15 @@ void teamSelect_init(void)
     // reset_sprites();
     // do_update_PmenuAll = true;
     initPlayers();
+    initAvailableCharacters();
+
     
     initTeams();
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
     g_Game.numTeams = 0;
-    
-    if (game_options.debug_mode == true) {
-        g_Game.minTeams = 0;
-        for (int i = 0; i < TOTAL_CHARACTERS; i++) {
-            characterAvailable[i] = true;
-        }
-    }
+    g_Game.minTeams = 1;
     
     if (game_options.mesh_display) {
         menu_bg1.mesh = MESHon;
@@ -278,7 +280,8 @@ void drawCharacterSelectGrid(void)
         
         // CHARACTER METER
         if (player->startSelection) {
-            
+            // SPEED
+            // Uint8 maxSpeed = JO_FIXED_TO_INT(player->maxSpeed);
             if (game_options.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
             }
@@ -287,7 +290,7 @@ void drawCharacterSelectGrid(void)
             }
             // yellow
             meter.spr_id = meter.anim1.asset[7];
-            set_spr_scale(&meter, (player->maxSpeed), METER_HEIGHT);
+            set_spr_scale(&meter, player->maxSpeed, METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y-METER_Y1, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
@@ -295,24 +298,26 @@ void drawCharacterSelectGrid(void)
             set_spr_scale(&meter, (METER_WIDTH-player->maxSpeed), METER_HEIGHT);
             set_spr_position(&meter, (METER_X+(2*player->maxSpeed)), portrait_y-METER_Y1, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
-            
+            // ACCELERATION
+            Uint8 acceleration = JO_FIXED_TO_INT(player->acceleration);
             if (game_options.debug_mode) {
-                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", player->acceleration); 
+                jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", acceleration); 
             }
             else {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL."); 
             }
             // yellow       
             meter.spr_id = meter.anim1.asset[7];
-            set_spr_scale(&meter, (player->acceleration), METER_HEIGHT);
+            set_spr_scale(&meter, acceleration, METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
             meter.spr_id = meter.anim1.asset[8];
-            set_spr_scale(&meter, (METER_WIDTH-player->acceleration), METER_HEIGHT);
-            set_spr_position(&meter, (METER_X+(2*player->acceleration)), portrait_y-METER_Y2, PORTRAIT_DEPTH);
+            set_spr_scale(&meter, (METER_WIDTH-acceleration), METER_HEIGHT);
+            set_spr_position(&meter, (METER_X+(2*acceleration)), portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
-            
+            // POWER
+            // Uint8 power = JO_FIXED_TO_INT(player->power);
             if (game_options.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
             }
@@ -321,7 +326,7 @@ void drawCharacterSelectGrid(void)
             }
             // yellow
             meter.spr_id = meter.anim1.asset[7];
-            set_spr_scale(&meter, (player->power), METER_HEIGHT);
+            set_spr_scale(&meter, player->power, METER_HEIGHT);
             set_spr_position(&meter, METER_X, portrait_y+METER_Y3, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // red
@@ -377,7 +382,7 @@ void characterSelect_input(void)
             }
             // ASSIGN STATS
             player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-            player->acceleration = characterAttributes[player->character.choice].acceleration;
+            player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
             player->power = characterAttributes[player->character.choice].power;
             
             // GO BACK

@@ -68,9 +68,9 @@ RgbPalette rgbSprites = {
       {1, 1, 1}, {39, 26, 24}, {73, 46, 42}, {107, 67, 53}, {123, 78, 58}, {134, 93, 72}, {157, 107, 81}, {163, 111, 90}, 
       {255, 255, 255}, {161, 120, 96}, {171, 133, 105}, {178, 138, 115}, {189, 148, 120}, {201, 159, 134}, {217, 182, 150}, {233, 201, 161}, 
       {11, 11, 11}, {255, 125, 169}, {249, 179, 183}, {87, 87, 87}, {255, 245, 141}, {255, 255, 255}, {255, 175, 43}, {249, 163, 27}, 
-      {223, 125, 27}, {189, 103, 17}, {0, 0, 0}, {127, 255, 127}, {211, 249, 127}, {255, 1, 127}, {127, 1, 127}, {1, 127, 127}, 
-      {1, 255, 127}, {89, 195, 231}, {167, 195, 231}, {255, 127, 127}, {167, 61, 231}, {1, 1, 127}, {51, 129, 231}, {83, 153, 249}, 
-      {129, 179, 249}, {173, 153, 249}, {173, 103, 249}, {127, 77, 249}, {83, 103, 249}, {83, 153, 249}, {127, 127, 255} }
+      {223, 125, 27}, {189, 103, 17}, {1, 1, 129}, {1, 129, 129}, {3, 255, 129}, {17, 65, 129}, {191, 17, 129}, {129, 255, 129}, 
+      {129, 129, 249}, {65, 17, 129}, {239, 191, 129}, {239, 65, 129}, {191, 239, 129}, {17, 191, 129}, {65, 239, 129}, {255, 3, 135}, 
+      {127, 1, 129}, {255, 127, 129}, {211, 249, 129}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0} }
 };
 
 // buffer palette for writing to CRAM (populated at runtime)
@@ -146,7 +146,7 @@ HslPalette hslSprites = {
 };
 
 // palette ranges
-PaletteRange p_rangeSpritesAll   = { 0, 234 };     // all colors (excluding normal map colors)
+PaletteRange p_rangeSpritesAll   = { 0, 233 };     // all colors (excluding normal map colors)
 
 // FONT (start index chosen arbitrarily - don't forget to reset palette after exiting screen!
 PaletteRange p_rangeFont2All  = {64, 93}; // A - END
@@ -197,7 +197,7 @@ PaletteRange p_rangeGarfield1 = { 225, 231 };   // garfield
 PaletteRange p_rangeBomb      = { 89, 91 };     // bomb
 PaletteRange p_rangeFish      = { 153, 156 };   // fish
 PaletteRange p_rangeShroom    = { 158, 159 };   // mushroom
-PaletteRange p_rangeNormalMap = { 235, 254 };   // normal map
+PaletteRange p_rangeNormalMap = { 234, 254 };   // normal map
 
 // tracks the accumulation of changes for the HSL color model
 GlobalHSL hsl_incSprites = {0, 0, 0};

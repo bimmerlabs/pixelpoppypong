@@ -88,6 +88,16 @@ version 0.45:
 
 version 0.5:
 -gameplay implementation:
+intial feedback:
+	only Y movement feels better than X/Y?
+	continues goes 1 further than expected
+	intitial ball speed is too fast
+	AI rebound speed is too fast (base on difficulty/power?)
+	start ball at last scoring player position?
+	need to look at lives/continues for game mode/difficulty
+	adjust goal size obased on diffculty/ai
+	adjust pp size based on difficulty (bigger is easier?)
+
 	story mode (started)
 		Block breaking? (not this version)
 		rescue kittens/wuppy?

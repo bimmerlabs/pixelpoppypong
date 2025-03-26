@@ -3,7 +3,6 @@
 #include "assets.h"
 #include "physics.h"
 #include "gameplay.h"
-#include "objects/player.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -23,8 +22,11 @@ void playerAI(Sprite *ball) {
         {
             continue;
         }
-        if (player->onLeftSide == true) {
-            FIXED center_diff = toFIXED(0);
+        if (!g_Game.isBallActive) {
+            centerAiPlayer(player);
+            // continue;
+        }
+        else if (player->onLeftSide == true) {
             // Check if the ball is moving towards player 2's goal
             if (ball->vel.x < toFIXED(0)) {
 
@@ -38,25 +40,12 @@ void playerAI(Sprite *ball) {
                     FIXED y_diff = ball->pos.y - player->_sprite->pos.y;
 
                     // Gradual movement
-                    player->curPos.dy += jo_fixed_mult(MOVEMENT_FACTOR, y_diff);
-                    // player->curPos.dy += JO_ABS(ball->vel.y) * y_diff;
+                    player->curPos.dy += jo_fixed_mult(player->acceleration, y_diff);
                 }
             }
             else {
-                // Ball is moving away, move back to the center
-                center_diff = SCREEN_MIDDLE - player->_sprite->pos.y;
-                if (center_diff > GOAL_THRESHOLD || center_diff < -GOAL_THRESHOLD) {
-                    // Gradual movement
-                    player->curPos.dy += jo_fixed_mult(SLOW_MOVEMENT_FACTOR, center_diff);
-                    // animate_paw1 = false;
-                }
-                else {
-                    player->curPos.dy = toFIXED(0);
-                }
+                centerAiPlayer(player);
             }
-            // if (game_options.debug_display) {
-                // jo_nbg0_printf(2, 14, "CENTER_DIFF:%i", toINT(center_diff));
-            // }
         }
         else {
             // Check if the ball is moving towards player 2's goal
@@ -72,21 +61,11 @@ void playerAI(Sprite *ball) {
                     FIXED y_diff = ball->pos.y - player->_sprite->pos.y;
 
                     // Gradual movement
-                    player->curPos.dy += jo_fixed_mult(MOVEMENT_FACTOR, y_diff);
-                    // player->curPos.dy += JO_ABS(ball->vel.y) * y_diff;
+                    player->curPos.dy += jo_fixed_mult(player->acceleration, y_diff);
                 }
             } 
             else {
-                // Ball is moving away, move back to the center
-                FIXED center_diff = SCREEN_MIDDLE - player->_sprite->pos.y;
-                if (center_diff > GOAL_THRESHOLD || center_diff < -GOAL_THRESHOLD) {
-                    // Gradual movement
-                    player->curPos.dy += jo_fixed_mult(SLOW_MOVEMENT_FACTOR, center_diff);
-                    // animate_paw1 = false;
-                }
-                else {
-                    player->curPos.dy = toFIXED(0);
-                }
+                centerAiPlayer(player);
             }
         }
         
@@ -144,5 +123,116 @@ void playerAI(Sprite *ball) {
         
         detect_player_ball_collision(&pixel_poppy, player);
         boundAiPlayer(player);
+    }
+}
+
+void centerAiPlayer(PPLAYER player)
+{
+    FIXED middle;
+    // account for game modes (1-4 players)
+    switch(player->teamChoice)
+    {
+        case TEAM_1: {
+            middle = -AI_GOAL_CENTER;
+            if (g_Game.numTeams < 3) {
+                middle = SCREEN_MIDDLE;
+            }
+            break;
+        }
+        case TEAM_2: {
+            middle = -AI_GOAL_CENTER;
+            if (g_Game.numTeams <= 3) {
+                middle = SCREEN_MIDDLE;
+            }
+            break;
+        }
+        default:
+            middle = AI_GOAL_CENTER;
+            break;
+    }
+    FIXED center_diff = middle - player->_sprite->pos.y;
+    if (center_diff > player->goalCenterThresholdMax || center_diff < -player->goalCenterThresholdMax) {
+        player->curPos.dy += jo_fixed_mult(MEDIUM_MOVEMENT_FACTOR, center_diff);
+    }
+    else if (center_diff > player->goalCenterThresholdMin || center_diff < -player->goalCenterThresholdMin) {
+        player->curPos.dy -= jo_fixed_mult(SLOW_MOVEMENT_FACTOR, center_diff);
+    }
+    else {
+        player->curPos.dy = toFIXED(0);
+    }
+    // if (player->teamChoice == TEAM_2) {
+        // jo_nbg0_printf(20, 16, "POS.Y:%i", JO_FIXED_TO_INT(player->_sprite->pos.y));
+        // jo_nbg0_printf(20, 17, "CENTER_DIFF:%i", JO_FIXED_TO_INT(center_diff));
+        // jo_nbg0_printf(20, 18, "MIDDLE:%i",  JO_FIXED_TO_INT(middle));
+        // jo_nbg0_printf(20, 19, "CURPOS.DY:%i",  JO_FIXED_TO_INT(player->curPos.dy));
+    // } 
+    // if (player->teamChoice == TEAM_3) {
+        // jo_nbg0_printf(2, 16, "POS.Y:%i", JO_FIXED_TO_INT(player->_sprite->pos.y));
+        // jo_nbg0_printf(2, 17, "CENTER_DIFF:%i", JO_FIXED_TO_INT(center_diff));
+        // jo_nbg0_printf(2, 18, "MIDDLE:%i",  JO_FIXED_TO_INT(middle));
+        // jo_nbg0_printf(2, 19, "CURPOS.DY:%i",  JO_FIXED_TO_INT(player->curPos.dy));
+    // }
+    player->_sprite->pos.y += player->curPos.dy;
+    player->_sprite->vel.y += player->curPos.dy;
+    boundAiPlayer(player);
+}
+
+void boundAiPlayer(PPLAYER player)
+{
+    if (player->onLeftSide == true) {
+        if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
+        }
+        if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
+        }
+    }
+    else {
+        if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
+        }
+        if(player->_sprite->pos.x < SCREEN_QUARTER + PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = SCREEN_QUARTER + PLAYER_WIDTH;
+        }
+    }
+
+    // account for game modes (1-4 players)
+    FIXED bottom = SCREEN_BOTTOM;
+    FIXED top = SCREEN_MIDDLE;
+    switch(player->teamChoice)
+    {
+        case TEAM_1: {
+            bottom = SCREEN_MIDDLE;
+            top = SCREEN_TOP;
+            if (g_Game.numTeams < 3) {
+                bottom = SCREEN_BOTTOM;
+            }
+            break;
+        }
+        case TEAM_2: {
+            bottom = SCREEN_MIDDLE;
+            top = SCREEN_TOP;
+            if (g_Game.numTeams <= 3) {
+                bottom = SCREEN_BOTTOM;
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    if(player->_sprite->pos.y > bottom)
+    {
+        player->_sprite->pos.y = bottom;
+        player->curPos.dy = toFIXED(0);
+    }
+
+    if(player->_sprite->pos.y < top)
+    {
+        player->_sprite->pos.y = top;
+        player->curPos.dy = toFIXED(0);
     }
 }

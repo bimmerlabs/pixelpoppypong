@@ -1,6 +1,17 @@
 #include "sprites.h"
+#include "assets.h"
 
 // sprite structs - used with my_sprite_draw
+
+Sprite font = {
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,                                       
+    .pal_id = 0,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCC
+};
 
 Sprite ppplogo = {
     .pos = {toFIXED(0), toFIXED(0), toFIXED(100)},   // Position x, y, z (all initialized to 0)
