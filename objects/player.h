@@ -19,12 +19,18 @@
 
 #define PLAYER_HEIGHT toFIXED(20)
 #define PLAYER_WIDTH toFIXED(40)
+#define PLAYER_BOUNDARY_RIGHT  toFIXED(328.0)
+#define PLAYER_BOUNDARY_LEFT  toFIXED(-328.0)
+#define PLAYER_BOUNDARY_MIDDLE  toFIXED(50.0)
 
-#define PLAYER_X 350
-#define PLAYER_Y 120
+#define PLAYER_MOVEMENT_SPEED toFIXED(0.0015)
+
+#define PLAYER_X 340
+#define PLAYER_Y 110
 #define PLAYER_DEPTH 110
-#define PLAYER_RADIUS toFIXED(26)
-#define SHIELD_OFFSET toFIXED(36)
+#define PLAYER_RADIUS toFIXED(27)
+#define SHIELD_RADIUS toFIXED(60)
+#define SHIELD_OFFSET toFIXED(32)
 
 typedef enum _PLAYER_STATE
 {
@@ -54,6 +60,7 @@ typedef struct _CHARACTER_ATTRIBUTES
 typedef struct _SHIELD
 {
     Uint8 power;
+    bool activate;
 } SHIELD;
 
 typedef enum _CHARACTER_SELECT

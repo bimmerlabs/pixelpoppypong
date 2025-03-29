@@ -204,16 +204,16 @@ void loadGameAssets(void)
     star.anim1.asset = g_Assets.heart;
     star.spr_id = star.anim1.asset[3];
     
-    loadSprite(&shield1, g_Assets.shield, "SHIELD.TGA", shield_tileset, NUM_SHIELD_SPRITES, 32, 64, true);
-    shield2.anim1.asset = g_Assets.shield,
-    shield2.anim1.max = 6,
-    shield2.spr_id = shield2.anim1.asset[6];
-    shield3.anim1.asset = g_Assets.shield,
-    shield3.anim1.max = 6,
-    shield3.spr_id = shield3.anim1.asset[6];
-    shield4.anim1.asset = g_Assets.shield,
-    shield4.anim1.max = 6,
-    shield4.spr_id = shield4.anim1.asset[6];
+    loadSprite(&shield[0], g_Assets.shield, "SHIELD.TGA", shield_tileset, NUM_SHIELD_SPRITES, 32, 64, true);
+    shield[1].anim1.asset = g_Assets.shield,
+    shield[1].anim1.max = 6,
+    shield[1].spr_id = shield[1].anim1.asset[6];
+    shield[2].anim1.asset = g_Assets.shield,
+    shield[2].anim1.max = 6,
+    shield[2].spr_id = shield[2].anim1.asset[6];
+    shield[3].anim1.asset = g_Assets.shield,
+    shield[3].anim1.max = 6,
+    shield[3].spr_id = shield[3].anim1.asset[6];
     
     
     // Items

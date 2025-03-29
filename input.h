@@ -1,7 +1,7 @@
 #pragma once
 
 #define MAX_INPUTS (12)
-#define SENSITIVITY toFIXED(0.1)
+#define ANALOG_SENSITIVITY toFIXED(0.11)
 #define ANALOG_MIN toFIXED(0.02)
 #define ANALOG_MAX toFIXED(0.2)
 

@@ -5,25 +5,16 @@
 
 #define MIN_VELOCITY_X toFIXED(7)
 #define MIN_VELOCITY_Y toFIXED(5)
-#define MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
+#define EASY_MAX_VELOCITY toFIXED(8) // 8 = easy, 10 = medium, 13 = hard?
+#define MEDIUM_MAX_VELOCITY toFIXED(10) // 8 = easy, 10 = medium, 13 = hard?
+#define HARD_MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)
 #define BALL_FRICTION_X toFIXED(1.25)
 #define BALL_ROTATION 1.7 // IDEA:  PICK UP A BOOMERANG ITEM - MAKE THIS NUMBER HIGHER?
 #define REBOUND toFIXED(0.1) // the lower this is, the bigger the rebound?
-
-
-// NOTE: based on float!!!
-// 0.05 - easy?
-// 0.075 - medium?
-// 0.10 - hard?
-// NOTE: based on fixed!!!
-// 0.075
-// 0.2 - too strong
-// 0.3 - causes the ball to spin backwards!
 #define FRICTION_COEFFICIENT toFIXED(2.5) // Adjust this value to alter the ball curve
 
 typedef struct {
-    // int playerID;
     bool onLeftSide;
     bool hasTouched;
     Uint16 touchCount;
@@ -31,17 +22,6 @@ typedef struct {
 } BallTouchTracker;
 
 extern BallTouchTracker touchedBy[MAX_PLAYERS];
-
-typedef struct {
-    Sprite *sprite;
-    bool active;
-} SpriteEntry;
-
-#define MAX_SPRITES 128
-
-// Array of SpriteEntries to store all sprites for sweep and prune
-extern SpriteEntry sprite_list[MAX_SPRITES];
-extern int sprite_id;
 
 void initTouchCounter(void);
 
@@ -93,39 +73,21 @@ static inline void updateBallTouch(PPLAYER player) {
     }
 
     // Update the player who last touched the ball
-    // touchedBy[player->PlayerID].PlayerID = player->PlayerID;
     touchedBy[player->playerID].hasTouched = true;
     touchedBy[player->playerID].touchCount++;
     touchedBy[player->playerID].teamChoice = player->teamChoice; // needs to be initialized, not here
 }
 
+static inline FIXED my_fixed_clamp(FIXED value, FIXED min, FIXED max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
 // Function to update the ball's position and check for collisions
 void update_ball(Sprite *ball);
-
-void handle_elastic_collision(Sprite *ball, PPLAYER player, FIXED dx, FIXED dy, FIXED distance_squared);
-
-void handle_ball_player_collision(Sprite *ball, PPLAYER player);
 
 // // Function to detect and handle ball-player collision
 bool detect_player_ball_collision(Sprite *ball, PPLAYER player);
 
-// // COLLISION DETECTION
-// bool checkForCircleCollision_int(Sprite *a, Sprite *b);
-// bool checkForCircleCollision_fixed(Sprite *a, Sprite *b);
-
-void add_sprite_to_sweep_and_prune(Sprite *sprite);
-
-// Remove a sprite from the sweep and prune list
-void remove_sprite_from_sweep_and_prune(Sprite *sprite);
-
-// Sort sprites by the min_x value of their bounding box
-void sort_sprites_by_min_x(void);
-
-// Perform sweep and prune collision detection
-void sweep_and_prune(void);
-
-// // Example collision handler function
-// void handle_collision(Sprite *a, Sprite *b);
-
-// // Update bounding boxes whenever an object's position changes
-// void update_bounding_box(Sprite *sprite);
+void handle_ball_player_reaction(Sprite *ball, PPLAYER player);

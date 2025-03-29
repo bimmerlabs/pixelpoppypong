@@ -15,8 +15,8 @@
 #define AI_GOAL_CENTER toFIXED(80.0)
 
 #define HARD_AI_MOVEMENT_SPEED   toFIXED(0.0020)
-#define MEDIUM_AI_MOVEMENT_SPEED toFIXED(0.0012)
-#define EASY_AI_MOVEMENT_SPEED   toFIXED(0.0004)
+#define MEDIUM_AI_MOVEMENT_SPEED toFIXED(0.0010)
+#define EASY_AI_MOVEMENT_SPEED   toFIXED(0.0006)
 
 void playerAI(Sprite *ball);
 void centerAiPlayer(PPLAYER player);

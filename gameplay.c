@@ -8,6 +8,7 @@ bool start_gameplay_timer = false;
 bool round_start = false;
 static bool play_battle_is_over = true;
 
+Uint8 g_goalPlayerId[MAX_PLAYERS];
 static bool draw_demo_text = true;
 static bool time_over = false;
 static unsigned int endGameTimer = 0;
@@ -25,6 +26,9 @@ void gameplay_init() {
         loadGameAssets();
     }
     
+    if (g_Game.lastState != GAME_STATE_GAMEPLAY) {
+        initPlayerGoals(); // don't initialize if restarting within gameplay.
+    }
     g_Game.lastState = GAME_STATE_GAMEPLAY;
         if (g_Game.nextState == GAME_STATE_GAMEPLAY)
     {
@@ -72,12 +76,14 @@ void gameplay_init() {
     sprite_frame_reset(&bomb_item);
     sprite_frame_reset(&fishtank_item);
     sprite_frame_reset(&shroom_item);
-    sprite_frame_reset(&shield1);
+    
+    for (int i = 0; i < MAX_PLAYERS; i++) {
+        sprite_frame_reset(&shield[0]);
+    }
 
     // reset_sprites();
     // do_update_shroom = true;
     // do_update_PmenuAll = true;
-    initPlayerGoals();
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -233,9 +239,9 @@ void demo_update(void)
     if (g_Game.GameTimer > 0 && frame % 60 == 0) { // modulus
         g_Game.GameTimer--;
     }
-    else if (g_Game.GameTimer == 0) {
-        time_over = true;
-    }
+    // else if (g_Game.GameTimer == 0) {
+        // time_over = true;
+    // }
     // test
     if (g_Game.BombTimer == 0) {
         explode_bomb = true;
@@ -319,9 +325,6 @@ void gameplayUI_draw(PPLAYER player) {
             int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
             int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
             int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
-            set_shield_position(player->_sprite, &shield1, player->shield_pos);
-            looped_animation_pow(&shield1, 4);
-            my_sprite_draw(&shield1);
                         // If speed is an issue, can create a sprite object for each portrait during gameplay
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
@@ -340,10 +343,7 @@ void gameplayUI_draw(PPLAYER player) {
             int heart_x = GAMEPLAY_PORTRAIT_X - 40;
             int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
             int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
-            set_shield_position(player->_sprite, &shield2, player->shield_pos);
-            looped_animation_pow(&shield2, 4);
-            my_sprite_draw(&shield2);
-
+            
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
@@ -363,10 +363,7 @@ void gameplayUI_draw(PPLAYER player) {
             int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
             int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
             int star_y = GAMEPLAY_PORTRAIT_Y - 12;
-            set_shield_position(player->_sprite, &shield3, player->shield_pos);
-            looped_animation_pow(&shield3, 4);
-            my_sprite_draw(&shield3);
-
+            
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
@@ -386,9 +383,6 @@ void gameplayUI_draw(PPLAYER player) {
             int heart_x = GAMEPLAY_PORTRAIT_X - 40;
             int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
             int star_y = GAMEPLAY_PORTRAIT_Y - 12;
-            set_shield_position(player->_sprite, &shield4, player->shield_pos);
-            looped_animation_pow(&shield4, 4);
-            my_sprite_draw(&shield4);
 
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
@@ -486,6 +480,7 @@ void gameplay_update(void)
     switch (g_Game.gameMode) {
         case GAME_MODE_CLASSIC:
             getClassicModeInput();
+            // getPlayersInput();
             break;
         default:
             getPlayersInput();

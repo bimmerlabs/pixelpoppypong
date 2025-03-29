@@ -51,7 +51,7 @@ void update_bg_position(void);
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
-static __jo_force_inline void updatePlayerLives(int lastTouchPlayerID, int scoredOnPlayerID)
+static __jo_force_inline bool updatePlayerLives(Uint8 scoredOnPlayerID)
 {
     if (g_Players[scoredOnPlayerID].numLives > 0) {
         g_Players[scoredOnPlayerID].numLives--;
@@ -64,9 +64,50 @@ static __jo_force_inline void updatePlayerLives(int lastTouchPlayerID, int score
             else {
                 g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
             }
-            g_Players[lastTouchPlayerID].score.stars++;
+            return true;
         }
     }
+    return false;
+}
+
+static __jo_force_inline void updateLeftPlayerStars(int lastTouchPlayerID)
+{
+    if (lastTouchPlayerID != -1 && g_Players[lastTouchPlayerID].onLeftSide) {
+        g_Players[lastTouchPlayerID].score.stars++;       
+    }
+    else {
+        if (g_Game.numTeams > 2) {
+            g_Players[g_goalPlayerId[TEAM_1-1]].score.stars++; 
+            g_Players[g_goalPlayerId[TEAM_3-1]].score.stars++;
+        }
+        else {
+            g_Players[g_goalPlayerId[TEAM_3-1]].score.stars++;
+        }
+    }
+}
+
+static __jo_force_inline void updateRightPlayerStars(int lastTouchPlayerID)
+{
+    if (lastTouchPlayerID != -1 && !g_Players[lastTouchPlayerID].onLeftSide) {
+        g_Players[lastTouchPlayerID].score.stars++;       
+    }
+    else {
+        if (g_Game.numTeams == 4) {
+            g_Players[g_goalPlayerId[TEAM_2-1]].score.stars++; 
+            g_Players[g_goalPlayerId[TEAM_4-1]].score.stars++;
+        }
+        else {
+            g_Players[g_goalPlayerId[TEAM_2-1]].score.stars++;
+        }
+    }
+}
+
+static __jo_force_inline void calculateScore(Sprite *ball, Uint8 playerID) {
+    unsigned int points = (JO_ABS(toINT(ball->vel.x)) * 50) 
+                         + (JO_ABS(toINT(ball->vel.y)) * 500) 
+                         + (JO_ABS(toINT(ball->vel.z)) * 1000);
+    g_Players[playerID].score.points += points;
+    g_Game.isGoalScored = true;
 }
 
 // these don't work - need to assign a goal id for the player, instead of trying to calculate it since the player id isn't the same thing as the goal
@@ -82,23 +123,34 @@ static __jo_force_inline void updateScoreLeft(Sprite *ball) {
     }
     // Assign score if a valid player touched it
     if (lastTouchPlayerID != -1 && g_Players[lastTouchPlayerID].onLeftSide) {
-        unsigned int points = (JO_ABS(toINT(ball->vel.x)) * 10) 
-                            + (JO_ABS(toINT(ball->vel.y)) * 100) 
-                            + (JO_ABS(toINT(ball->vel.z)) * 500);
-        g_Players[lastTouchPlayerID].score.points += points;
-        g_Game.isGoalScored = true;
-        
-    }
-    if (g_Game.numTeams == 4 && ball->pos.y > SCREEN_MIDDLE) {
-        scoredOnPlayerID = 3;
-    }
-    else if (g_Game.numTeams == 4 && ball->pos.y < SCREEN_MIDDLE) {
-        scoredOnPlayerID = 1;
+        calculateScore(ball, lastTouchPlayerID);        
     }
     else {
-        scoredOnPlayerID = 1;
+        // todo: assign score if nobody on other side touched the ball
+        if (g_Game.numTeams > 2) {
+            calculateScore(ball, g_goalPlayerId[TEAM_1-1]);
+            calculateScore(ball, g_goalPlayerId[TEAM_3-1]);
+        }
+        else {
+            calculateScore(ball, g_goalPlayerId[TEAM_1-1]);
+        }
     }
-    updatePlayerLives(lastTouchPlayerID, scoredOnPlayerID);
+    
+    if (g_Game.numTeams == 4 && ball->pos.y > SCREEN_MIDDLE) {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_4-1];
+    }
+    else if (g_Game.numTeams == 4 && ball->pos.y < SCREEN_MIDDLE) {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_2-1];
+    }
+    else {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_2-1];
+    }
+    
+    if (updatePlayerLives(scoredOnPlayerID)) {
+        // scored on player lost all their lives
+        updateLeftPlayerStars(lastTouchPlayerID);
+    }
+    
 }
 
 static __jo_force_inline void updateScoreRight(Sprite *ball) {
@@ -113,22 +165,33 @@ static __jo_force_inline void updateScoreRight(Sprite *ball) {
     }
     // Assign score if a valid player touched it
     if (lastTouchPlayerID != -1 && !g_Players[lastTouchPlayerID].onLeftSide) {
-        unsigned int points = (JO_ABS(toINT(ball->vel.x)) * 10) 
-                            + (JO_ABS(toINT(ball->vel.y)) * 100) 
-                            + (JO_ABS(toINT(ball->vel.z)) * 500);
-        g_Players[lastTouchPlayerID].score.points += points;
-        g_Game.isGoalScored = true;
-    }
-    if (g_Game.numTeams > 2 && ball->pos.y > SCREEN_MIDDLE) {
-        scoredOnPlayerID = 2;
-    }
-    else if (g_Game.numTeams > 2 && ball->pos.y < SCREEN_MIDDLE) {
-        scoredOnPlayerID = 0;
+        calculateScore(ball, lastTouchPlayerID);  
     }
     else {
-        scoredOnPlayerID = 0;
+        // todo: assign score if nobody on other side touched the ball
+        if (g_Game.numTeams == 4) {
+            calculateScore(ball, g_goalPlayerId[TEAM_2-1]);
+            calculateScore(ball, g_goalPlayerId[TEAM_4-1]);
+        }
+        else {
+            calculateScore(ball, g_goalPlayerId[TEAM_2-1]);
+        }
     }
-    updatePlayerLives(lastTouchPlayerID, scoredOnPlayerID);
+    
+    if (g_Game.numTeams > 2 && ball->pos.y > SCREEN_MIDDLE) {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_3-1];
+    }
+    else if (g_Game.numTeams > 2 && ball->pos.y < SCREEN_MIDDLE) {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_1-1];
+    }
+    else {
+        scoredOnPlayerID = g_goalPlayerId[TEAM_1-1];
+    }
+    
+    if (updatePlayerLives(scoredOnPlayerID)) {
+        // scored on player lost all their lives
+        updateRightPlayerStars(lastTouchPlayerID);
+    }
 }
 
 static __jo_force_inline void checkLeftWallScore(Sprite *ball) {

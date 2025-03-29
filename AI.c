@@ -10,7 +10,7 @@ void playerAI(Sprite *ball) {
     // for debug
     // unsigned int text_y = 5;
     // unsigned int text_x = 2;
-    for(unsigned int i = 0; i <  COUNTOF(g_Players); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         // if (i == 2) {
             // text_y = 5;
@@ -180,23 +180,23 @@ void centerAiPlayer(PPLAYER player)
 void boundAiPlayer(PPLAYER player)
 {
     if (player->onLeftSide == true) {
-        if(player->_sprite->pos.x > -SCREEN_QUARTER - PLAYER_WIDTH)
+        if(player->_sprite->pos.x > -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH)
         {
-            player->_sprite->pos.x = -SCREEN_QUARTER - PLAYER_WIDTH;
+            player->_sprite->pos.x = -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH;
         }
-        if(player->_sprite->pos.x < SCREEN_LEFT + PLAYER_WIDTH)
+        if(player->_sprite->pos.x < PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH)
         {
-            player->_sprite->pos.x = SCREEN_LEFT + PLAYER_WIDTH;
+            player->_sprite->pos.x = PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH;
         }
     }
     else {
-        if(player->_sprite->pos.x > SCREEN_RIGHT - PLAYER_WIDTH)
+        if(player->_sprite->pos.x > PLAYER_BOUNDARY_RIGHT - PLAYER_WIDTH)
         {
-            player->_sprite->pos.x = SCREEN_RIGHT - PLAYER_WIDTH;
+            player->_sprite->pos.x = PLAYER_BOUNDARY_RIGHT - PLAYER_WIDTH;
         }
-        if(player->_sprite->pos.x < SCREEN_QUARTER + PLAYER_WIDTH)
+        if(player->_sprite->pos.x < PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH)
         {
-            player->_sprite->pos.x = SCREEN_QUARTER + PLAYER_WIDTH;
+            player->_sprite->pos.x = PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH;
         }
     }
 

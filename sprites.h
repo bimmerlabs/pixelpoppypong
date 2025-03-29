@@ -7,7 +7,9 @@
 #define FRAMERATE1 4 // for animation speed (power of 2)
 #define FRAMERATE2 6 // for animation speed
 #define FRAMERATE3 8 // for animation speed (power of 2)
-#define BALL_RADIUS toFIXED(24)
+#define EASY_BALL_RADIUS toFIXED(56)
+#define NORMAL_BALL_RADIUS toFIXED(36)
+#define HARD_BALL_RADIUS toFIXED(32)
 
 typedef struct {
     FIXED x, y, z;
@@ -86,15 +88,8 @@ extern Sprite meter;
 extern Sprite heart;
 extern Sprite star;
 extern Sprite goal[MAX_PLAYERS];
-extern Sprite goal1;
-extern Sprite goal2;
-extern Sprite goal3;
-extern Sprite goal4;
 
-extern Sprite shield1;
-extern Sprite shield2;
-extern Sprite shield3;
-extern Sprite shield4;
+extern Sprite shield[MAX_PLAYERS];
 
 // characters
 extern Sprite pixel_poppy;
@@ -129,16 +124,24 @@ static inline void reset_ball_movement(Sprite *ball) {
     ball_falling = true;
     ball_bounce = false;
     ball->pos.x = toFIXED(0);
-    ball->pos.y = toFIXED(-260);
+    ball->pos.y = toFIXED(-280);
     ball->rot.z = 0;
     ball->vel.x = toFIXED(0);
     ball->vel.y = toFIXED(0);
     ball->vel.z = 0;
-    ball->scl.x = toFIXED(1.0); // BASE ON DIFFFICULTY?
-    ball->scl.y = toFIXED(1.1);
-    // ball->scl.x = toFIXED(1.0);
-    // ball->scl.y = toFIXED(1.1);
-    ball->pos.r = BALL_RADIUS;
+    switch(g_Game.gameDifficulty)
+    {
+        case GAME_DIFFICULTY_EASY:
+            ball->pos.r = EASY_BALL_RADIUS;
+            ball->scl.x = toFIXED(2.0);
+            ball->scl.y = toFIXED(2.0);
+            break;
+        default:
+            ball->pos.r = NORMAL_BALL_RADIUS;
+            ball->scl.x = toFIXED(1.0);
+            ball->scl.y = toFIXED(1.1);
+            break;
+    }
 }
 
 #define BALL_VELOCITY toFIXED(10)

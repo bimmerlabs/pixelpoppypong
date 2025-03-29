@@ -1,7 +1,7 @@
 #pragma once
 #include "BG_DEF/sprite_colors.h"
 
-#define TITLE_TIMER (3 * 60)
+#define TITLE_TIMER (30 * 60)
 #define LOGO_TIMER (25 * 60)
 #define LOGO_TIMER2 (24 * 60)
 #define MODE_ID 1       // sprite index offset for mode text

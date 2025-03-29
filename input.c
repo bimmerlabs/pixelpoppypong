@@ -16,7 +16,7 @@ void init_inputs(void) {
 	input->axis_y = JO_FIXED_0;
 	input->left_trigger = JO_FIXED_0;
 	input->right_trigger = JO_FIXED_0;
-	input->sensitivity = SENSITIVITY;
+	input->sensitivity = ANALOG_SENSITIVITY;
         input->isSelected = false;
         input->isAnalog = false;
     }
@@ -97,11 +97,11 @@ void check_inputs(void) {
             continue;
         }
         if (jo_get_input_type(i) == JoNightsPad) {
-            if (jo_is_input_key_pressed(i, JO_KEY_LEFT) && input->sensitivity > ANALOG_MIN) {
+            if (jo_is_input_key_down(i, JO_KEY_LEFT) && input->sensitivity > ANALOG_MIN) {
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
                 input->sensitivity -= toFIXED(0.01);
             }
-            if (jo_is_input_key_pressed(i, JO_KEY_RIGHT) && input->sensitivity < ANALOG_MAX) {
+            if (jo_is_input_key_down(i, JO_KEY_RIGHT) && input->sensitivity < ANALOG_MAX) {
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
                 input->sensitivity += toFIXED(0.01);
             }

@@ -151,7 +151,8 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
         return;
     }
     
-    Uint8 i = player->playerID;
+        // Set goal asset by team selection
+    Uint8 i = player->teamChoice-1;
     int x_position = 0;
     int y_position_top = 0;
     int y_position_mid = 0;
@@ -237,6 +238,7 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
         default:
             break;
     }
+    // top
     goal[i].spr_id = goal[i].anim1.asset[0];
     goal[i].zmode = top_zmode;
     goal[i].flip = top_flip;
@@ -248,6 +250,7 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
     set_spr_position(&goal[i], x_position+2, y_position_top+2, 125);
     my_sprite_draw(&goal[i]);
 
+    // middle
     goal[i].spr_id = goal[i].anim1.asset[1];
     goal[i].zmode = mid_zmode;
     set_spr_position(&goal[i], x_position, y_position_mid, 120);
@@ -258,6 +261,7 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
     set_spr_position(&goal[i], x_position+2, y_position_mid+2, 125);
     my_sprite_draw(&goal[i]);
 
+    // bottom
     goal[i].spr_id = goal[i].anim1.asset[0];
     goal[i].zmode = bot_zmode;
     goal[i].flip = bot_flip;
@@ -382,6 +386,11 @@ static __jo_force_inline void drawGameUI(void) {
         if (player->objectState == OBJECT_STATE_INACTIVE) {
             continue;
         }
+        if (player->shield.activate) {
+            set_shield_position(player->_sprite, &shield[i], player->shield_pos);
+            looped_animation_pow(&shield[i], 4);
+            my_sprite_draw(&shield[i]);
+        }
         looped_animation_pow(player->_sprite, 4); // shield?
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         gameplayUI_draw(player);
@@ -392,6 +401,10 @@ static __jo_force_inline void drawGameUI(void) {
 static __jo_force_inline bool startGameplay(void) {
     if (g_Game.isBallActive) {        // g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
         start_ball_movement(&pixel_poppy);
+        touchedBy[0].hasTouched = false;
+        touchedBy[1].hasTouched = false;
+        touchedBy[2].hasTouched = false;
+        touchedBy[3].hasTouched = false;
         g_Game.isRoundOver = false;
         g_Game.isGoalScored = false;
         return false;

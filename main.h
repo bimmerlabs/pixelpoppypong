@@ -6,7 +6,7 @@
 #include "audio.h"
 #include "audio.h"
 
-#define VERSION "0.53"
+#define VERSION "0.54"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -14,7 +14,6 @@
 #define SCREEN_RIGHT  toFIXED(352.0)
 #define SCREEN_LEFT  toFIXED(-352.0)
 #define SCREEN_MIDDLE  toFIXED(0)
-#define SCREEN_QUARTER  toFIXED(100.0)
 #define SCREEN_WIDTH  toFIXED(704.0)
 #define SCREEN_HEIGHT  toFIXED(480.0)
 #define SCREEN_TOP toFIXED(-240.0)

@@ -49,7 +49,8 @@ void pause_input(void)
         // only check for pause press if the game is unpaused
         checkForPausePress();
     }
-    else
+    // don't allow unpause unless mosaic is done
+    else if (!mosaic_out)
     {
         // only check for pause menu presses if the game is paused
         checkForPauseMenu();
