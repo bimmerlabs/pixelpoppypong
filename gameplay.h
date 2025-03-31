@@ -14,7 +14,11 @@
 #define DROP_BALL_TIME (1.5 * 60)
 #define DEMO_TIME (30 * 60)
 #define BOMB_TIMER (15 * 60)
-#define TIMEOUT 99 // seconds
+#define TIMEOUT_CLASSIC (5 * 60) // seconds
+#define TIMEOUT_BATTLE 999 // seconds
+#define TIMEOUT_STORY_EASY (10 * 60) // seconds
+#define TIMEOUT_STORY_MEDIUM (5 * 60) // seconds
+#define TIMEOUT_STORY_HARD (3 * 60) // seconds
 
 #define MAX_ROUNDS 3
 
@@ -79,6 +83,42 @@ void demo_input(void);
 	initVsModePlayers();
 }
 
+static __jo_force_inline void setGameTimer(void) {
+    switch(g_Game.gameMode)
+    {
+        case GAME_MODE_BATTLE:
+            g_Game.GameTimer = TIMEOUT_BATTLE;
+            break;
+        case GAME_MODE_CLASSIC:
+            g_Game.GameTimer = TIMEOUT_CLASSIC;
+            break;
+        case GAME_MODE_STORY:
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    g_Game.GameTimer = TIMEOUT_STORY_EASY;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    g_Game.GameTimer = TIMEOUT_STORY_HARD;
+                    break;
+                default:
+                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                    break;
+            }
+            break;
+        default:
+            g_Game.GameTimer = TIMEOUT_BATTLE;
+            break;
+    }
+    convertNumberToDigits(g_Game.GameTimer);
+    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
+    timer_num10.spr_id = timer_num10.anim1.asset[tens];
+    timer_num1.spr_id = timer_num1.anim1.asset[ones];
+}
+
 static __jo_force_inline void initPixelPoppy(void) {
     reset_ball_movement(&pixel_poppy);
     sprite_frame_reset(&pixel_poppy);
@@ -99,11 +139,11 @@ static __jo_force_inline void setItemPositions(void) {
         x += offset;
     }
 }
-static inline void draw_heart_element(Sprite *sprite, Uint8 num, int x, int y, int offset) {
-    for (int i = 0; i < num; i++) {
-        if (num > g_Game.numLives) {
+static inline void draw_heart_element(Sprite *sprite, PPLAYER player, int x, int y, int offset) {
+    for (int i = 0; i < player->numLives; i++) {
+        if (player->numLives > player->totalLives) {
             sprite->spr_id = sprite->anim1.asset[1];
-	    num--;
+	    player->numLives--;
         }
         else {
 	    sprite->spr_id = sprite->anim1.asset[0];
@@ -112,9 +152,9 @@ static __jo_force_inline void setItemPositions(void) {
         my_sprite_draw(sprite);
         x += offset;
     }
-    if (num < g_Game.numLives) {
+    if (player->numLives < player->totalLives) {
 	sprite->spr_id = sprite->anim1.asset[2];
-	for (int i = 0; i < (g_Game.numLives - num); i++) {
+	for (int i = 0; i < (player->totalLives - player->numLives); i++) {
 	    set_spr_position(sprite, x, y, 90);
 	    my_sprite_draw(sprite);
 	    x += offset;
@@ -321,6 +361,7 @@ static __jo_force_inline void drawGameItems(void) {
         if (g_Game.isGoalScored) {
             // g_Game.isActive = false;
             initPixelPoppy();
+            resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.BeginTimer = 0;
@@ -356,6 +397,7 @@ static __jo_force_inline void drawGameItems(void) {
 }
 static __jo_force_inline void drawClassicMode(void) {
         // SPRITES
+        my_sprite_draw(&timer_num100); // tens
         my_sprite_draw(&timer_num10); // tens
         my_sprite_draw(&timer_num1);  // ones
         
@@ -399,8 +441,10 @@ static __jo_force_inline void drawGameUI(void) {
 }
 
 static __jo_force_inline bool startGameplay(void) {
-    if (g_Game.isBallActive) {        // g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
-        start_ball_movement(&pixel_poppy);
+    if (g_Game.isBallActive) {
+        if (!g_GameOptions.testCollision) {
+            start_ball_movement(&pixel_poppy);
+        }
         touchedBy[0].hasTouched = false;
         touchedBy[1].hasTouched = false;
         touchedBy[2].hasTouched = false;

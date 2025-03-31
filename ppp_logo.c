@@ -33,7 +33,7 @@ void pppLogo_init(void)
     // loadPPPLogoAssets();
     
     // this way only until I implement palette adjustments
-    if (!game_options.use_rtc) {
+    if (!g_GameOptions.use_rtc) {
         current_background++;
         if (current_background > 4) {
             current_background = 1;
@@ -62,7 +62,7 @@ void pppLogo_init(void)
     update_nbg1_palette();
     loadTitleScreenAssets();
     
-    if (game_options.mesh_display) {
+    if (g_GameOptions.mesh_display) {
         pppshadow.mesh = MESHon;
     }
     else {
@@ -85,12 +85,12 @@ void pppLogo_init(void)
     screenTransition_init(MINIMUM_FADE, MINIMUM_FADE, MINIMUM_FADE);
     
     
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
         mosaicInit(NBG1ON);
     }
     fade_in_rate = 1;
     
-    if (!game_options.debug_display) {
+    if (!g_GameOptions.debug_display) {
         jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
         slColOffsetOn(NBG0ON | SPRON);
         slColOffsetAUse(NBG0ON);
@@ -228,7 +228,7 @@ void pppLogo_update(void)
             update_light_position();
         // }
     }
-    else if (game_options.mosaic_display) {
+    else if (g_GameOptions.mosaic_display) {
         mosaicRandom(NBG1ON);
     }
     
@@ -236,12 +236,12 @@ void pppLogo_update(void)
     {
         fade_out = true;
         nbg1_rate = MAXIMUM_FADE;
-        if (!game_options.debug_display) {
+        if (!g_GameOptions.debug_display) {
             slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
         }
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
         
-        if (!game_options.mosaic_display) {
+        if (!g_GameOptions.mosaic_display) {
             jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         }
     }
@@ -267,7 +267,7 @@ void pppLogo_draw(void)
     my_sprite_draw(&pixel_poppy);
     jo_nbg0_printf(17, 19, "PRESENTS...");
         
-    if (game_options.debug_display) {
+    if (g_GameOptions.debug_display) {
         jo_nbg0_printf(2, 25, "LIGHT:X=%3d,Y=%3d,Z=%3d", JO_FIXED_TO_INT(light.x), JO_FIXED_TO_INT(light.y), JO_FIXED_TO_INT(light.z));
         jo_nbg0_printf(2, 26, "LIGHTANGLE:%3d", lightAngle);
     }

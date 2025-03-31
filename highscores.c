@@ -32,7 +32,7 @@ void init_scores(void)
     fade_in = true;
     transition_in = true;
     
-    if (game_options.debug_mode) { // only needed if manually changing states
+    if (g_GameOptions.debug_mode) { // only needed if manually changing states
         reset_sprites();
         do_update_All = true;
         updateAllColors();
@@ -47,7 +47,7 @@ void init_scores(void)
 
     g_ScoreTimer = 0;
     
-    if (game_options.mesh_display) {
+    if (g_GameOptions.mesh_display) {
         menu_bg2.mesh = MESHon;
     }
     else {

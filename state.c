@@ -160,7 +160,7 @@ void transitionState(GAME_STATE newState)
     fade_in = false;
     transition_in = false;
     
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
         mosaic_out = true;
     }
     music_out = true;
@@ -170,7 +170,7 @@ void transitionState(GAME_STATE newState)
     screenTransition_init(0, 0, 0);
     
     
-    if (!game_options.debug_display) {
+    if (!g_GameOptions.debug_display) {
         slColOffsetOn(NBG0ON | NBG1ON | SPRON);
         slColOffsetAUse(NBG0ON);
         slColOffsetBUse(NBG1ON | SPRON);

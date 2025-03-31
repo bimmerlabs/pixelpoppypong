@@ -78,7 +78,7 @@ void playerAI(Sprite *ball) {
         player->_sprite->vel.y += player->curPos.dy;
         // update_bounding_box(player->_sprite);
         
-        // if (game_options.debug_mode) {
+        // if (g_GameOptions.debug_mode) {
             // jo_nbg0_printf(text_x, text_y, "PLAYER ID: %i", player->playerID);
             // text_y++;
             // jo_nbg0_printf(text_x, text_y, "TEAM: %i", player->teamChoice);

@@ -123,7 +123,7 @@ void titleScreen_input(void)
     if (jo_is_pad1_key_down(JO_KEY_START)) {
         pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         changeState(GAME_STATE_TITLE_MENU);
-        if (game_options.mosaic_display) {
+        if (g_GameOptions.mosaic_display) {
             mosaic_out = true;
         }
         fade_out = false;
@@ -138,7 +138,7 @@ void startScreen_update(void)
         return;
     }
     g_TitleTimer++;
-    poppy_animation_id = my_random_range(0, 4); // delete??
+    poppy_animation_id = my_random_range(0, 3); // delete??
     if (!logo_bounce && !logo_falling) {
         if (g_TitleTimer == LOGO_TIMER) {
             reset_sprites();
@@ -203,7 +203,7 @@ void drawTitle(void)
     if (draw_start_text) {
         jo_nbg0_printf(16, 27, "PRESS START");
     }
-    if (game_options.debug_mode) {
+    if (g_GameOptions.debug_mode) {
         // version number
         jo_nbg0_printf(20, 28, "%s", VERSION);
     }
@@ -287,7 +287,7 @@ void titleMenu_init(void)
     
     g_Game.lastState = GAME_STATE_TITLE_MENU;
     jo_set_default_background_color(JO_COLOR_Black);
-    if (game_options.mesh_display) {
+    if (g_GameOptions.mesh_display) {
         menu_bg1.mesh = MESHon;
     }
     else {
@@ -483,7 +483,7 @@ void menuScreen_input(void)
         {
             case TITLE_OPTION_GAME_MODE:
                 changeState(GAME_STATE_TITLE_SCREEN);
-                if (game_options.mosaic_display) {
+                if (g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 fade_in = false;
@@ -525,6 +525,7 @@ void drawMenu(void)
         return;
     }
 
+// SUBROUTINE FOR ANIMATION
     // GASP
     if (poppy_animation_id == 1) 
     {
@@ -748,7 +749,7 @@ void optionsScreen_init(void)
     slColOffsetBUse(NBG1ON);
     slColOffsetB(QUARTER_FADE, QUARTER_FADE, QUARTER_FADE);
     
-    if (game_options.mesh_display) {
+    if (g_GameOptions.mesh_display) {
         menu_bg2.mesh = MESHon;
     }
     else {
@@ -780,27 +781,29 @@ void optionsScreen_input(void)
     
     if (jo_is_pad1_key_down(JO_KEY_LEFT) || jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
+        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         switch(g_OptionScreenChoice)
         {
             case OPTION_DEBUG_MODE:
-                game_options.debug_mode = !game_options.debug_mode;
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                g_GameOptions.debug_mode = !g_GameOptions.debug_mode;
                 break;
             case OPTION_DEBUG_TEXT:
-                game_options.debug_display = !game_options.debug_display;
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                break;
+            case OPTION_DEBUG_COLLISION:
+                g_GameOptions.testCollision = !g_GameOptions.testCollision;
                 break;
             case OPTION_DRAWMESH:
-                game_options.mesh_display = !game_options.mesh_display;
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                g_GameOptions.mesh_display = !g_GameOptions.mesh_display;
                 break;
             case OPTION_DRAWMOSAIC:
-                game_options.mosaic_display = !game_options.mosaic_display;
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                g_GameOptions.mosaic_display = !g_GameOptions.mosaic_display;
                 break;
             case OPTION_USE_RTC:
-                game_options.use_rtc = !game_options.use_rtc;
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                g_GameOptions.use_rtc = !g_GameOptions.use_rtc;
+                break;
+            case OPTION_BIG_HEAD:
+                g_GameOptions.bigHeadMode = !g_GameOptions.bigHeadMode;
                 break;
             default:
                 break;
@@ -874,26 +877,39 @@ void drawOptions(void)
     
     options_y += 4;
     jo_nbg0_printf(title_x, options_y, "DEBUG MODE:");
-    if (game_options.debug_mode) {
+    if (g_GameOptions.debug_mode) {
         jo_nbg0_printf(options_x, options_y, "ON");
     }
     else {
         jo_nbg0_printf(options_x, options_y, "OFF");
     }
     
-    options_y += 2;
-    jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
-    if (game_options.debug_display) {
-        jo_nbg0_printf(options_x, options_y, "ON");
-    }
-    else {
-        jo_nbg0_printf(options_x, options_y, "OFF");
-    }
+    // if (g_GameOptions.debug_mode) {
+        options_y += 2;
+        jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
+        if (g_GameOptions.debug_display) {
+            jo_nbg0_printf(options_x, options_y, "ON");
+        }
+        else {
+            jo_nbg0_printf(options_x, options_y, "OFF");
+        }
+    // }
+    
+    // if (g_GameOptions.debug_mode && g_GameOptions.debug_display) {
+        options_y += 2;
+        jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
+        if (g_GameOptions.testCollision) {
+            jo_nbg0_printf(options_x, options_y, "ON");
+        }
+        else {
+            jo_nbg0_printf(options_x, options_y, "OFF");
+        }
+    // }
 
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "MESH TRANSPARENCY:");
-    if (game_options.mesh_display) {
-        menu_bg1.mesh = MESHon; // good enough for now
+    if (g_GameOptions.mesh_display) {
+        menu_bg1.mesh = MESHon;
         menu_bg2.mesh = MESHon;
         jo_nbg0_printf(options_x, options_y, "ON");
     }
@@ -905,7 +921,7 @@ void drawOptions(void)
 
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "MOSAIC EFFECT:");
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
 	slScrMosSize(MOSAIC_MAX, MOSAIC_MAX);
 	slScrMosaicOn(NBG1ON);
         jo_nbg0_printf(options_x, options_y, "ON");
@@ -918,7 +934,16 @@ void drawOptions(void)
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "USE RTC:");
-    if (game_options.use_rtc) {
+    if (g_GameOptions.use_rtc) {
+        jo_nbg0_printf(options_x, options_y, "YES");
+    }
+    else {
+        jo_nbg0_printf(options_x, options_y, "NO");
+    }    
+    
+    options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "BIG HEAD MODE:");
+    if (g_GameOptions.bigHeadMode) {
         jo_nbg0_printf(options_x, options_y, "YES");
     }
     else {

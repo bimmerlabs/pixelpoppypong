@@ -40,7 +40,7 @@ void initUnlockedCharacters(void) {
 }
 
 void initAvailableCharacters(void) {
-    if (game_options.debug_mode) {
+    if (g_GameOptions.debug_mode) {
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
             characterAvailable[i] = true;
         }
@@ -81,7 +81,7 @@ void teamSelect_init(void)
     g_Game.numTeams = 0;
     g_Game.minTeams = 1;
     
-    if (game_options.mesh_display) {
+    if (g_GameOptions.mesh_display) {
         menu_bg1.mesh = MESHon;
         menu_bg2.mesh = MESHon;
         player_bg.mesh = MESHon;
@@ -192,7 +192,7 @@ void drawCharacterSelectGrid(void)
     {
         PPLAYER player = &g_Players[i];
         
-        if (!game_options.debug_display) {
+        if (!g_GameOptions.debug_display) {
             jo_nbg0_printf(text_x, text_y, "PLAYER %i:", i+1);
             if (player->character.choice != CHARACTER_NONE || g_Game.numPlayers > ONE_PLAYER) {
                 jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
@@ -282,7 +282,7 @@ void drawCharacterSelectGrid(void)
         if (player->startSelection) {
             // SPEED
             // Uint8 maxSpeed = JO_FIXED_TO_INT(player->maxSpeed);
-            if (game_options.debug_mode) {
+            if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
             }
             else {
@@ -300,7 +300,7 @@ void drawCharacterSelectGrid(void)
             my_sprite_draw(&meter);
             // ACCELERATION
             Uint8 acceleration = JO_FIXED_TO_INT(player->acceleration);
-            if (game_options.debug_mode) {
+            if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", acceleration); 
             }
             else {
@@ -318,7 +318,7 @@ void drawCharacterSelectGrid(void)
             my_sprite_draw(&meter);
             // POWER
             // Uint8 power = JO_FIXED_TO_INT(player->power);
-            if (game_options.debug_mode) {
+            if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
             }
             else {

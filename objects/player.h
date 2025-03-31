@@ -31,6 +31,14 @@
 #define PLAYER_RADIUS toFIXED(27)
 #define SHIELD_RADIUS toFIXED(60)
 #define SHIELD_OFFSET toFIXED(32)
+#define SHIELD_POWER 26
+#define SHIELD_REGEN 8 // POWER OF 2!!
+
+#define ATTACK1 toFIXED(10)
+#define ATTACK1_COST 4
+#define ATTACK2 toFIXED(20)
+#define ATTACK2_COST 6
+#define ATTACK_FRAMES 8 // POWER OF 2!!
 
 typedef enum _PLAYER_STATE
 {
@@ -127,6 +135,7 @@ typedef struct _PLAYER
     bool scored;
     bool isAI;
     int numLives;
+    int totalLives;
     
     // Team (replaces team struct values)
     // make into a struct again?
@@ -143,6 +152,12 @@ typedef struct _PLAYER
     // FOR GOAL MOVEMENT
     FIXED goalCenterThresholdMax;
     FIXED goalCenterThresholdMin;
+    
+    // ATTACK
+    bool attack1;
+    Uint8 attack1Frames;
+    bool attack2;
+    Uint8 attack2Frames;
     
     // SHIELD
     SHIELD shield;
@@ -171,10 +186,11 @@ void speedLimitPlayer(PPLAYER player);
 void boundPlayer(PPLAYER player);
 void explodeNeighbors(PPLAYER player);
 
+void regenPlayerPower(PPLAYER player);
+void playerAttack(PPLAYER player);
 void getClassicModeInput(void);
 void getPlayersInput(void);
 void updatePlayers(void);
-void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion);
 
 void initPlayers(void);
 void initAiPlayers(void);
@@ -186,10 +202,11 @@ void assignCharacterSprite(PPLAYER player);
 void assignCharacterStats(PPLAYER player);
 void initPlayerGoals(void);
 
-int getLives(void);
+int getLives(PPLAYER player);
 int getStars(void);
 void getContinues(void);
 void resetPlayerScores(void);
+void resetPlayerAttacks(void);
 void spawnPlayers(void);
 void cacheInputDirectionPlayer(PPLAYER player, bool* up, bool* down, bool* left, bool *right);
 

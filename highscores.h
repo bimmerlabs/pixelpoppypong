@@ -58,8 +58,8 @@ static __jo_force_inline bool updatePlayerLives(Uint8 scoredOnPlayerID)
         if (g_Players[scoredOnPlayerID].numLives == 0) {
             // kill player?
             g_Players[scoredOnPlayerID].score.deaths++;
-            if (g_Players[scoredOnPlayerID].score.deaths < g_Game.numContinues) {
-                g_Players[scoredOnPlayerID].numLives = getLives();
+            if (g_Players[scoredOnPlayerID].score.deaths < g_Game.numContinues && !g_Players[scoredOnPlayerID].isAI) {
+                g_Players[scoredOnPlayerID].numLives = getLives(&g_Players[scoredOnPlayerID]);
             }
             else {
                 g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;

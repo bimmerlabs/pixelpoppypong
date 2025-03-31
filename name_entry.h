@@ -87,7 +87,7 @@ static inline int snap_to_end(int angle, bool *isAngleSnapped) {
 }
 
 static inline void reset_name_entry_settings(void) {
-    if (game_options.debug_mode && g_Game.lastState == GAME_STATE_NAME_ENTRY) { // only needed if manually changing states
+    if (g_GameOptions.debug_mode && g_Game.lastState == GAME_STATE_NAME_ENTRY) { // only needed if manually changing states
         reset_sprites();
         do_update_All = true;
         updateAllColors();

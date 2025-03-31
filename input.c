@@ -66,7 +66,7 @@ void check_inputs(void) {
             input->isAnalog = false;
         }
         
-        // if (game_options.debug_display && i == 0) {
+        // if (g_GameOptions.debug_display && i == 0) {
             // PPLAYER player = &g_Players[i];
             // jo_nbg0_printf(2, 21, "P1_SELECTED:%i", g_Players[0].input->isSelected);
             // jo_nbg0_printf(2, 22, "P2_SELECTED:%i", g_Players[1].input->isSelected);

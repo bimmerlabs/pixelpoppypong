@@ -49,7 +49,7 @@ void gameplay_init() {
         }
     }
 
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
     }
     music_in = true;
@@ -66,10 +66,6 @@ void gameplay_init() {
     
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
-    // add_sprite_to_sweep_and_prune(&pixel_poppy);
-    // update_bounding_box(&pixel_poppy);
-    // add_sprite_to_sweep_and_prune(&macchi);
-    // add_sprite_to_sweep_and_prune(&jelly);
     
     explode_bomb = false;
     draw_bomb = true;
@@ -80,10 +76,6 @@ void gameplay_init() {
     for (int i = 0; i < MAX_PLAYERS; i++) {
         sprite_frame_reset(&shield[0]);
     }
-
-    // reset_sprites();
-    // do_update_shroom = true;
-    // do_update_PmenuAll = true;
     
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
@@ -93,13 +85,11 @@ void gameplay_init() {
     g_Game.isPaused = false;
     g_Game.isActive = false;
     g_Game.isBallActive = false;
+    
     // reset timer
-    g_Game.GameTimer = TIMEOUT;
+    setGameTimer();
     g_Game.BombTimer = BOMB_TIMER;
-    convertNumberToDigits(g_Game.GameTimer);
-    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
-    timer_num10.spr_id = timer_num10.anim1.asset[tens];
-    timer_num1.spr_id = timer_num1.anim1.asset[ones];
+    
     // NEED BETTER NAMES FOR THESE
     start_gameplay_timer = false;
     g_Game.BeginTimer = 0;
@@ -108,6 +98,7 @@ void gameplay_init() {
     g_Game.isRoundOver = false;
     g_Game.countofRounds = 0;
     g_Game.isGoalScored = false;
+    // poorly named - a delay timer before transitioning to the "end"
     endGameTimer = 5*60;
     play_battle_is_over = true;
     
@@ -117,7 +108,6 @@ void gameplay_init() {
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
-    // set_spr_scale(&goal2, 2, 0.1); // need a different sprite for 4 teams
     setItemPositions();    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
@@ -239,9 +229,9 @@ void demo_update(void)
     if (g_Game.GameTimer > 0 && frame % 60 == 0) { // modulus
         g_Game.GameTimer--;
     }
-    // else if (g_Game.GameTimer == 0) {
-        // time_over = true;
-    // }
+    else if (g_Game.GameTimer == 0) {
+        time_over = true;
+    }
     // test
     if (g_Game.BombTimer == 0) {
         explode_bomb = true;
@@ -327,7 +317,7 @@ void gameplayUI_draw(PPLAYER player) {
             int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
                         // If speed is an issue, can create a sprite object for each portrait during gameplay
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
+            draw_heart_element(&heart, player, heart_x, heart_y, 16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
             
             // calculate power meter color            hslSprites.color[p_rangePmenu[0].lower].h = player->shield.power*color_multiplier;            calculate_sprites_color(&p_rangePmenu[0]);
@@ -345,7 +335,7 @@ void gameplayUI_draw(PPLAYER player) {
             int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
             
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
+            draw_heart_element(&heart, player, heart_x, heart_y, -16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
             
             // calculate power meter color
@@ -365,7 +355,7 @@ void gameplayUI_draw(PPLAYER player) {
             int star_y = GAMEPLAY_PORTRAIT_Y - 12;
             
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            draw_heart_element(&heart, player->numLives, heart_x, heart_y, 16);
+            draw_heart_element(&heart, player, heart_x, heart_y, 16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
             
             // calculate power meter color
@@ -385,7 +375,7 @@ void gameplayUI_draw(PPLAYER player) {
             int star_y = GAMEPLAY_PORTRAIT_Y - 12;
 
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            draw_heart_element(&heart, player->numLives, heart_x, heart_y, -16);
+            draw_heart_element(&heart, player, heart_x, heart_y, -16);
             draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
             
             // calculate power meter color
@@ -479,8 +469,11 @@ void gameplay_update(void)
     check_inputs();
     switch (g_Game.gameMode) {
         case GAME_MODE_CLASSIC:
+        if (!g_GameOptions.testCollision) {
             getClassicModeInput();
-            // getPlayersInput();
+        } else {
+            getPlayersInput();
+        }
             break;
         default:
             getPlayersInput();

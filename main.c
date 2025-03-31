@@ -57,12 +57,14 @@ Uint8 frame = 0;
 // explcitly create callback names so they can be added / removed as neccesary?
 int run_once_callback = 0;
 
-GameOptions game_options = {
+GameOptions g_GameOptions = {
     .debug_mode = true,
     .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = true,
+    .bigHeadMode = false,
+    .testCollision = false,
 };
 
 void loading_screen(void)
@@ -76,7 +78,7 @@ void loading_screen(void)
         slColOffsetOn(NBG1ON);
         jo_nbg0_printf(17, 12, "LOADING!");
         
-        if (game_options.debug_mode) {
+        if (g_GameOptions.debug_mode) {
             jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
         }
         
@@ -113,7 +115,7 @@ void main_loop(void) {
 // returns to title screen if player one presses ABC+Start
 void abcStart_callback(void)
 {
-    if (game_options.debug_mode) {
+    if (g_GameOptions.debug_mode) {
         // manually switch states
         if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
             g_Game.nextState = g_Game.gameState +1;

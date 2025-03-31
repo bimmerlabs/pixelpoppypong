@@ -119,7 +119,7 @@ bool slowFadeIn(Sint16 rate, Sint16 max) {
         if (nbg1_rate > max) {
             nbg1_rate = max;
         }
-        if (!game_options.debug_display) {
+        if (!g_GameOptions.debug_display) {
             slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
         }
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);

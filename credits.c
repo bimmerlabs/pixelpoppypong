@@ -16,7 +16,7 @@ static int delay_timer = 0;
 static Uint8 bg_spr_id = 0;
 void init_credits(void)
 {
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
     }
     music_in = true;
@@ -70,7 +70,7 @@ void display_credits(void)
     
     // wait to start credits
     if (g_CreditsTimer == CREDITS_BEGIN) {
-        if (!game_options.debug_display && game_options.mosaic_display) {
+        if (!g_GameOptions.debug_display && g_GameOptions.mosaic_display) {
             mosaicInit(NBG0ON);
         }
         credits_display = true;
@@ -78,7 +78,7 @@ void display_credits(void)
     }
     if (credits_display) {
         if (credits_fade_in) {
-            if (!game_options.debug_display && game_options.mosaic_display) {
+            if (!g_GameOptions.debug_display && g_GameOptions.mosaic_display) {
                 mosaic_in = mosaicIn(NBG0ON);
             }
             if (JO_MOD_POW2(frame, 4) == 0 && transparency_rate > CLRate31_1) { // modulus
@@ -101,7 +101,7 @@ void display_credits(void)
         }
 
         else if (credits_fade_out) {
-            if (!game_options.debug_display && game_options.mosaic_display) {
+            if (!g_GameOptions.debug_display && g_GameOptions.mosaic_display) {
                 mosaic_out = mosaicOut(NBG0ON);
             }
             if (JO_MOD_POW2(frame, 2) == 0 && transparency_rate < CLRate0_32) { // modulus
@@ -125,9 +125,6 @@ void display_credits(void)
             display_timer--;
             if (display_timer == 0) {
                 credits_fade_out = true; // Start fading out
-                // if (!game_options.debug_display && game_options.mosaic_display) {
-                    // mosaic_out = true;
-                // }
             }
         }
         else if (delay_timer > 0) { // Delay before fading in
@@ -139,14 +136,14 @@ void display_credits(void)
                 menu_bg1.scl.x = toFIXED(0);
                 menu_bg1.scl.y = toFIXED(bg_height); // test
                 menu_bg1.spr_id = menu_bg1.anim1.asset[bg_spr_id];
-                if (!game_options.debug_display && game_options.mosaic_display) {
+                if (!g_GameOptions.debug_display && g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 credits_fade_in = true; // Start fading in
             }
         }
 
-        // if (game_options.debug_display) {
+        // if (g_GameOptions.debug_display) {
             // jo_nbg0_printf(2, 4, "FADE_IN:%i", credits_fade_in);
             // jo_nbg0_printf(2, 5, "DISPLAY:%i", credits_display);
             // jo_nbg0_printf(2, 6, "FADE_OUT:%i", credits_fade_out);

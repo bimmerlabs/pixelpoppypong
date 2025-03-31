@@ -21,17 +21,36 @@ void initTouchCounter(void) {
 }
 
 // Function to initialize the ball's movement
-void start_ball_movement(Sprite *ball) {    
-    // this works as is because I can set a minimum in the range    
-    // TODO: set based on difficulty / game mode
-    ball->vel.x = toFIXED(my_random_range(5, 10));
-    ball->vel.y = toFIXED(my_random_range(4, 9));
-    ball->vel.z = my_random_range(1, 5);
+// incorporate ball rotation angle?
+void start_ball_movement(Sprite *ball) {
+    switch(g_Game.gameDifficulty)
+    {
+        case GAME_DIFFICULTY_EASY:
+            ball->vel.x = my_random_range(toFIXED(5), toFIXED(9));
+            ball->vel.y = my_random_range(toFIXED(2), toFIXED(8));
+            ball->vel.z = my_random_range(0, 5);
+            break;
+        case GAME_DIFFICULTY_MEDIUM:
+            ball->vel.x = my_random_range(toFIXED(6), toFIXED(10));
+            ball->vel.y = my_random_range(toFIXED(3), toFIXED(9));
+            ball->vel.z = my_random_range(0, 6);
+            break;
+        case GAME_DIFFICULTY_HARD:
+            ball->vel.x = my_random_range(toFIXED(7), toFIXED(11));
+            ball->vel.y = my_random_range(toFIXED(4), toFIXED(10));
+            ball->vel.z = my_random_range(0, 7);
+            break;
+        default:
+            ball->vel.x = my_random_range(toFIXED(6), toFIXED(10));
+            ball->vel.y = my_random_range(toFIXED(3), toFIXED(9));
+            ball->vel.z = my_random_range(0, 6);
+            break;
+    }
            
     // Randomize direction
-    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.x = -ball->vel.x; // modulus
-    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.y = -ball->vel.y; // modulus
-    if (JO_MOD_POW2(jo_random(999), 2)) ball->vel.z = -ball->vel.z; // modulus
+    if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.x = -ball->vel.x; // modulus
+    if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.y = -ball->vel.y; // modulus
+    if (JO_MOD_POW2(jo_random(99999), 2)) ball->vel.z = -ball->vel.z; // modulus
 }
 
 // inline?
@@ -203,60 +222,27 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
         player->_sprite->isColliding = false;
         return false;
     }
-        
     
     // Relative position vector
     FIXED dx = ball->pos.x - player->_sprite->pos.x;
     FIXED dy = ball->pos.y - player->_sprite->pos.y;
-
-    // Relative velocity vector
-    FIXED dvx = ball->vel.x - player->_sprite->vel.x;
-    FIXED dvy = ball->vel.y - player->_sprite->vel.y;
-
-    // Calculate the dot product of the relative velocity and the collision normal
-    FIXED dot_product = jo_fixed_mult(dvx, dx) + jo_fixed_mult(dvy, dy);
-    
-    // If the dot product is positive, the ball is moving away
-    if (dot_product > toFIXED(0)) {
-        player->_sprite->isColliding = false;
-        return false; // No need to check for collision
-    }
 
     // Radius of the player (used for the semicircle)
     int player_radius = toINT(player->_sprite->pos.r);
     
     // **Step 1: Check collision with the rectangle (depends on player side)**
     FIXED player_left, player_right, player_top, player_bottom;
-    switch(g_Game.gameMode)
-    {
-        case GAME_MODE_CLASSIC:
-            if (player->onLeftSide) {
-                // Rectangle extends to the **left** of the semicircle
-                player_left   = player->_sprite->pos.x - player_radius;
-                player_right  = player->_sprite->pos.x;
-            } else {
-                // Rectangle extends to the **right** of the semicircle
-                player_left   = player->_sprite->pos.x;
-                player_right  = player->_sprite->pos.x + player_radius;
-            }
-            player_top    = player->_sprite->pos.y - 2*player_radius;
-            player_bottom = player->_sprite->pos.y + 2*player_radius;
-            break;
-        default:
-            if (player->onLeftSide) {
-                // Rectangle extends to the **left** of the semicircle
-                player_left   = player->_sprite->pos.x - player_radius;
-                player_right  = player->_sprite->pos.x + player_radius;
-            } else {
-                // Rectangle extends to the **right** of the semicircle
-                player_left   = player->_sprite->pos.x - player_radius;
-                player_right  = player->_sprite->pos.x + player_radius;
-            }
-            player_top    = player->_sprite->pos.y - player_radius;
-            player_bottom = player->_sprite->pos.y + player_radius;
-            break;
+    if (player->onLeftSide) {
+        // Rectangle extends to the **left** of the semicircle
+        player_left   = player->_sprite->pos.x - player_radius;
+        player_right  = player->_sprite->pos.x;
+    } else {
+        // Rectangle extends to the **right** of the semicircle
+        player_left   = player->_sprite->pos.x;
+        player_right  = player->_sprite->pos.x + player_radius;
     }
-
+    player_top    = player->_sprite->pos.y - player_radius;
+    player_bottom = player->_sprite->pos.y + player_radius;
 
     // Check if the ball is inside the rectangle
     if (ball->pos.x >= player_left && ball->pos.x <= player_right &&
@@ -287,6 +273,7 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 
 // SIMPLER / BETTER? (ball/circle)
 void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
+    player->_sprite->isColliding = true;
     // Calculate relative position vector
     FIXED dx = ball->pos.x - player->_sprite->pos.x;
     FIXED dy = ball->pos.y - player->_sprite->pos.y;
@@ -309,6 +296,7 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
 
     player->_sprite->isColliding = true;
     
+  if (!g_GameOptions.testCollision) {        
     // Reflect the ball's velocity along the collision normal, factoring in player's movement    
     switch(g_Game.gameMode)
     {
@@ -333,4 +321,5 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
         (!player->onLeftSide && player->_sprite->vel.x < 0)) {
         ball->vel.x += rel_vel_x;
     }
+  }
 }

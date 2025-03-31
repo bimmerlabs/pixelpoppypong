@@ -8,7 +8,7 @@ Uint8 backup_device = 0;
 SaveGame save_game;
 
 void init_save_game() {
-    save_game.game_options = game_options;
+    save_game.g_GameOptions = g_GameOptions;
     save_game.characterUnlocked = characterUnlocked;
     for (int i = 0; i < SCORE_ENTRIES; i++) {
         save_game.highScores[i] = highScores[i];
@@ -56,7 +56,7 @@ bool load_game_backup(void) {
             memory_access = 0;
             return false;
         }
-        game_options = loaded_save->game_options; 
+        g_GameOptions = loaded_save->g_GameOptions; 
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
             characterUnlocked[i] = loaded_save->characterUnlocked[i];
         }

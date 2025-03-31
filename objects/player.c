@@ -38,21 +38,21 @@ const CHARACTER_ATTRIBUTES characterAttributes[] = {
     {60, 60, 60}, // NONE: Medium attributes (for CPU)
 };
 
-void spawnPlayers(void)
-{
-    PPLAYER player = NULL;
+// void spawnPlayers(void)
+// {
+    // PPLAYER player = NULL;
 
-    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
-    {
-        player = &g_Players[i];
-        respawnPlayer(player, false);
-    }
-}
+    // for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    // {
+        // player = &g_Players[i];
+        // respawnPlayer(player, false);
+    // }
+// }
 
 void resetPlayerScores(void)
 {
     
-    g_Game.numLives = getLives();
+    // dss = getLives();
     g_Game.numStars = getStars();
     
     PPLAYER player = NULL;
@@ -60,11 +60,12 @@ void resetPlayerScores(void)
     {
         player = &g_Players[i];
 
-        player->shield.power = 26;
+        player->shield.power = SHIELD_POWER;
         player->score.stars  = 0;
         player->score.deaths = 0;
         player->score.points = 0;
-        player->numLives = g_Game.numLives;
+        player->totalLives = getLives(player);
+        player->numLives = player->totalLives;
         
         touchedBy[i].onLeftSide = false;
         touchedBy[i].hasTouched = false;
@@ -73,29 +74,82 @@ void resetPlayerScores(void)
     }
 }
 
-int getLives(void)
+void resetPlayerAttacks(void)
+{    
+    PPLAYER player = NULL;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        player = &g_Players[i];
+
+        player->shield.activate = false;
+        player->_sprite->pos.r = PLAYER_RADIUS;
+        sprite_frame_reset(&shield[i]);
+        
+        if (player->attack1) {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x -= ATTACK1;
+            }
+            else {
+                player->_sprite->pos.x += ATTACK1;
+            }
+            player->attack1 = false;
+            player->attack1Frames = 0;
+        }
+        if (player->attack2) {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x -= ATTACK2;
+            }
+            else {
+                player->_sprite->pos.x += ATTACK2;
+            }
+            player->attack2 = false;
+            player->attack2Frames = 0;
+        }
+        
+    }
+}
+
+int getLives(PPLAYER player)
 {
     int numLives = 0;
     
     switch(g_Game.gameMode)
     {
         case GAME_MODE_CLASSIC:
-            numLives = 3;
+            numLives = 9;
             break;
         case GAME_MODE_STORY: {
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
-                    numLives = 9;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
-                    numLives = 6;
-                    break;
-                case GAME_DIFFICULTY_HARD:
-                    numLives = 3;
-                    break;
-                default:
-                    break;
+            if (player->isAI) {
+                switch(g_Game.gameDifficulty)
+                {
+                    case GAME_DIFFICULTY_EASY:
+                        numLives = 4;
+                        break;
+                    case GAME_DIFFICULTY_MEDIUM:
+                        numLives = 5;
+                        break;
+                    case GAME_DIFFICULTY_HARD:
+                        numLives = 6;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else {
+                switch(g_Game.gameDifficulty)
+                {
+                    case GAME_DIFFICULTY_EASY:
+                        numLives = 6;
+                        break;
+                    case GAME_DIFFICULTY_MEDIUM:
+                        numLives = 5;
+                        break;
+                    case GAME_DIFFICULTY_HARD:
+                        numLives = 4;
+                        break;
+                    default:
+                        break;
+                }
             }
             break;
         }
@@ -119,11 +173,38 @@ int getStars(void)
         case GAME_MODE_CLASSIC:
             numStars = 1;
             break;
-        case GAME_MODE_STORY:
-            numStars = 2;
+        case GAME_MODE_STORY: {
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    numStars = 1;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    numStars = 1;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    numStars = 2;
+                    break;
+                default:
+                    break;
+            }
             break;
+        }
         case GAME_MODE_BATTLE:
-            numStars = 3;
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    numStars = 1;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    numStars = 2;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    numStars = 3;
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
             break;
@@ -135,20 +216,35 @@ int getStars(void)
 
 void getContinues(void)
 {
-    switch(g_Game.gameDifficulty)
+    switch(g_Game.gameMode)
     {
-        case GAME_DIFFICULTY_EASY:
-            g_Game.numContinues = 3;
+        case GAME_MODE_CLASSIC:
+            g_Game.numContinues = 0;
             break;
-        case GAME_DIFFICULTY_MEDIUM:
-            g_Game.numContinues = 2;
+        case GAME_MODE_STORY: {
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    g_Game.numContinues = 3;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    g_Game.numContinues = 2;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    g_Game.numContinues = 1;
+                    break;
+                default:
+                    break;
+            }
             break;
-        case GAME_DIFFICULTY_HARD:
-            g_Game.numContinues = 1;
+        }
+        case GAME_MODE_BATTLE:
+            g_Game.numContinues = 0;
             break;
         default:
             break;
     }
+
 }
 
 void initPlayers(void)
@@ -163,6 +259,7 @@ void initPlayers(void)
         
         player->playerID = i;
         player->objectState = OBJECT_STATE_ACTIVE;
+        player->subState = PLAYER_STATE_ACTIVE;
         player->input->id = 0;
         player->input->isSelected = false;
         
@@ -222,6 +319,11 @@ void initPlayers(void)
         player->_sprite->vel.x = toFIXED(0);
         player->curPos.dy = toFIXED(0);
         player->_sprite->vel.y = toFIXED(0);
+        
+        player->attack1 = false;
+        player->attack2 = false;
+        player->attack1Frames = 0;
+        player->attack2Frames = 0;
         
         player->_sprite->pos.r = PLAYER_RADIUS;
         player->shield.activate = false;
@@ -635,17 +737,14 @@ void getClassicModeInput(void)
             player->_sprite->vel.y = 0;
         }
         
+        regenPlayerPower(player);
+        
         if (!g_Game.isBallActive) {
             return;
         }
         
-        // did the player click
-        if (jo_is_input_key_down(player->input->id, JO_KEY_A) ||
-            jo_is_input_key_down(player->input->id, JO_KEY_C))
-        {
-            // attack?
-
-        }
+        playerAttack(player);
+        
     }
 }
 
@@ -710,28 +809,92 @@ void getPlayersInput(void)
             player->_sprite->vel.y = 0;
         }
         
+        regenPlayerPower(player);
+        
         if (!g_Game.isBallActive) {
             return;
         }
+       
+        playerAttack(player);
         
-        // did the player click
-        if (jo_is_input_key_down(player->input->id, JO_KEY_A) ||
-            jo_is_input_key_down(player->input->id, JO_KEY_C))
+        // SHIELD
+        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
         {
-            // attack?
-
-        }
-        
-        // did the player plant a flag
-        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B))
-        {
-            player->shield.activate = true;
-            player->_sprite->pos.r = SHIELD_RADIUS;
-            // block?
+            if (player->shield.power > 1) {
+                player->shield.activate = true;
+                player->_sprite->pos.r = SHIELD_RADIUS;
+            }
+            player->shield.power--;
         }
         else {
             player->shield.activate = false;
             player->_sprite->pos.r = PLAYER_RADIUS;
+        }
+    }
+}
+
+void playerAttack(PPLAYER player) {
+        // ATTACK1
+        if (jo_is_input_key_down(player->input->id, JO_KEY_A) && player->shield.power > ATTACK1_COST && !player->attack1)
+        {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x += ATTACK1;
+            }
+            else {
+                player->_sprite->pos.x -= ATTACK1;
+            }
+            player->attack1 = true;
+            player->shield.power -= ATTACK1_COST;
+        }
+        else if (player->attack1 && player->attack1Frames == ATTACK_FRAMES) {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x -= ATTACK1;
+            }
+            else {
+                player->_sprite->pos.x += ATTACK1;
+            }
+            player->attack1Frames = 0;
+            player->attack1 = false;
+        }
+        else if (player->attack1 && player->attack1Frames < ATTACK_FRAMES) {
+            player->attack1Frames++;
+        }
+        // ATTACK2
+        if (jo_is_input_key_down(player->input->id, JO_KEY_C) && player->shield.power > ATTACK2_COST && !player->attack2)
+        {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x += ATTACK2;
+            }
+            else {
+                player->_sprite->pos.x -= ATTACK2;
+            }
+            player->attack2 = true;
+            player->shield.power -= ATTACK2_COST;
+        }
+        else if (player->attack2 && player->attack2Frames == ATTACK_FRAMES) {
+            if (player->onLeftSide) {
+                player->_sprite->pos.x -= ATTACK2;
+            }
+            else {
+                player->_sprite->pos.x += ATTACK2;
+            }
+            player->attack2Frames = 0;
+            player->attack2 = false;
+        }
+        else if (player->attack2 && player->attack2Frames < ATTACK_FRAMES) {
+            player->attack2Frames++;
+        }
+}
+
+void regenPlayerPower(PPLAYER player)
+{
+    if (!jo_is_input_key_pressed(player->input->id, JO_KEY_A) || 
+        !jo_is_input_key_pressed(player->input->id, JO_KEY_B) || 
+        !jo_is_input_key_pressed(player->input->id, JO_KEY_C)) {
+        if (player->shield.power < SHIELD_POWER) {
+            if (JO_MOD_POW2(frame, SHIELD_REGEN) == 0) { // modulus
+                player->shield.power++;
+            }
         }
     }
 }
@@ -848,14 +1011,18 @@ void boundPlayer(PPLAYER player)
 {
     // screen boundaries
     if (player->onLeftSide == true) {
+      if (g_GameOptions.testCollision) {
         if(player->_sprite->pos.x > PLAYER_BOUNDARY_RIGHT - PLAYER_WIDTH)
         {
             player->_sprite->pos.x = PLAYER_BOUNDARY_RIGHT - PLAYER_WIDTH;
         }
-        // if(player->_sprite->pos.x > -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH)
-        // {
-            // player->_sprite->pos.x = -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH;
-        // }
+      }
+      else {
+        if(player->_sprite->pos.x > -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = -PLAYER_BOUNDARY_MIDDLE - PLAYER_WIDTH;
+        }
+      }
         if(player->_sprite->pos.x < PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH)
         {
             player->_sprite->pos.x = PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH;
@@ -866,14 +1033,18 @@ void boundPlayer(PPLAYER player)
         {
             player->_sprite->pos.x = PLAYER_BOUNDARY_RIGHT - PLAYER_WIDTH;
         }
-        // if(player->_sprite->pos.x < PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH)
-        // {
-            // player->_sprite->pos.x = PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH;
-        // }
+      if (g_GameOptions.testCollision) {
         if(player->_sprite->pos.x < PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH)
         {
             player->_sprite->pos.x = PLAYER_BOUNDARY_LEFT + PLAYER_WIDTH;
         }
+      }
+      else {
+        if(player->_sprite->pos.x < PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH)
+        {
+            player->_sprite->pos.x = PLAYER_BOUNDARY_MIDDLE + PLAYER_WIDTH;
+        }
+      }
     }
 
     if(player->_sprite->pos.y > SCREEN_BOTTOM - PLAYER_HEIGHT)
@@ -886,45 +1057,6 @@ void boundPlayer(PPLAYER player)
         player->_sprite->pos.y = SCREEN_TOP + PLAYER_HEIGHT;
     }
 }
-
-// void explodePlayer(PPLAYER player, bool showExplosion, bool spreadExplosion)
-// {
-    // int rand = 0;
-
-    // player->subState = PLAYER_STATE_EXPLODING;
-    // // player->frameCount = EXPLODING_FRAME_COUNT + jo_random(EXPLODING_FRAME_COUNT);
-    // player->score.deaths++;
-
-    // player->curPos.dx = jo_random(0x40000) - 0x20000;
-    // player->curPos.dy = jo_random(0x40000) - 0x20000;
-
-    // // player->size = toFIXED(1);
-    // // player->ds = toFIXED(.07);
-
-    // // player->angle = jo_random(360);
-
-
-    // // player->da = 45 - jo_random(30);
-
-    // // 50% chance to flip the direction
-    // rand = jo_random(2);
-    // if(rand == 1)
-    // {
-        // // player->da *= -1;
-    // }
-
-    // // if(showExplosion)
-    // // {
-        // // // draw an explosion on the player
-        // // spawnExplosion(player);
-    // // }
-
-    // // if(spreadExplosion)
-    // // {
-        // // // spread the explosion to nearby players
-        // // explodeNeighbors(player);
-    // // }
-// }
 
 // void explodeNeighbors(PPLAYER player)
 // {

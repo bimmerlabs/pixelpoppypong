@@ -272,7 +272,7 @@ void nameEntryDraw(void)
     set_spr_position(&pixel_poppy, 0, 0, 100);
     my_sprite_draw(&pixel_poppy);
     
-    if (game_options.debug_display) {
+    if (g_GameOptions.debug_display) {
         jo_nbg0_printf(2, 24, "RAD:X=%3d,Y=%3d", JO_FIXED_TO_INT(xRadius), JO_FIXED_TO_INT(yRadius));
         jo_nbg0_printf(2, 25, "POS:X=%3d,Y=%3d", JO_FIXED_TO_INT(light.x), JO_FIXED_TO_INT(light.y));
         jo_nbg0_printf(2, 26, "ANGLE:%3d", nameEntryAngle);

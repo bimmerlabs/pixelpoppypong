@@ -17,7 +17,7 @@ extern PLAYER g_Players[MAX_PLAYERS];
 
 void debux_text(void)
 {    
-    if (!game_options.debug_display) {
+    if (!g_GameOptions.debug_display) {
         return;
     }
         jo_getdate(&now);
@@ -26,6 +26,7 @@ void debux_text(void)
         jo_nbg0_printf(29, 2, "NEXT:%2d", g_Game.nextState);
         jo_nbg0_printf(2, 3, "FRAME:%i", frame);
         jo_nbg0_printf(2, 4, "VOLUME:%i,%i", volume, g_StartGameFrames);
+        jo_nbg0_printf(2, 5, "TESTCOLLISION:%i", g_GameOptions.testCollision);
         // jo_nbg0_printf(20, 24, "DO_UPDATE_ALL:%i", do_update_All);
         // jo_nbg0_printf(20, 25, "UPDATE_PALETTE_ALL:%i", update_palette_All);
         // jo_nbg0_printf(20, 24, "BACKUP_DEVICE:%i", backup_device);
@@ -41,7 +42,7 @@ void debux_text(void)
         // jo_nbg0_printf(20, 3, "RAM USAGE:%d%%", jo_memory_usage_percent());
         
         // transition debug
-        // if (game_options.mosaic_display) {
+        // if (g_GameOptions.mosaic_display) {
         // jo_nbg0_printf(20, 2, "MOSAIC_X/Y:%i,%i", mosaic_x, mosaic_y);
         // }
         // jo_nbg0_printf(2, 26, "PLAYING CD:%i", cd_is_playing);
@@ -199,13 +200,13 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 10, "POPPY.VEL.X:%i", pixel_poppy.vel.x);
                 // jo_nbg0_printf(2, 11, "POPPY.VEL.Y:%i", pixel_poppy.vel.y);
                 // jo_nbg0_printf(2, 12, "POPPY.VEL.Z:%i", pixel_poppy.vel.z);
-                jo_nbg0_printf(2, 12, "PLAYER.X:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.x));
-                jo_nbg0_printf(2, 13, "POPPY.X:%i", JO_FIXED_TO_INT(pixel_poppy.pos.x));
+                
+                // jo_nbg0_printf(2, 10, "PLAYER.X:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.x));
+                // jo_nbg0_printf(2, 11, "POPPY.X:%i", JO_FIXED_TO_INT(pixel_poppy.pos.x));
+                
                 // jo_nbg0_printf(2, 14, "POPPY.Y:%i", pixel_poppy.pos.y);
                 // jo_nbg0_printf(2, 15, "ISBALLACTIVE:%i", g_Game.isBallActive);
                 
-                jo_nbg0_printf(20, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
-                jo_nbg0_printf(20, 12, "LEFTSIDE:%i", g_Players[0].onLeftSide);
                 // jo_nbg0_printf(20, 11, "SPR0 ACTIVE:%i", sprite_list[0].active);
                 // jo_nbg0_printf(20, 12, "SPR1 ACTIVE:%i", sprite_list[1].active);
                 
@@ -215,11 +216,20 @@ void debux_text(void)
                     // jo_nbg0_printf(2, 20, "TEAM_4 PID:%i", g_goalPlayerId[TEAM_4-1]);
                          
                 if (g_Players[0].isPlaying) {
-                    jo_nbg0_printf(2, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[0].power), g_Players[0].power);
+                    jo_nbg0_printf(2, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
+                    jo_nbg0_printf(2, 12, "LEFTSIDE:%i", g_Players[0].onLeftSide);
                 }
                 if (g_Players[1].isPlaying) {
-                    jo_nbg0_printf(20, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[1].power), g_Players[1].power);
-                }  
+                    jo_nbg0_printf(22, 11, "ISCOLLIDING:%i", g_Players[1]._sprite->isColliding);
+                    jo_nbg0_printf(22, 12, "LEFTSIDE:%i", g_Players[1].onLeftSide);
+                } 
+                                         
+                // if (g_Players[0].isPlaying) {
+                    // jo_nbg0_printf(2, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[0].power), g_Players[0].power);
+                // }
+                // if (g_Players[1].isPlaying) {
+                    // jo_nbg0_printf(20, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[1].power), g_Players[1].power);
+                // }  
                       
                 // if (g_Players[0].isPlaying) {
                     // jo_nbg0_printf(2, 17, "P1 ISAI:%i", g_Players[0].isAI);

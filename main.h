@@ -6,7 +6,7 @@
 #include "audio.h"
 #include "audio.h"
 
-#define VERSION "0.54"
+#define VERSION "0.55"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -30,9 +30,11 @@ typedef struct {
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
+    bool bigHeadMode;
+    bool testCollision;
 } GameOptions, *PGameOptions;
 
-extern GameOptions game_options;
+extern GameOptions g_GameOptions;
 
 // 1-4 players
 typedef enum _NUMBER_OF_PLAYERS
@@ -127,7 +129,7 @@ typedef struct _GAME
     int debug;
 
     // number of lives (1, 3, 6, 9)
-    Uint8 numLives;
+    // Uint8 numLives;
     // number of stars (1, 2, 3)
     Uint8 numStars;
     

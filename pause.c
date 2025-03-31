@@ -93,7 +93,7 @@ void pauseGame(void)
     slColOffsetBUse(NBG1ON);
     nbg1_rate = PAUSE_FADE;
     slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
-    if (game_options.mosaic_display) {
+    if (g_GameOptions.mosaic_display) {
         mosaic_out = true;
     }
     g_Game.isPaused = true;
@@ -148,7 +148,7 @@ static void checkForPauseMenu(void)
         {
             case PAUSE_OPTIONS_DEBUG:
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
-                game_options.debug_display = !game_options.debug_display;
+                g_GameOptions.debug_display = !g_GameOptions.debug_display;
                 break;
             default:
                 break;
@@ -160,7 +160,7 @@ static void checkForPauseMenu(void)
         {
             case PAUSE_OPTIONS_DEBUG:
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
-                game_options.debug_display = !game_options.debug_display;
+                g_GameOptions.debug_display = !g_GameOptions.debug_display;
                 break;
             default:
                 break;
@@ -178,7 +178,7 @@ static void checkForPauseMenu(void)
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
-                if (game_options.mosaic_display) {
+                if (g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
@@ -195,7 +195,7 @@ static void checkForPauseMenu(void)
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // start a new game without going to title or team select
                 mosaic_in_rate = MOSAIC_FAST_RATE;
-                if (game_options.mosaic_display) {
+                if (g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
@@ -211,7 +211,7 @@ static void checkForPauseMenu(void)
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
-                if (game_options.mosaic_display) {
+                if (g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
@@ -227,7 +227,7 @@ static void checkForPauseMenu(void)
                 pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
-                if (game_options.mosaic_display) {
+                if (g_GameOptions.mosaic_display) {
                     mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
@@ -246,7 +246,7 @@ static void checkForPauseMenu(void)
         pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         // simply unpause
         mosaic_in_rate = MOSAIC_FAST_RATE;
-        if (game_options.mosaic_display) {
+        if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
         }
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
@@ -270,7 +270,7 @@ static void drawPauseMenu(int options_y)
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "QUIT");
     options_y += 2;
-    if (game_options.debug_display) {
+    if (g_GameOptions.debug_display) {
         jo_nbg0_printf(options_x, options_y, "DEBUG:ON");
     }
     else {

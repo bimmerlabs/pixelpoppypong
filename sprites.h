@@ -125,16 +125,32 @@ static inline void reset_ball_movement(Sprite *ball) {
     ball_bounce = false;
     ball->pos.x = toFIXED(0);
     ball->pos.y = toFIXED(-280);
-    ball->rot.z = 0;
+    // ball->rot.z = 0;
     ball->vel.x = toFIXED(0);
     ball->vel.y = toFIXED(0);
     ball->vel.z = 0;
+    
+    // big head option? (only with 2 players)    
+    if(g_GameOptions.bigHeadMode && g_Game.numPlayers < 3)
+    {
+        ball->pos.r = EASY_BALL_RADIUS;
+        ball->scl.x = toFIXED(2.0);
+        ball->scl.y = toFIXED(2.0);
+        return;
+    }
     switch(g_Game.gameDifficulty)
     {
         case GAME_DIFFICULTY_EASY:
-            ball->pos.r = EASY_BALL_RADIUS;
-            ball->scl.x = toFIXED(2.0);
-            ball->scl.y = toFIXED(2.0);
+            if (g_Game.numPlayers > 2) {
+                ball->pos.r = NORMAL_BALL_RADIUS;
+                ball->scl.x = toFIXED(1.0);
+                ball->scl.y = toFIXED(1.1);
+            }
+            else {
+                ball->pos.r = EASY_BALL_RADIUS;
+                ball->scl.x = toFIXED(2.0);
+                ball->scl.y = toFIXED(2.0);
+            }
             break;
         default:
             ball->pos.r = NORMAL_BALL_RADIUS;

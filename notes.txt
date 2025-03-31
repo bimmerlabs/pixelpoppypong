@@ -83,20 +83,20 @@ version 0.45:
 	-reset touch count (done)
 	-decide if there will be 2 teams or 4 teams (4 teams, 1 player per team)
 	-fix character position & bounding for different number of teams (fixed)
--set up actual gameplay loop (scoring, hearts, stars?)
--classic pong game? (remove x movement and power ups?)
+-set up actual gameplay loop (scoring, hearts, stars?) (started)
+-classic pong game? (remove x movement and power ups?) (started)
 
 version 0.5:
 -gameplay implementation:
 intial feedback:
-	only Y movement feels better than X/Y?
-	continues goes 1 further than expected
-	intitial ball speed is too fast
-	AI rebound speed is too fast (base on difficulty/power?)
-	start ball at last scoring player position?
+	only Y movement feels better than X/Y? (done - classic mode)
+	continues goes 1 further than expected (eliminate?)
+	intitial ball speed is too fast (tweak Y speed or used fixed?) (done)
+	AI rebound speed is too fast (base on difficulty/power?) (fixed)
+	start ball at last scoring player position? (nope)
 	need to look at lives/continues for game mode/difficulty
-	adjust goal size obased on diffculty/ai
-	adjust pp size based on difficulty (bigger is easier?)
+	adjust goal size obased on diffculty/ai (done)
+	adjust pp size based on difficulty (bigger is easier?) (done)
 
 	story mode (started)
 		Block breaking? (not this version)
@@ -110,6 +110,8 @@ intial feedback:
 		bombs
 		stars?
 		hearts?
+		clock? (extra time)
+		ball of yarn? (normal mapped??)
 	Actions:
 		shields/block (started)
 		-need shield/meter for each player?  blue?  color calc? (started)
@@ -126,7 +128,9 @@ version 0.6:
 -save game (done?)
 
 version 0.7-0.8
+-AI enhancements
 -polishing?
+-big head mode? (done)
 
 version 0.9? (review build)
 -review mode (debug on, debug display disabled)
