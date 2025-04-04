@@ -4,6 +4,7 @@
 #include "main.h"
 #include "input.h"
 #include "assets.h"
+#include "backup.h"
 #include "util.h"
 #include "screen_transition.h"
 #include "objects/player.h"
@@ -39,12 +40,12 @@ static void checkForPauseMenu(void);
 // input for handling pause
 void pause_input(void)
 {
-    if(g_Game.gameState != GAME_STATE_GAMEPLAY)
+    if(g_Game.gameState != GAME_STATE_GAMEPLAY || g_Game.isRoundOver)
     {
         return;
     }
 
-    if(g_Game.isPaused == false)
+    if(!g_Game.isPaused)
     {
         // only check for pause press if the game is unpaused
         checkForPausePress();
@@ -86,7 +87,6 @@ void pause_draw(void)
 // pause the game
 void pauseGame(void)
 {
-
     g_PauseChoice = 0;
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
@@ -98,12 +98,12 @@ void pauseGame(void)
     }
     g_Game.isPaused = true;
     mosaic_in_rate = MOSAIC_FAST_RATE;
-    volume = LOWER_VOLUME;
-    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-    CDDA_SetVolume(volume);
-    #else
-    jo_audio_set_volume(volume);
-    #endif
+    // volume = LOWER_VOLUME;
+    // #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+    // CDDA_SetVolume(volume);
+    // #else
+    // jo_audio_set_volume(volume);
+    // #endif
     pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
     // TODO:
     // playCDTrack(track);
@@ -117,7 +117,7 @@ void pauseGame(void)
 // check if player 1 paused the game
 static void checkForPausePress(void)
 {
-    if (!g_Game.isActive)
+    if (!g_Game.isActive || g_Game.selectStoryCharacter)
     {
         return;
     }
@@ -172,6 +172,7 @@ static void checkForPauseMenu(void)
 
     if (jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_A) || jo_is_pad1_key_down(JO_KEY_C))
     {
+        save_game_backup();
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_RESUME:
@@ -243,6 +244,7 @@ static void checkForPauseMenu(void)
     }
     else if (jo_is_pad1_key_down(JO_KEY_B))
     {
+        save_game_backup();
         pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         // simply unpause
         mosaic_in_rate = MOSAIC_FAST_RATE;

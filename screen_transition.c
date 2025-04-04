@@ -16,8 +16,10 @@ Sint8 fade_out_rate = 4;
 Uint8 mosaic_in_rate = MOSAIC_SLOW_RATE;
 unsigned int g_FadeTimer = 0;
 bool fade_out = false;
+bool story_fade_out = false;
 bool fade_in = false;
 bool slow_fade_in = false;
+bool story_fade_in = false;
 
 unsigned short mosaic_x = MOSAIC_MIN;
 unsigned short mosaic_y = MOSAIC_MIN;
@@ -49,11 +51,14 @@ void screenTransition_update(void) {
 }
 
 bool transitionOut(void) {
-    if (!fade_out && !mosaic_out && !music_out) {
+    if (!fade_out && !story_fade_out && !mosaic_out && !music_out) {
         return false;
     }
     if (fade_out) {
         fade_out = fadeOut(fade_out_rate, MINIMUM_FADE);
+    }
+    if (story_fade_out) {
+        story_fade_out = fadeOut(fade_out_rate, STORY_FADE);
     }
     if (mosaic_out) {
         mosaic_out = mosaicOut(NBG1ON);
@@ -65,7 +70,7 @@ bool transitionOut(void) {
 }
 
 bool transitionIn(void) {
-    if (!fade_in && !mosaic_in && !music_in && !slow_fade_in) {
+    if (!fade_in && !mosaic_in && !music_in && !slow_fade_in && !story_fade_in) {
         return false;
     }
     if (fade_in) {
@@ -73,6 +78,9 @@ bool transitionIn(void) {
     }
     if (slow_fade_in) {
         slow_fade_in = slowFadeIn(fade_in_rate, QUARTER_FADE);
+    }
+    if (story_fade_in) {
+        story_fade_in = fadeIn(fade_in_rate, STORY_FADE);
     }
     if (mosaic_in) {
         mosaic_in = mosaicIn(NBG1ON);

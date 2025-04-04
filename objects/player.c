@@ -11,7 +11,7 @@
 #include "../BG_DEF/sprite_colors.h"
 
 // distance formula without the square root
-bool checkDistance(PPLAYER a, PPLAYER b);
+bool checkDistance(Sprite *player, Sprite *item);
 
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
@@ -54,6 +54,7 @@ void resetPlayerScores(void)
     
     // dss = getLives();
     g_Game.numStars = getStars();
+    initTouchCounter();
     
     PPLAYER player = NULL;
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
@@ -66,11 +67,6 @@ void resetPlayerScores(void)
         player->score.points = 0;
         player->totalLives = getLives(player);
         player->numLives = player->totalLives;
-        
-        touchedBy[i].onLeftSide = false;
-        touchedBy[i].hasTouched = false;
-        touchedBy[i].touchCount = 0;
-        touchedBy[i].teamChoice = 0;
     }
 }
 
@@ -84,6 +80,7 @@ void resetPlayerAttacks(void)
         player->shield.activate = false;
         player->_sprite->pos.r = PLAYER_RADIUS;
         sprite_frame_reset(&shield[i]);
+        player->isExploded = false;
         
         if (player->attack1) {
             if (player->onLeftSide) {
@@ -112,21 +109,22 @@ void resetPlayerAttacks(void)
 int getLives(PPLAYER player)
 {
     int numLives = 0;
-    
     switch(g_Game.gameMode)
     {
-        case GAME_MODE_CLASSIC:
+        case GAME_MODE_BATTLE:
             numLives = 9;
             break;
-        case GAME_MODE_STORY: {
+        default:
             if (player->isAI) {
                 switch(g_Game.gameDifficulty)
                 {
                     case GAME_DIFFICULTY_EASY:
                         numLives = 4;
+                        // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_MEDIUM:
                         numLives = 5;
+                        // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_HARD:
                         numLives = 6;
@@ -140,6 +138,7 @@ int getLives(PPLAYER player)
                 {
                     case GAME_DIFFICULTY_EASY:
                         numLives = 6;
+                        // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_MEDIUM:
                         numLives = 5;
@@ -152,22 +151,13 @@ int getLives(PPLAYER player)
                 }
             }
             break;
-        }
-        case GAME_MODE_BATTLE:
-            numLives = 9;
-            break;
-        default:
-            break;
     }
-
     return numLives;
-
 }
 
 int getStars(void)
 {
     int numStars = 0;
-    
     switch(g_Game.gameMode)
     {
         case GAME_MODE_CLASSIC:
@@ -197,10 +187,10 @@ int getStars(void)
                     numStars = 1;
                     break;
                 case GAME_DIFFICULTY_MEDIUM:
-                    numStars = 2;
+                    numStars = 1;
                     break;
                 case GAME_DIFFICULTY_HARD:
-                    numStars = 3;
+                    numStars = 1;
                     break;
                 default:
                     break;
@@ -209,9 +199,7 @@ int getStars(void)
         default:
             break;
     }
-
     return numStars;
-
 }
 
 void getContinues(void)
@@ -244,7 +232,6 @@ void getContinues(void)
         default:
             break;
     }
-
 }
 
 void initPlayers(void)
@@ -273,6 +260,7 @@ void initPlayers(void)
         player->isPlaying = false; // get rid of this?
         player->scored = false;
         player->isAI = false;
+        player->isExploded = false;
         
         // GAMEPLAY
         player->numLives = 9;
@@ -371,13 +359,13 @@ void initStoryCharacters(void)
     PPLAYER player = NULL;
     player = &g_Players[1];
     
-    validateTeam(player);
-    teamAvailable[player->teamChoice] = false;
-    g_Game.numTeams++; 
+    player->teamChoice = TEAM_2;
+    teamAvailable[player->teamChoice] = false; 
     g_goalPlayerId[player->teamChoice-1] = 1;
     
     player->_bg->spr_id = player->_bg->anim1.asset[1];
-    player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
+    // player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
+    player->character.choice = g_Game.countofRounds +1;
     characterAvailable[player->character.choice] = false;
 
     assignCharacterSprite(player);
@@ -385,8 +373,23 @@ void initStoryCharacters(void)
     
     player->isPlaying = PLAYING;
     player->objectState = OBJECT_STATE_ACTIVE;
+    player->subState = PLAYER_STATE_ACTIVE;
     player->isAI = true;
     g_Game.numTeams = 2; // NEEDS TO BE SET DIFFERENTLY IF 2 PLAYERS ARE SELECTED?
+}
+
+void nextStoryCharacter(void)
+{
+    PPLAYER player = NULL;
+    player = &g_Players[1];
+    
+    player->character.choice = g_Game.countofRounds + 1;
+    player->objectState = OBJECT_STATE_ACTIVE;
+    player->subState = PLAYER_STATE_ACTIVE;
+
+    assignCharacterSprite(player);
+    initVsModePlayers();
+    boundPlayer(player);
 }
 
 void initVsModePlayers(void)
@@ -511,6 +514,7 @@ void initDemoPlayers(void)
             player->character.choice = i;
             player->shield_pos = SHIELD_OFFSET;
             g_Game.numTeams++;
+            g_Game.currentNumPlayers++;
         }
         else if (i == 1) {
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
@@ -541,6 +545,7 @@ void initDemoPlayers(void)
             }
             player->shield_pos = -SHIELD_OFFSET;
             g_Game.numTeams++;
+            g_Game.currentNumPlayers++;
         }
         else if (i == 2) { // set up player 3 last (we need to know the team count)
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
@@ -563,6 +568,7 @@ void initDemoPlayers(void)
             g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = SHIELD_OFFSET;
             g_Game.numTeams++;
+            g_Game.currentNumPlayers++;
         }
         else if (i == 3) {
             if (JO_MOD_POW2(jo_random(999), 2)) { // modulus
@@ -585,6 +591,7 @@ void initDemoPlayers(void)
             g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = -SHIELD_OFFSET;
             g_Game.numTeams++;
+            g_Game.currentNumPlayers++;
         }
         
         assignCharacterStats(player);
@@ -648,9 +655,27 @@ void assignCharacterSprite(PPLAYER player) {
 }
 
 void assignCharacterStats(PPLAYER player) {
-    player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.1));
+    if (player->isAI) {
+        switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.06));
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.08));
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.1));
+                    break;
+                default:
+                    break;
+            }
+    }
+    else {        
+        player->maxSpeed = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].maxSpeed), toFIXED(0.1));
+    }
     player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
-    player->basePower = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].power), toFIXED(.05)); // this could be a difficulty factor?
+    player->basePower = jo_fixed_mult(toFIXED(characterAttributes[player->character.choice].power), toFIXED(.05));
     player->power = player->basePower;
     
     if (player->isAI) {
@@ -745,6 +770,19 @@ void getClassicModeInput(void)
         
         playerAttack(player);
         
+        // SHIELD
+        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
+        {
+            if (player->shield.power > 1) {
+                player->shield.activate = true;
+                player->_sprite->pos.r = SHIELD_RADIUS;
+            }
+            player->shield.power--;
+        }
+        else {
+            player->shield.activate = false;
+            player->_sprite->pos.r = PLAYER_RADIUS;
+        }        
     }
 }
 
@@ -811,24 +849,21 @@ void getPlayersInput(void)
         
         regenPlayerPower(player);
         
-        if (!g_Game.isBallActive) {
-            return;
-        }
-       
-        playerAttack(player);
-        
-        // SHIELD
-        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
-        {
-            if (player->shield.power > 1) {
-                player->shield.activate = true;
-                player->_sprite->pos.r = SHIELD_RADIUS;
+        if (g_Game.isBallActive) {
+            playerAttack(player);
+            // SHIELD
+            if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
+            {
+                if (player->shield.power > 1) {
+                    player->shield.activate = true;
+                    player->_sprite->pos.r = SHIELD_RADIUS;
+                }
+                player->shield.power--;
             }
-            player->shield.power--;
-        }
-        else {
-            player->shield.activate = false;
-            player->_sprite->pos.r = PLAYER_RADIUS;
+            else {
+                player->shield.activate = false;
+                player->_sprite->pos.r = PLAYER_RADIUS;
+            }
         }
     }
 }
@@ -1129,15 +1164,33 @@ void respawnPlayer(PPLAYER player, bool deductLife)
     player->subState = PLAYER_STATE_ACTIVE;
 }
 
-// distance formula without the square root
-bool checkDistance(PPLAYER a, PPLAYER b)
+bool explodePLayer(PPLAYER player)
 {
-    int dist = 36*36;
+    if (player->numLives > 0) {
+        player->numLives--;
+        touchedBy[player->playerID].touchCount = 0;
+        if (player->numLives == 0) {
+            // kill player
+            player->score.deaths++;
+            if (player->isAI && g_Game.gameMode == GAME_MODE_STORY) {
+                g_Game.countofRounds++; // for story mode only
+            }
+            player->subState = PLAYER_STATE_DEAD;
+            g_Game.currentNumPlayers--;
+        }
+    }
+    return true;
+}
 
-    int x_dist = toINT(a->curPos.x) - toINT(b->curPos.x);
+// distance formula without the square root
+bool checkDistance(Sprite *player, Sprite *item)
+{
+    int dist = 32*32;
+
+    int x_dist = toINT(player->pos.x) - toINT(item->pos.x);
     x_dist = x_dist * x_dist;
 
-    int y_dist = toINT(a->curPos.y) - toINT(b->curPos.y);
+    int y_dist = toINT(player->pos.y) - toINT(item->pos.y);
     y_dist = y_dist * y_dist;
 
     if(dist > x_dist + y_dist)

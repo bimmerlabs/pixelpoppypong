@@ -7,6 +7,7 @@
 #define NEUTRAL_FADE 0
 #define MAXIMUM_FADE 254
 #define PAUSE_FADE -75
+#define STORY_FADE -100
 
 #define MOSAIC_MIN  1
 #define MOSAIC_MAX  16
@@ -25,7 +26,9 @@ extern Sint8 fade_out_rate;
 extern Uint8 mosaic_in_rate;
 extern unsigned int g_FadeTimer;
 extern bool fade_out;
+extern bool story_fade_out;
 extern bool fade_in;
+extern bool story_fade_in;
 extern bool slow_fade_in;
 
 extern unsigned short mosaic_x;

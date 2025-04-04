@@ -52,8 +52,8 @@ typedef enum _PLAYER_STATE
 
 typedef struct _SCORE
 {
-    unsigned int stars;
-    unsigned int deaths; // last wave player was alive for
+    Uint8 stars;
+    Uint8 deaths; // last wave player was alive for
     unsigned int points; // number of boxes opened
 
 } SCORE, *PSCORE;
@@ -134,6 +134,7 @@ typedef struct _PLAYER
     bool onLeftSide;
     bool scored;
     bool isAI;
+    bool isExploded;
     int numLives;
     int totalLives;
     
@@ -195,6 +196,7 @@ void updatePlayers(void);
 void initPlayers(void);
 void initAiPlayers(void);
 void initStoryCharacters(void);
+void nextStoryCharacter(void);
 void initVsModePlayers(void);
 void initDemoPlayers(void);
 
@@ -208,6 +210,8 @@ void getContinues(void);
 void resetPlayerScores(void);
 void resetPlayerAttacks(void);
 void spawnPlayers(void);
+bool explodePLayer(PPLAYER player);
+
 void cacheInputDirectionPlayer(PPLAYER player, bool* up, bool* down, bool* left, bool *right);
 
 static __jo_force_inline void drawPlayers(void)

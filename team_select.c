@@ -67,13 +67,10 @@ void teamSelect_init(void)
     unloadTitleScreenAssets();
     loadCharacterAssets();
     reset_inputs();
-    initTouchCounter();
-    // reset_sprites();
-    // do_update_PmenuAll = true;
+    initTouchCounter(); // not sure this is needed here
     initPlayers();
     initAvailableCharacters();
 
-    
     initTeams();
     all_players_ready = false;
     g_TeamSelectPressedStart = false;

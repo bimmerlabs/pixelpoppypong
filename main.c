@@ -62,7 +62,7 @@ GameOptions g_GameOptions = {
     .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
-    .use_rtc = true,
+    .use_rtc = false,
     .bigHeadMode = false,
     .testCollision = false,
 };
@@ -115,16 +115,16 @@ void main_loop(void) {
 // returns to title screen if player one presses ABC+Start
 void abcStart_callback(void)
 {
-    if (g_GameOptions.debug_mode) {
-        // manually switch states
-        if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
-            g_Game.nextState = g_Game.gameState +1;
-            if (g_Game.nextState == GAME_STATE_TRANSITION) {
-                g_Game.nextState = GAME_STATE_UNINITIALIZED;
-            }
-            transitionState(g_Game.nextState);
-        }
-    }
+    // if (g_GameOptions.debug_mode) {
+        // // manually switch states
+        // if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
+            // g_Game.nextState = g_Game.gameState +1;
+            // if (g_Game.nextState == GAME_STATE_TRANSITION) {
+                // g_Game.nextState = GAME_STATE_UNINITIALIZED;
+            // }
+            // transitionState(g_Game.nextState);
+        // }
+    // }
     if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
     {        
         return;

@@ -14,13 +14,13 @@
 #define DROP_BALL_TIME (1.5 * 60)
 #define DEMO_TIME (30 * 60)
 #define BOMB_TIMER (15 * 60)
-#define TIMEOUT_CLASSIC (5 * 60) // seconds
 #define TIMEOUT_BATTLE 999 // seconds
-#define TIMEOUT_STORY_EASY (10 * 60) // seconds
-#define TIMEOUT_STORY_MEDIUM (5 * 60) // seconds
-#define TIMEOUT_STORY_HARD (3 * 60) // seconds
+#define TIMEOUT_CLASSIC 299
+#define TIMEOUT_STORY_EASY 599
+#define TIMEOUT_STORY_MEDIUM 299
+#define TIMEOUT_STORY_HARD 199
 
-#define MAX_ROUNDS 3
+#define MAX_ROUNDS 8
 
 #define GAMEPLAY_PORTRAIT_X 300
 #define GAMEPLAY_PORTRAIT_Y 190
@@ -31,9 +31,13 @@ extern Uint8 g_goalPlayerId[MAX_PLAYERS];
 
 extern ANGLE ball_rotation;
 extern bool start_gameplay_timer;
-extern bool round_start;
+extern bool round_start;
+extern bool explode_ball;
+extern bool play_continue_track;
+
 static bool draw_bomb;
-static bool explode_bomb;
+static bool explode_bomb;
+
 void gameplay_init(void);
 void demo_init(void);
 void demo_update(void);
@@ -41,83 +45,51 @@ void setGoalSize(void);
 
 void gameplay_timer(void);
 void gameplay_draw(void);
+int determineWinner(void);
 void gameScore_draw(void);
 void gameplayUI_draw(PPLAYER player);
 void gameplay_update(void);
+void reset_ball_movement(Sprite *ball);
 void gameplay_input(void);
 void demo_input(void);
-static inline void initStoryMode(void) {
-	g_Game.numPlayers = TWO_PLAYER;
-	reset_inputs();
-	initPlayers();
-	initTeams();
-	g_Game.currentNumPlayers = 1;              
+// static inline void initStoryMode(void) {
+	// g_Game.numPlayers = TWO_PLAYER;
+	// reset_inputs();
+	// initPlayers();
+	// initTeams();
+	// g_Game.currentNumPlayers = 2;              
 
-	PPLAYER player = &g_Players[0]; // macchi
+	// PPLAYER player = &g_Players[0]; // macchi
 
-	player->input = &g_Inputs[0];
-	player->input->id = 0;
-	player->input->isSelected = true;
+	// player->input = &g_Inputs[0];
+	// player->input->id = 0;
+	// player->input->isSelected = true;
 
-	player->_sprite = &macchi;
+	// player->_sprite = &macchi;
 
-	player->teamChoice = TEAM_1;
-	player->teamSelected = true;
-	teamAvailable[player->teamChoice] = false;
-	g_Game.numTeams++;
+	// player->teamChoice = TEAM_1;
+	// player->teamSelected = true;
+	// teamAvailable[player->teamChoice] = false;
+	// g_Game.numTeams++;
 
-	player->character.selected = true;
-	player->character.choice = CHARACTER_MACCHI;
-	characterAvailable[player->character.choice] = false;
-	player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
+	// player->character.selected = true;
+	// player->character.choice = CHARACTER_MACCHI;
+	// characterAvailable[player->character.choice] = false;
+	// player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
 
-	player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-	player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
-	player->power = characterAttributes[player->character.choice].power;
+	// player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
+	// player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
+	// player->power = characterAttributes[player->character.choice].power;
 
-	player->objectState = OBJECT_STATE_ACTIVE;
-	player->isPlaying = PLAYING;
-	player->isAI = false;
-	boundPlayer(player);
-	initStoryCharacters();
-	initVsModePlayers();
-}
+	// player->objectState = OBJECT_STATE_ACTIVE;
+	// player->isPlaying = PLAYING;
+	// player->isAI = false;
+	// boundPlayer(player);
+	// initStoryCharacters();
+	// initVsModePlayers();
+// }
 
-static __jo_force_inline void setGameTimer(void) {
-    switch(g_Game.gameMode)
-    {
-        case GAME_MODE_BATTLE:
-            g_Game.GameTimer = TIMEOUT_BATTLE;
-            break;
-        case GAME_MODE_CLASSIC:
-            g_Game.GameTimer = TIMEOUT_CLASSIC;
-            break;
-        case GAME_MODE_STORY:
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
-                    g_Game.GameTimer = TIMEOUT_STORY_EASY;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
-                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
-                    break;
-                case GAME_DIFFICULTY_HARD:
-                    g_Game.GameTimer = TIMEOUT_STORY_HARD;
-                    break;
-                default:
-                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
-                    break;
-            }
-            break;
-        default:
-            g_Game.GameTimer = TIMEOUT_BATTLE;
-            break;
-    }
-    convertNumberToDigits(g_Game.GameTimer);
-    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
-    timer_num10.spr_id = timer_num10.anim1.asset[tens];
-    timer_num1.spr_id = timer_num1.anim1.asset[ones];
-}
+void setGameTimer(void);
 
 static __jo_force_inline void initPixelPoppy(void) {
     reset_ball_movement(&pixel_poppy);
@@ -162,7 +134,19 @@ static __jo_force_inline void setItemPositions(void) {
    }
 }
 
-static __jo_force_inline void gameplayScores_draw(PPLAYER player) {
+static __jo_force_inline void storymodeScore_draw(PPLAYER player) {
+    switch (player->teamChoice) 
+    {
+        case TEAM_1: {
+            jo_nbg0_printf(9, 2, "%09d", player->score.points);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+static __jo_force_inline void gameplayScore_draw(PPLAYER player) {
     switch (player->teamChoice) 
     {
         case TEAM_1: {
@@ -365,7 +349,7 @@ static __jo_force_inline void drawGameItems(void) {
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.BeginTimer = 0;
-            g_Game.countofRounds++;
+            // g_Game.countofRounds++;
             // setItemPositions();
         }
 }
@@ -388,10 +372,11 @@ static __jo_force_inline void drawGameItems(void) {
         if (g_Game.isGoalScored) {
             // g_Game.isActive = false;
             initPixelPoppy();
+            resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.BeginTimer = 0;
-            g_Game.countofRounds++;
+            // g_Game.countofRounds++;
             // setItemPositions();
         }
 }
@@ -414,10 +399,11 @@ static __jo_force_inline void drawGameItems(void) {
         if (g_Game.isGoalScored) {
             // g_Game.isActive = false;
             initPixelPoppy();
+            resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.BeginTimer = 0;
-            g_Game.countofRounds++;
+            // g_Game.countofRounds++;
         }
 }
 
@@ -445,10 +431,7 @@ static __jo_force_inline bool startGameplay(void) {
         if (!g_GameOptions.testCollision) {
             start_ball_movement(&pixel_poppy);
         }
-        touchedBy[0].hasTouched = false;
-        touchedBy[1].hasTouched = false;
-        touchedBy[2].hasTouched = false;
-        touchedBy[3].hasTouched = false;
+        initTouchCounter();
         g_Game.isRoundOver = false;
         g_Game.isGoalScored = false;
         return false;

@@ -83,24 +83,26 @@ version 0.45:
 	-reset touch count (done)
 	-decide if there will be 2 teams or 4 teams (4 teams, 1 player per team)
 	-fix character position & bounding for different number of teams (fixed)
--set up actual gameplay loop (scoring, hearts, stars?) (started)
--classic pong game? (remove x movement and power ups?) (started)
+-set up actual gameplay loop (scoring, hearts, stars?) (done)
+-classic pong game? (remove x movement and power ups?) (done)
 
 version 0.5:
 -gameplay implementation:
-intial feedback:
 	only Y movement feels better than X/Y? (done - classic mode)
-	continues goes 1 further than expected (eliminate?)
+	continues goes 1 further than expected (fixed)
 	intitial ball speed is too fast (tweak Y speed or used fixed?) (done)
 	AI rebound speed is too fast (base on difficulty/power?) (fixed)
 	start ball at last scoring player position? (nope)
-	need to look at lives/continues for game mode/difficulty
+	need to look at lives/continues for game mode/difficulty (done)
 	adjust goal size obased on diffculty/ai (done)
 	adjust pp size based on difficulty (bigger is easier?) (done)
 
 	story mode (started)
 		Block breaking? (not this version)
 		rescue kittens/wuppy?
+		story mode character select:
+			initcharacterselect (done)
+			drawcharacterselect (started)
 	power ups:
 		mushrooms (different colors have different effects?)
 		garfield (to unlock garfield character)
@@ -113,11 +115,56 @@ intial feedback:
 		clock? (extra time)
 		ball of yarn? (normal mapped??)
 	Actions:
-		shields/block (started)
-		-need shield/meter for each player?  blue?  color calc? (started)
-		attack forward (instead of D pad?)
+		shields/block (done)
+		-need shield/meter for each player?  blue?  color calc? (done)
+		attack forward (done)
 		
-		
+competition entry goals: (order of preference)
+	1 adjust goal hitbox (done)
+	2 remove multi-region flag from ip.bin (not patched - must have been one of the releases)
+	3 implement ball touch timer (done)
+	4 finish story presentation:
+		A cursor on CPU character select (done)
+		B player vs character text on selection (done)
+		C continue timer when you die (show # of continues)
+		D winning / losing messages
+		E transitions (done)
+		F adjust timers (done)
+		G "battle is over" sound (only play at the end of the game?) (done)
+	5 store high scores?
+		A send winning player object to highscores function (done)
+		B save score (done)
+	6 additional music / placeholders (VF1/VF2 continue music?)
+		A fix next round music (you won but the game isn't over yet) (done - workaround)
+		B continue music
+	7 item collision?
+		A at least implement craig and garf so they can be unlocked (ball touches count?)
+	8 playtest!
+		transition to credits after name entry / score
+		release build
+		turn off some debug stuff (state skip) (done)
+
+tommorrow morning:
+	goal 1 (done)
+	goal 2 (done)
+	goal 3 (done)
+	goal 4a (done)
+	goal 6a (done)
+	stretch: 
+		goal 5a (done)
+		goal 5b (done)
+tommorrow afternoon:
+	goal 8
+	goal 4b (done)
+	goal 4c (partial)
+	goal 4e (done)
+	goal 4f (done)
+friday morning:
+	goal 6b (done)
+	goal 7a (implemented explosion instead)
+	stretch:
+		-sound effects
+	
 
 version 0.6:
 -lighting
@@ -125,6 +172,7 @@ version 0.6:
 -ending
 -high scores (started)
 -team high scores? (started?)
+-items: implement collision (started)
 -save game (done?)
 
 version 0.7-0.8
@@ -145,9 +193,9 @@ version 1.0:
 	-analog support (done)
 	-screen modes (2026)
 	-sound test
--player select (needs tweaks to reflect gameplay)
+-player select (done)
 -full gameplay loop
-	-physics
+	-physics (done)
 	-ai opponents
 	-deaths
 	-scoring
@@ -157,7 +205,7 @@ version 1.0:
 	-vs / battle
 	-co-op (dropped)
 	-4 player?
--credit roll
+-credit roll (started)
 -sound effects
 -music by random (started)
 -save game (done)

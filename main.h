@@ -4,9 +4,8 @@
 #include "state.h"
 #include "util.h"
 #include "audio.h"
-#include "audio.h"
 
-#define VERSION "0.55"
+#define VERSION "0.60 RC"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -73,6 +72,7 @@ typedef enum _GAME_RESOLUTION
 } GAME_RESOLUTION;
 
 #define GOAL_X_POS 330
+#define GOAL_X_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_CENTER_POS 0
 
 typedef enum _GOAL_SCALE
@@ -127,18 +127,19 @@ typedef struct _GAME
     
     // debug level
     int debug;
-
-    // number of lives (1, 3, 6, 9)
-    // Uint8 numLives;
+    
     // number of stars (1, 2, 3)
     Uint8 numStars;
     
     // TIMERS
+    Uint16 endDelayTimer;
     Uint16 BeginTimer;
     Uint16 GameTimer;
     Uint16 BombTimer;
     Uint16 RoundOverTimer;
     Uint16 DemoTimer;
+
+    bool selectStoryCharacter;
 
     // is the game loading?
     bool isLoading;
@@ -156,6 +157,8 @@ typedef struct _GAME
 
     // is the game finished?
     bool isGameOver;
+    
+    int winner;
     
     // is the game playing?
     bool isActive;

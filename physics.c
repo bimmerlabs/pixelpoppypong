@@ -9,6 +9,7 @@
 extern PLAYER g_Players[MAX_PLAYERS];
 
 BallTouchTracker touchedBy[MAX_PLAYERS];
+Uint16 ballTtouchTimer = 0;
 
 void initTouchCounter(void) {
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
@@ -18,6 +19,12 @@ void initTouchCounter(void) {
         touchedBy[i].touchCount = 0;
         touchedBy[i].teamChoice = 0;
     }
+    ballTtouchTimer = 0;
+}
+
+void stopBallMovement(Sprite *ball) {
+    ball->vel.x = toFIXED(0);
+    ball->vel.y = toFIXED(0);
 }
 
 // Function to initialize the ball's movement
@@ -68,34 +75,44 @@ void adjust_xy_velocity_based_on_spin(Sprite *ball) {
 
 // Function to update the ball's position and check for collisions
 void update_ball(Sprite *ball) {
+       
     // Update position based on velocity
     ball->pos.x += ball->vel.x;
     ball->pos.y += ball->vel.y;
     ball->rot.z += ball->vel.z;
-        
     
-    switch (ball->vel.z) {
-        case 1:
-            ball->spr_id = ball->anim1.asset[0];
-            break;
-        case 2:
-            ball->spr_id = ball->anim1.asset[1];
-            break;
-        case 3:
-            ball->spr_id = ball->anim1.asset[2];
-            break;
-        case 4:
-            ball->spr_id = ball->anim1.asset[3];
-            break;
-        case 5:
-            ball->spr_id = ball->anim1.asset[4];
-            break;
-        case 6:
-            ball->spr_id = ball->anim1.asset[5];
-            break;
-        default:
-            ball->spr_id = ball->anim1.asset[0];
-            break;
+    if (!explode_ball) {
+        switch (ball->vel.z) {
+            case 1:
+                ball->spr_id = ball->anim1.asset[0];
+                break;
+            case 2:
+                ball->spr_id = ball->anim1.asset[1];
+                break;
+            case 3:
+                ball->spr_id = ball->anim1.asset[2];
+                break;
+            case 4:
+                ball->spr_id = ball->anim1.asset[3];
+                break;
+            case 5:
+                ball->spr_id = ball->anim1.asset[4];
+                break;
+            case 6:
+                ball->spr_id = ball->anim1.asset[5];
+                break;
+            default:
+                ball->spr_id = ball->anim1.asset[0];
+                break;
+        }
+    }
+    
+    // Check for collisions with goals
+    if (ball->pos.x >= GOAL_X_BOUNDS) {
+        checkRightWallScore(ball);
+    }
+    else if (ball->pos.x <= -GOAL_X_BOUNDS) {
+        checkLeftWallScore(ball);
     }
     
     // Check for collisions with walls
@@ -117,11 +134,7 @@ void update_ball(Sprite *ball) {
         }
 
         // Adjust Z velocity for horizontal collision
-        ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
-        
-        // switch for number of teams
-        checkLeftWallScore(ball);
-        
+        ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);        
     }
     else if (ball->pos.x <= SCREEN_LEFT) {
         ball->pos.x = SCREEN_LEFT;
@@ -141,10 +154,7 @@ void update_ball(Sprite *ball) {
         }
 
         // Adjust Z velocity for horizontal collision
-        ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);
-        
-        checkRightWallScore(ball);
-        
+        ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);        
     }
     if (ball->pos.y >= SCREEN_BOTTOM - ball->pos.r) {
         ball->pos.y = SCREEN_BOTTOM - ball->pos.r;
@@ -248,7 +258,9 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     if (ball->pos.x >= player_left && ball->pos.x <= player_right &&
         ball->pos.y >= player_top && ball->pos.y <= player_bottom) {
         handle_ball_player_reaction(ball, player);
-        updateBallTouch(player);
+        if (!explode_ball) {
+            updateBallTouch(player);
+        }
         return true;
     }    
     
@@ -262,7 +274,9 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 
     if (distance_squared <= radius_squared) {
         handle_ball_player_reaction(ball, player);
-        updateBallTouch(player);
+        if (!explode_ball) {
+            updateBallTouch(player);
+        }
         return true;
     }
 
@@ -273,6 +287,11 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 
 // SIMPLER / BETTER? (ball/circle)
 void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
+    if (explode_ball && !player->isExploded) {
+        player->isExploded = explodePLayer(player);
+        player->_sprite->isColliding = false;
+        return;
+    }
     player->_sprite->isColliding = true;
     // Calculate relative position vector
     FIXED dx = ball->pos.x - player->_sprite->pos.x;
@@ -300,15 +319,15 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
     // Reflect the ball's velocity along the collision normal, factoring in player's movement    
     switch(g_Game.gameMode)
     {
-        case GAME_MODE_CLASSIC:
-            if (player->onLeftSide) {
-                ball->vel.x = jo_fixed_mult(jo_fixed_mult(-ball->vel.x, collision_normal_x), player->power);
-            }
-            else {
-                ball->vel.x = jo_fixed_mult(jo_fixed_mult(ball->vel.x, collision_normal_x), player->power);
-            }
-            ball->vel.y = jo_fixed_mult(ball->vel.y, player->power);
-            break;
+        // case GAME_MODE_CLASSIC:
+            // if (player->onLeftSide) {
+                // ball->vel.x = jo_fixed_mult(jo_fixed_mult(-ball->vel.x, collision_normal_x), player->power);
+            // }
+            // else {
+                // ball->vel.x = jo_fixed_mult(jo_fixed_mult(ball->vel.x, collision_normal_x), player->power);
+            // }
+            // ball->vel.y = jo_fixed_mult(ball->vel.y, player->power);
+            // break;
         default:
             ball->vel.x -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_x), player->power);
             ball->vel.y -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_y), player->power);

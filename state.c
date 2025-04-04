@@ -135,7 +135,8 @@ void changeState(GAME_STATE newState)
             reset_inputs();
             slColorCalcOn(OFF);
             slColRateNbg0 ( TRANSPARENCY_MIN );
-            g_Game.lastState = GAME_STATE_UNINITIALIZED;
+            slScrPosNbg0(toFIXED(0), toFIXED(0));
+            // g_Game.lastState = GAME_STATE_UNINITIALIZED;
             g_Game.nextState = GAME_STATE_PPP_LOGO;
             changeState(g_Game.nextState);
             break;

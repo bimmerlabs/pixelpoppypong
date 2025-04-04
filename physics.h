@@ -4,12 +4,12 @@
 #include "objects/player.h"
 
 #define MIN_VELOCITY_X toFIXED(7)
-#define MIN_VELOCITY_Y toFIXED(5)
-#define EASY_MAX_VELOCITY toFIXED(8) // 8 = easy, 10 = medium, 13 = hard?
+#define MIN_VELOCITY_Y toFIXED(3)
+#define EASY_MAX_VELOCITY toFIXED(8.5) // 8 = easy, 10 = medium, 13 = hard?
 #define MEDIUM_MAX_VELOCITY toFIXED(10) // 8 = easy, 10 = medium, 13 = hard?
 #define HARD_MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)
-#define BALL_FRICTION_X toFIXED(1.25)
+#define BALL_FRICTION_X toFIXED(1.15)
 #define BALL_ROTATION 1.7 // IDEA:  PICK UP A BOOMERANG ITEM - MAKE THIS NUMBER HIGHER?
 #define REBOUND toFIXED(0.1) // the lower this is, the bigger the rebound?
 #define FRICTION_COEFFICIENT toFIXED(2.5) // Adjust this value to alter the ball curve
@@ -23,9 +23,11 @@ typedef struct {
 
 extern BallTouchTracker touchedBy[MAX_PLAYERS];
 
+extern Uint16 ballTtouchTimer;
+
 void initTouchCounter(void);
 
-// Function to initialize the ball's movement
+void stopBallMovement(Sprite *ball);
 void start_ball_movement(Sprite *ball);
 
 void adjust_xy_velocity_based_on_spin(Sprite *ball);
@@ -76,6 +78,7 @@ static inline void updateBallTouch(PPLAYER player) {
     touchedBy[player->playerID].hasTouched = true;
     touchedBy[player->playerID].touchCount++;
     touchedBy[player->playerID].teamChoice = player->teamChoice; // needs to be initialized, not here
+    ballTtouchTimer = 0;
 }
 
 static inline FIXED my_fixed_clamp(FIXED value, FIXED min, FIXED max) {

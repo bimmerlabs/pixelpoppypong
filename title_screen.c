@@ -87,7 +87,7 @@ void titleScreen_init(void)
     slColOffsetAUse(NBG0ON);
     slColOffsetBUse(NBG1ON | SPRON);
     
-    jo_set_default_background_color(JO_COLOR_Black);
+    // jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN); // not really being used..
     
@@ -205,7 +205,7 @@ void drawTitle(void)
     }
     if (g_GameOptions.debug_mode) {
         // version number
-        jo_nbg0_printf(20, 28, "%s", VERSION);
+        jo_nbg0_printf(18, 28, "%s", VERSION);
     }
 
     if (poppy_scale < POPPY_MAX_SCALE) {
@@ -785,14 +785,14 @@ void optionsScreen_input(void)
         switch(g_OptionScreenChoice)
         {
             case OPTION_DEBUG_MODE:
-                g_GameOptions.debug_mode = !g_GameOptions.debug_mode;
+                // g_GameOptions.debug_mode = !g_GameOptions.debug_mode;
                 break;
             case OPTION_DEBUG_TEXT:
                 g_GameOptions.debug_display = !g_GameOptions.debug_display;
                 break;
-            case OPTION_DEBUG_COLLISION:
-                g_GameOptions.testCollision = !g_GameOptions.testCollision;
-                break;
+            // case OPTION_DEBUG_COLLISION:
+                // g_GameOptions.testCollision = !g_GameOptions.testCollision;
+                // break;
             case OPTION_DRAWMESH:
                 g_GameOptions.mesh_display = !g_GameOptions.mesh_display;
                 break;
@@ -895,16 +895,14 @@ void drawOptions(void)
         }
     // }
     
-    // if (g_GameOptions.debug_mode && g_GameOptions.debug_display) {
-        options_y += 2;
-        jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
-        if (g_GameOptions.testCollision) {
-            jo_nbg0_printf(options_x, options_y, "ON");
-        }
-        else {
-            jo_nbg0_printf(options_x, options_y, "OFF");
-        }
-    // }
+        // options_y += 2;
+        // jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
+        // if (g_GameOptions.testCollision) {
+            // jo_nbg0_printf(options_x, options_y, "ON");
+        // }
+        // else {
+            // jo_nbg0_printf(options_x, options_y, "OFF");
+        // }
 
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "MESH TRANSPARENCY:");

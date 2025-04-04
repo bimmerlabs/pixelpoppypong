@@ -79,7 +79,7 @@ void loadSoundAssets(void)
 {
     #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
     g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
-    g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"A.PCM", 15360);
+    g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"BUMP.PCM", 15360);
     #else
     jo_audio_load_pcm("GMOVR8.PCM", JoSoundStereo8Bit, &g_Assets.gameOverPcm8);
     g_Assets.gameOverPcm8.sample_rate = 32000;
@@ -93,8 +93,8 @@ void loadCommonAssets(void)
     jo_sprite_free_all();
     // pixel poppy
     loadSprite(&pixel_poppy, g_Assets.pixel_poppy1, "POPPY.TGA", pixel_poppy1_tileset, NUM_POPPY_SPRITES, 64, 50, true);
-    pixel_poppy_shadow.anim1.asset = g_Assets.pixel_poppy1;
-    pixel_poppy_shadow.spr_id = pixel_poppy_shadow.anim1.asset[7];
+    // pixel_poppy_shadow.anim1.asset = g_Assets.pixel_poppy1;
+    // pixel_poppy_shadow.spr_id = pixel_poppy_shadow.anim1.asset[7];
     // menu cursor
     cursor.spr_id = jo_sprite_add_tga(NULL, "CURSOR.TGA", palette_transparent_index);
     
@@ -221,6 +221,9 @@ void loadGameAssets(void)
     loadSprite(&bomb_item, g_Assets.explosion, "EXPLOD.TGA", explode_tileset, NUM_EXPLOD_SPRITES, 72, 72, false);
     loadSprite(&fishtank_item, g_Assets.fishtank, "FISH.TGA", fishtank_tileset, NUM_FISH_SPRITES, 24, 24, true);
     loadSprite(&shroom_item, g_Assets.shroom, "SHROOM.TGA", shroom_tileset, NUM_SHROOM_SPRITES, 24, 24, true);
+    
+    pixel_poppy.anim2.asset = g_Assets.explosion;
+    pixel_poppy.anim2.max = bomb_item.anim2.max;
     
     craig_item.spr_id = jo_sprite_add_tga(NULL, "CRAIG.TGA", palette_transparent_index);
     garfield_item.spr_id = jo_sprite_add_tga(NULL, "GARFIELD.TGA", palette_transparent_index);

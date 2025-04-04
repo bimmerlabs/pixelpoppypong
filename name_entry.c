@@ -2,6 +2,8 @@
 #include "main.h"
 #include "assets.h"
 #include "state.h"
+#include "backup.h"
+#include "highscores.h"
 #include "name_entry.h"
 #include "screen_transition.h"
 #include "BG_DEF/nbg1.h"
@@ -10,7 +12,7 @@
 
 unsigned int g_NameEntryTimer = 0;
 unsigned int g_NameEntrySelection = 0;
-const char letters[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.  ";
+const char letters[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.< ";
 static char initials[4];  // 3 letters + null terminator
 static int char_id[3];
 
@@ -244,6 +246,10 @@ void nameEntryUpdate(void)
     
     if(g_NameEntryTimer == 0 || xRadius <= END_RADIUS)
     {
+        // TODO: SAVE HIGH SCORE
+        addHighScore(g_Players[g_Game.winner].score.points, initials);
+        save_game_backup();
+        g_Game.lastState = GAME_STATE_NAME_ENTRY;
         transitionState(GAME_STATE_HIGHSCORES);
         return;
     }

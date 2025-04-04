@@ -4,6 +4,7 @@
 #include "screen_transition.h"
 #include "gameplay.h"
 #include "sprites.h"
+#include "name_entry.h"
 #include "BG_DEF/nbg1.h"
 
 unsigned int g_ScoreTimer = 0;
@@ -11,16 +12,16 @@ unsigned int g_ScoreTimer = 0;
 HighScoreEntry highScores[SCORE_ENTRIES];
 
 void highScore_init(void) {
-    highScores[0] = (HighScoreEntry){500000, "CDS"};
-    highScores[1] = (HighScoreEntry){450000, "BUB"};
-    highScores[2] = (HighScoreEntry){400000, "SES"};
-    highScores[3] = (HighScoreEntry){350000, "DAD"};
-    highScores[4] = (HighScoreEntry){300000, "OCS"};
-    highScores[5] = (HighScoreEntry){250000, "FOO"};
-    highScores[6] = (HighScoreEntry){200000, "BAR"};
-    highScores[7] = (HighScoreEntry){150000, "PPP"};
-    highScores[8] = (HighScoreEntry){125000, "ITS"};
-    highScores[9] = (HighScoreEntry){100000, "WUP"};
+    highScores[0] = (HighScoreEntry){10000000, "CDS"}; // could put an actual score here
+    highScores[1] = (HighScoreEntry){5000000, "BUB"};
+    highScores[2] = (HighScoreEntry){4500000, "SES"};
+    highScores[3] = (HighScoreEntry){4000000, "DAD"};
+    highScores[4] = (HighScoreEntry){3500000, "OCS"};
+    highScores[5] = (HighScoreEntry){3000000, "FOO"};
+    highScores[6] = (HighScoreEntry){2500000, "BAR"};
+    highScores[7] = (HighScoreEntry){2000000, "PPP"};
+    highScores[8] = (HighScoreEntry){1500000, "ITS"};
+    highScores[9] = (HighScoreEntry){1000000, "WUP"};
 }
 
 void init_scores(void)
@@ -43,7 +44,7 @@ void init_scores(void)
         sprite_frame_reset(&pixel_poppy);
     }
 
-    g_Game.lastState = GAME_STATE_HIGHSCORES;
+    // g_Game.lastState = GAME_STATE_HIGHSCORES;
 
     g_ScoreTimer = 0;
     
@@ -56,13 +57,14 @@ void init_scores(void)
     menu_bg2.spr_id = menu_bg2.anim1.asset[4];
     menu_bg2.zmode = _ZmCC;
     set_spr_position(&menu_bg2, 0, 0, 95);
-    set_spr_scale(&menu_bg2, 180, 480);
+    set_spr_scale(&menu_bg2, 200, 480);
     
     sortHighScores(highScores);
 
     volume = MAX_VOLUME;
-    CDDA_SetVolume(volume >> 4);
-    playCDTrack(BEGIN_GAME_TRACK, false);
+    reset_audio(volume);
+    // CDDA_SetVolume(volume >> 4);
+    playCDTrack(FINISH_TRACK, false);
 }
 
 static bool draw_header_text = true;
@@ -72,7 +74,7 @@ void display_scores(void)
     {
         return;
     }
-    int options_x = 14;
+    int options_x = 12;
     int options_y = 4;
     g_ScoreTimer++;
     
@@ -80,17 +82,23 @@ void display_scores(void)
         draw_header_text = !draw_header_text;
     }
     if (draw_header_text) {
-        jo_nbg0_printf(options_x+3, options_y, "HIGH SCORES");
+        jo_nbg0_printf(options_x+5, options_y, "HIGH SCORES");
     }
     options_y += 2;
     for (int i = 0; i < SCORE_ENTRIES; i++) {
-        jo_nbg0_printf(options_x, options_y, "%2d. %s - %d", i + 1, highScores[i].initials, highScores[i].score);
+        jo_nbg0_printf(options_x, options_y, "%2d. %s - %09d", i + 1, highScores[i].initials, highScores[i].score);
         options_y += 2;
     }
     my_sprite_draw(&menu_bg2);
     update_bg_position();    if (g_ScoreTimer == SCORE_DISPLAY_TIME) {
-        g_Game.lastState = GAME_STATE_HIGHSCORES;
-        transitionState(GAME_STATE_UNINITIALIZED);
+        if (g_Game.lastState == GAME_STATE_NAME_ENTRY) {
+            g_Game.lastState = GAME_STATE_HIGHSCORES;
+            transitionState(GAME_STATE_CREDITS);
+        }
+        else {
+            g_Game.lastState = GAME_STATE_HIGHSCORES;
+            transitionState(GAME_STATE_UNINITIALIZED);
+        }
     }
 }
 
@@ -108,7 +116,7 @@ void update_bg_position(void) {
 }
 
 void    score_input(void)	{
-    if (jo_is_pad1_key_down(JO_KEY_START)) {
+    if (jo_is_pad1_key_down(JO_KEY_START) && g_Game.lastState != GAME_STATE_NAME_ENTRY) {
         g_Game.lastState = GAME_STATE_HIGHSCORES;
         transitionState(GAME_STATE_UNINITIALIZED);
     }
@@ -126,16 +134,20 @@ void sortHighScores(HighScoreEntry scores[]) {
         }
     }
 }
-// void addHighScore(Uint16 newScore, const char *initials) {
-    // // Check if the new score qualifies
-    // if (newScore <= highScores[SCORE_ENTRIES - 1].score) {
-        // return;  // Score is too low, ignore
-    // }
 
-    // // Insert at the last position
-    // highScores[SCORE_ENTRIES - 1].score = newScore;
-    // highScores[SCORE_ENTRIES - 1].initials = initials; // causes error
+void addHighScore(unsigned int newScore, const char *initials) {
+    // Check if the new score qualifies
+    if (newScore <= highScores[SCORE_ENTRIES - 1].score) {
+        return;  // Score is too low, ignore
+    }
 
-    // // Sort the list
-    // sortHighScores(highScores);
-// }
+    // Insert at the last position
+    highScores[SCORE_ENTRIES - 1].score = newScore;
+    
+    for (int i = 0; i <= MAX_INITIAL; ++i) {
+        highScores[SCORE_ENTRIES - 1].initials[i] = initials[i];
+    }
+
+    // Sort the list
+    sortHighScores(highScores);
+}

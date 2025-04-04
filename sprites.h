@@ -118,48 +118,6 @@ static int ball_velocity = 0;
 static bool ball_falling = false;
 static bool ball_bounce = false;
 
-// add options input (difficulty, game mode, etc)
-static inline void reset_ball_movement(Sprite *ball) {
-    ball_velocity = 0;
-    ball_falling = true;
-    ball_bounce = false;
-    ball->pos.x = toFIXED(0);
-    ball->pos.y = toFIXED(-280);
-    // ball->rot.z = 0;
-    ball->vel.x = toFIXED(0);
-    ball->vel.y = toFIXED(0);
-    ball->vel.z = 0;
-    
-    // big head option? (only with 2 players)    
-    if(g_GameOptions.bigHeadMode && g_Game.numPlayers < 3)
-    {
-        ball->pos.r = EASY_BALL_RADIUS;
-        ball->scl.x = toFIXED(2.0);
-        ball->scl.y = toFIXED(2.0);
-        return;
-    }
-    switch(g_Game.gameDifficulty)
-    {
-        case GAME_DIFFICULTY_EASY:
-            if (g_Game.numPlayers > 2) {
-                ball->pos.r = NORMAL_BALL_RADIUS;
-                ball->scl.x = toFIXED(1.0);
-                ball->scl.y = toFIXED(1.1);
-            }
-            else {
-                ball->pos.r = EASY_BALL_RADIUS;
-                ball->scl.x = toFIXED(2.0);
-                ball->scl.y = toFIXED(2.0);
-            }
-            break;
-        default:
-            ball->pos.r = NORMAL_BALL_RADIUS;
-            ball->scl.x = toFIXED(1.0);
-            ball->scl.y = toFIXED(1.1);
-            break;
-    }
-}
-
 #define BALL_VELOCITY toFIXED(10)
 extern int ball_velocity;
 extern bool ball_falling;
@@ -315,7 +273,6 @@ static __jo_force_inline bool explode_animation(Sprite *sprite) {
         sprite->anim2.frame++;
     }
     if (sprite->anim2.frame > sprite->anim2.max) {
-        // sprite->anim2.frame = 0;
         sprite->spr_id = sprite->anim2.asset[sprite->anim2.max];
         return false;
     }

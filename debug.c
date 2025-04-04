@@ -26,7 +26,7 @@ void debux_text(void)
         jo_nbg0_printf(29, 2, "NEXT:%2d", g_Game.nextState);
         jo_nbg0_printf(2, 3, "FRAME:%i", frame);
         jo_nbg0_printf(2, 4, "VOLUME:%i,%i", volume, g_StartGameFrames);
-        jo_nbg0_printf(2, 5, "TESTCOLLISION:%i", g_GameOptions.testCollision);
+        // jo_nbg0_printf(2, 5, "TESTCOLLISION:%i", g_GameOptions.testCollision);
         // jo_nbg0_printf(20, 24, "DO_UPDATE_ALL:%i", do_update_All);
         // jo_nbg0_printf(20, 25, "UPDATE_PALETTE_ALL:%i", update_palette_All);
         // jo_nbg0_printf(20, 24, "BACKUP_DEVICE:%i", backup_device);
@@ -45,11 +45,11 @@ void debux_text(void)
         // if (g_GameOptions.mosaic_display) {
         // jo_nbg0_printf(20, 2, "MOSAIC_X/Y:%i,%i", mosaic_x, mosaic_y);
         // }
-        // jo_nbg0_printf(2, 26, "PLAYING CD:%i", cd_is_playing);
+        // jo_nbg0_printf(2, 25, "PLAYING CD:%i", cd_is_playing);
         // jo_nbg0_printf(2, 27, "VOLUME:%i", volume);
-        // jo_nbg0_printf(20, 4, "TRANS_IN/OUT:%i, %i", transition_in, transition_out);
+        jo_nbg0_printf(20, 6, "TRANS_IN/OUT:%i, %i", transition_in, transition_out);
         // jo_nbg0_printf(20, 5, "FADE_IN/OUT:%i, %i", fade_in, fade_out);
-        // jo_nbg0_printf(20, 6, "MOSAIC_IN/OUT:%i, %i", mosaic_in, mosaic_out);
+        jo_nbg0_printf(20, 7, "MOSAIC_IN/OUT:%i, %i", mosaic_in, mosaic_out);
         
         switch (g_Game.gameState) {
             case GAME_STATE_PPP_LOGO: // logo
@@ -152,10 +152,10 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 9, "POPPY.Y:%i", pixel_poppy.pos.y);
                 // jo_nbg0_printf(20, 10, "COLLIDING:%i", pixel_poppy.isColliding);
                 
-                jo_nbg0_printf(2, 12, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.r));
-                jo_nbg0_printf(2, 13, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[1]._sprite->pos.r));
-                jo_nbg0_printf(2, 14, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[2]._sprite->pos.r));
-                jo_nbg0_printf(2, 15, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[3]._sprite->pos.r));       
+                // jo_nbg0_printf(2, 12, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.r));
+                // jo_nbg0_printf(2, 13, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[1]._sprite->pos.r));
+                // jo_nbg0_printf(2, 14, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[2]._sprite->pos.r));
+                // jo_nbg0_printf(2, 15, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[3]._sprite->pos.r));       
                 
                 // jo_nbg0_printf(2, 12, "TEAM1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[0]);
                 // jo_nbg0_printf(2, 13, "TEAM2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[1]);
@@ -215,13 +215,13 @@ void debux_text(void)
                     // jo_nbg0_printf(2, 19, "TEAM_3 PID:%i", g_goalPlayerId[TEAM_3-1]);
                     // jo_nbg0_printf(2, 20, "TEAM_4 PID:%i", g_goalPlayerId[TEAM_4-1]);
                          
-                if (g_Players[0].isPlaying) {
+                if (g_Players[0].isPlaying && g_GameOptions.testCollision) {
                     jo_nbg0_printf(2, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
-                    jo_nbg0_printf(2, 12, "LEFTSIDE:%i", g_Players[0].onLeftSide);
+                    // jo_nbg0_printf(2, 12, "LEFTSIDE:%i", g_Players[0].onLeftSide);
                 }
-                if (g_Players[1].isPlaying) {
+                if (g_Players[1].isPlaying && g_GameOptions.testCollision) {
                     jo_nbg0_printf(22, 11, "ISCOLLIDING:%i", g_Players[1]._sprite->isColliding);
-                    jo_nbg0_printf(22, 12, "LEFTSIDE:%i", g_Players[1].onLeftSide);
+                    // jo_nbg0_printf(22, 12, "LEFTSIDE:%i", g_Players[1].onLeftSide);
                 } 
                                          
                 // if (g_Players[0].isPlaying) {
