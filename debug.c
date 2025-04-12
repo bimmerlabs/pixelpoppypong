@@ -184,11 +184,14 @@ void debux_text(void)
                 break;
                 
             case GAME_STATE_GAMEPLAY:
-                if (g_Game.isPaused == true) {
-                    jo_nbg0_printf(2, 5, "PAUSECHOICE:%i", g_PauseChoice);
-                }
-                jo_nbg0_printf(2, 7, "CURPOS.DX:%i", g_Players[0].curPos.dx);
-                jo_nbg0_printf(2, 8, "CURPOS.DY:%i", g_Players[0].curPos.dy);
+                // if (g_Game.isPaused == true) {
+                    // jo_nbg0_printf(2, 5, "PAUSECHOICE:%i", g_PauseChoice);
+                // }
+                jo_nbg0_printf(2, 5, "GAMEACTIVE:%i", g_Game.isActive);
+                jo_nbg0_printf(2, 6, "BALLACTIVE:%i", g_Game.isBallActive);
+                jo_nbg0_printf(2, 8, "CURPOS.DX:%i", g_Players[0].curPos.dx);
+                jo_nbg0_printf(2, 9, "CURPOS.DY:%i", g_Players[0].curPos.dy);
+                
                 // jo_nbg0_printf(2, 8, "MACCHI.X:%i", macchi.pos.x);
                 // jo_nbg0_printf(2, 9, "MACCHI.Y:%i", macchi.pos.y);
                 // jo_nbg0_printf(2, 10, "COLLIDING:%i", macchi.isColliding);

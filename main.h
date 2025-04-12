@@ -5,7 +5,7 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.60 RC"
+#define VERSION "0.62 RC"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 

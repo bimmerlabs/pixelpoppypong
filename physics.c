@@ -58,6 +58,8 @@ void start_ball_movement(Sprite *ball) {
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.x = -ball->vel.x; // modulus
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.y = -ball->vel.y; // modulus
     if (JO_MOD_POW2(jo_random(99999), 2)) ball->vel.z = -ball->vel.z; // modulus
+    // game is only active if ball is moving
+    g_Game.isActive = true;
 }
 
 // inline?

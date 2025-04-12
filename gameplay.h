@@ -348,6 +348,7 @@ static __jo_force_inline void drawGameItems(void) {
             resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
+            g_Game.isActive = false;
             g_Game.BeginTimer = 0;
             // g_Game.countofRounds++;
             // setItemPositions();
@@ -375,6 +376,7 @@ static __jo_force_inline void drawGameItems(void) {
             resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
+            g_Game.isActive = false;
             g_Game.BeginTimer = 0;
             // g_Game.countofRounds++;
             // setItemPositions();
@@ -402,6 +404,7 @@ static __jo_force_inline void drawGameItems(void) {
             resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
+            g_Game.isActive = false;
             g_Game.BeginTimer = 0;
             // g_Game.countofRounds++;
         }

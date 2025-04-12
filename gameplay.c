@@ -250,7 +250,6 @@ void demo_update(void)
         round_start = startGameplay(); // returns true until ball is active
     }
     else {
-        g_Game.isActive = true;
         round_start = false;
     }
     
@@ -286,6 +285,7 @@ void demo_update(void)
             resetPlayerAttacks();
             start_gameplay_timer = false;
             g_Game.isBallActive = false;
+            g_Game.isActive = false;
             g_Game.BeginTimer = 0;
         }
     }

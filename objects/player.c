@@ -764,11 +764,10 @@ void getClassicModeInput(void)
         
         regenPlayerPower(player);
         
-        if (!g_Game.isBallActive) {
+        if (!g_Game.isActive) {
             return;
-        }
-        
-        playerAttack(player);
+        }        
+        playerAttack(player); // need to disable before start of game?
         
         // SHIELD
         if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
@@ -782,7 +781,7 @@ void getClassicModeInput(void)
         else {
             player->shield.activate = false;
             player->_sprite->pos.r = PLAYER_RADIUS;
-        }        
+        }
     }
 }
 
@@ -849,21 +848,23 @@ void getPlayersInput(void)
         
         regenPlayerPower(player);
         
-        if (g_Game.isBallActive) {
-            playerAttack(player);
-            // SHIELD
-            if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
-            {
-                if (player->shield.power > 1) {
-                    player->shield.activate = true;
-                    player->_sprite->pos.r = SHIELD_RADIUS;
-                }
-                player->shield.power--;
+        if (!g_Game.isActive) {
+            return;
+        }        
+        playerAttack(player); // need to disable before start of game?
+        
+        // SHIELD
+        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
+        {
+            if (player->shield.power > 1) {
+                player->shield.activate = true;
+                player->_sprite->pos.r = SHIELD_RADIUS;
             }
-            else {
-                player->shield.activate = false;
-                player->_sprite->pos.r = PLAYER_RADIUS;
-            }
+            player->shield.power--;
+        }
+        else {
+            player->shield.activate = false;
+            player->_sprite->pos.r = PLAYER_RADIUS;
         }
     }
 }
