@@ -1,5 +1,10 @@
 #include "sprites.h"
 #include "assets.h"
+// #include "gameplay.h"
+
+// int ball_velocity = 0;
+// bool ball_falling = false;
+// bool ball_bounce = false;
 
 // sprite structs - used with my_sprite_draw
 
@@ -576,3 +581,68 @@ Sprite garfield_item = {
     .mesh = MESHoff,
     .zmode = _ZmCC
 };
+
+// bool drop_ball_animation(Sprite *ball) {    
+    // // jo_nbg0_printf(2, 17, "BALL_FALLING:%i", ball_falling);
+    // // jo_nbg0_printf(2, 18, "BALL_BOUNCE:%i", ball_bounce);
+    // // jo_nbg0_printf(2, 19, "BALL_VELOCITY:%i", ball_velocity); 
+    // // jo_nbg0_printf(2, 20, "BALLPOS.Y:%i", ball->pos.y);
+    // // ball is falling
+    // if (ball_falling && !ball_bounce) {
+        // pcm_play(g_Assets.dropPcm8, PCM_PROTECTED, 6);
+        // if (ball_velocity < BALL_VELOCITY) {
+            // if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                // ball_velocity += toFIXED(1);
+            // }
+        // }              
+        // if (ball->pos.y < toFIXED(0)) {
+            // ball->pos.y += ball_velocity;
+        // }
+        // // ball has hit the "ground"
+        // else {
+            // ball_falling = false;
+            // ball_bounce = true;
+        // }
+        // return false;
+    // }
+    // // ball is bouncing
+    // if (ball_bounce && !ball_falling) {
+        // ball->pos.y -= ball_velocity;
+        // if (ball_velocity > 0) {
+            // ball_velocity -= toFIXED(1.5);
+        // }
+        // else {
+            // // ball_velocity = 0;
+            // pcm_play(g_Assets.bouncePcm8, PCM_VOLATILE, 5);
+            // ball_falling = true;
+            // ball_bounce = true;
+        // }
+        // return false;
+    // }
+    // // first bounce has already happened
+    // else if (ball_bounce && ball_falling) {
+        // ball_falling = false;
+        // ball_bounce = false;
+        // return false;
+    // }
+    // // falling again
+    // else if (!ball_bounce && !ball_falling) {
+        // if (ball_velocity < BALL_VELOCITY) {
+            // if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                // ball_velocity += toFIXED(1.5);
+            // }
+            
+        // }
+        // // final resting place
+        // if (ball->pos.y < toFIXED(0)) {
+            // g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL;
+            // g_Game.dropBallTimer = DROP_BALL_TIME_NORMAL;
+            // ball->pos.y += ball_velocity;
+        // }
+        // else {
+            // pcm_play(g_Assets.bouncePcm8, PCM_VOLATILE, 5);
+            // return true;
+        // }
+    // }
+    // return false;
+// }

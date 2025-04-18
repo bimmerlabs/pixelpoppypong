@@ -50,7 +50,7 @@ void changeState(GAME_STATE newState)
         {
             titleMenu_init();
             g_Game.nextState = GAME_STATE_TITLE_MENU;
-            if (g_Game.gameState == GAME_STATE_GAMEPLAY || g_Game.gameState == GAME_STATE_TEAM_SELECT) {
+            if (g_Game.gameState == GAME_STATE_GAMEPLAY || g_Game.gameState == GAME_STATE_TEAM_SELECT || g_Game.gameState == GAME_STATE_CHARACTER_SELECT) {
                 reset_audio(HALF_VOLUME);
                 playCDTrack(TITLE_TRACK, true);
             }
@@ -84,6 +84,15 @@ void changeState(GAME_STATE newState)
             g_Game.gameState = GAME_STATE_TEAM_SELECT;
             break;
         }
+        // TODO: implement
+        // case GAME_STATE_CHARACTER_SELECT:
+        // {
+            // reset_audio(HALF_VOLUME);
+            // characterSelectInit();
+            // playCDTrack(SELECT_TRACK, true);
+            // g_Game.gameState = GAME_STATE_CHARACTER_SELECT;
+            // break;
+        // }
         case GAME_STATE_GAMEPLAY:
         {
             g_Game.nextState = GAME_STATE_GAMEPLAY;

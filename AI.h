@@ -9,13 +9,13 @@
 #define LARGE_GOAL_THRESHOLD_MIN toFIXED(10)
 #define SMALL_GOAL_THRESHOLD_MAX toFIXED(10)
 #define SMALL_GOAL_THRESHOLD_MIN toFIXED(5)
-#define MEDIUM_MOVEMENT_FACTOR toFIXED(0.001) // this is really the difficulty factor (higher = harder)
-#define SLOW_MOVEMENT_FACTOR toFIXED(0.0005) // this is really the difficulty factor (higher = harder)
+#define MEDIUM_MOVEMENT_FACTOR toFIXED(0.001)
+#define SLOW_MOVEMENT_FACTOR toFIXED(0.0005)
 
 #define AI_GOAL_CENTER toFIXED(80.0)
 
-#define HARD_AI_MOVEMENT_SPEED   toFIXED(0.0025)
-#define MEDIUM_AI_MOVEMENT_SPEED toFIXED(0.0013)
+#define HARD_AI_MOVEMENT_SPEED   toFIXED(0.0030)
+#define MEDIUM_AI_MOVEMENT_SPEED toFIXED(0.0015)
 #define EASY_AI_MOVEMENT_SPEED   toFIXED(0.0007)
 
 void playerAI(Sprite *ball);

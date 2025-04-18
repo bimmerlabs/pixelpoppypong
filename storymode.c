@@ -47,7 +47,6 @@ void initStoryMode(void)
 {    
     g_Game.selectStoryCharacter = true;
     character_pos_selected = CHARACTER_POS_Y;
-    // character_pos_selected = CHARACTER_POS_OFFSET*6; // FOR TESTING
     character_offset = (g_Game.countofRounds * CHARACTER_POS_OFFSET); // starts as 0
     
     if (g_GameOptions.mesh_display) {
@@ -74,17 +73,19 @@ void initStoryMode(void)
     player->input = &g_Inputs[0];
     player->input->id = 0;
     player->input->isSelected = true;
-    player->_sprite = &macchi;
     player->teamChoice = TEAM_1;
     player->teamSelected = true;
     teamAvailable[player->teamChoice] = false;
     g_Game.numTeams++;
+    // TODO: move to character select
+    player->_sprite = &macchi;
     player->character.selected = true;
     player->character.choice = CHARACTER_MACCHI;
     characterAvailable[player->character.choice] = false;
     player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
-    set_spr_position(player->_cursor, toFIXED(0), toFIXED(0), CURSOR_DEPTH);
     assignCharacterStats(player);
+    
+    set_spr_position(player->_cursor, toFIXED(0), toFIXED(0), CURSOR_DEPTH);
     player->objectState = OBJECT_STATE_ACTIVE;
     player->isPlaying = PLAYING;
     player->isAI = false;
@@ -102,18 +103,21 @@ void initStoryMode(void)
 void storySelectUpdate(void)
 {
     character_offset = ((g_Game.countofRounds) * CHARACTER_POS_OFFSET);
-    jo_nbg0_printf(1, 12, "%s", fullCharacterNames[0]);
-    jo_nbg0_printf(26, 12, "%s", fullCharacterNames[g_Game.countofRounds+1]);
+    jo_nbg0_printf(2, 14, "%s", fullCharacterNames[0]);
+    jo_nbg0_printf(26, 14, "%s", fullCharacterNames[g_Game.countofRounds+1]);
+    // scroll up list of characters
     if (character_pos_selected < character_offset) {
         character_pos_selected++;
     }
     else {
-        jo_nbg0_printf(1, 15, "%s", characterQuotes[0]);
+        jo_nbg0_printf(2, 16, "%s", characterQuotes[0]);
         jo_nbg0_printf(21, 19, "VS.");
-        jo_nbg0_printf(26, 15, "%s", characterQuotes[g_Game.countofRounds+1]);
+        jo_nbg0_printf(26, 16, "%s", characterQuotes[g_Game.countofRounds+1]);
     }
     if (g_StartStoryFrames == 0)
     {
+        g_Game.roundBeginTimer = ROUND_BEGIN_TIME_FAST;
+        g_Game.dropBallTimer = DROP_BALL_TIME_FAST;
         transition_in = true;
         if (g_GameOptions.mosaic_display) {
             mosaic_in = true;

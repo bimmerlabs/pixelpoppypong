@@ -11,12 +11,14 @@ extern PLAYER g_Players[MAX_PLAYERS];
 BallTouchTracker touchedBy[MAX_PLAYERS];
 Uint16 ballTtouchTimer = 0;
 
-void initTouchCounter(void) {
+void initTouchCounter(Uint8 resetTouchCount) {
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         touchedBy[i].onLeftSide = false;
         touchedBy[i].hasTouched = false;
-        touchedBy[i].touchCount = 0;
+        if (resetTouchCount == 1) {
+            touchedBy[i].touchCount = 0;
+        }
         touchedBy[i].teamChoice = 0;
     }
     ballTtouchTimer = 0;
@@ -28,7 +30,6 @@ void stopBallMovement(Sprite *ball) {
 }
 
 // Function to initialize the ball's movement
-// incorporate ball rotation angle?
 void start_ball_movement(Sprite *ball) {
     switch(g_Game.gameDifficulty)
     {
@@ -58,8 +59,10 @@ void start_ball_movement(Sprite *ball) {
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.x = -ball->vel.x; // modulus
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.y = -ball->vel.y; // modulus
     if (JO_MOD_POW2(jo_random(99999), 2)) ball->vel.z = -ball->vel.z; // modulus
+    
     // game is only active if ball is moving
     g_Game.isActive = true;
+    explode_ball = false;
 }
 
 // inline?
@@ -259,10 +262,10 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     // Check if the ball is inside the rectangle
     if (ball->pos.x >= player_left && ball->pos.x <= player_right &&
         ball->pos.y >= player_top && ball->pos.y <= player_bottom) {
-        handle_ball_player_reaction(ball, player);
         if (!explode_ball) {
             updateBallTouch(player);
         }
+        handle_ball_player_reaction(ball, player);
         return true;
     }    
     
@@ -275,10 +278,10 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     int distance_squared = (toINT(dx) * toINT(dx)) + (toINT(dy) * toINT(dy));
 
     if (distance_squared <= radius_squared) {
-        handle_ball_player_reaction(ball, player);
         if (!explode_ball) {
             updateBallTouch(player);
         }
+        handle_ball_player_reaction(ball, player);
         return true;
     }
 
@@ -319,22 +322,8 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
     
   if (!g_GameOptions.testCollision) {        
     // Reflect the ball's velocity along the collision normal, factoring in player's movement    
-    switch(g_Game.gameMode)
-    {
-        // case GAME_MODE_CLASSIC:
-            // if (player->onLeftSide) {
-                // ball->vel.x = jo_fixed_mult(jo_fixed_mult(-ball->vel.x, collision_normal_x), player->power);
-            // }
-            // else {
-                // ball->vel.x = jo_fixed_mult(jo_fixed_mult(ball->vel.x, collision_normal_x), player->power);
-            // }
-            // ball->vel.y = jo_fixed_mult(ball->vel.y, player->power);
-            // break;
-        default:
-            ball->vel.x -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_x), player->power);
-            ball->vel.y -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_y), player->power);
-            break;
-    }
+    ball->vel.x -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_x), player->power);
+    ball->vel.y -= jo_fixed_mult(jo_fixed_mult(dot_product, collision_normal_y), player->power);
     
     // Apply player's movement influence
     FIXED rel_vel_x = jo_fixed_mult(player->_sprite->vel.x, toFIXED(0.35));
@@ -343,4 +332,23 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
         ball->vel.x += rel_vel_x;
     }
   }
+}
+
+// distance formula without the square root
+bool checkDistance(Sprite *player, Sprite *item)
+{
+    int dist = 32*32;
+
+    int x_dist = toINT(player->pos.x) - toINT(item->pos.x);
+    x_dist = x_dist * x_dist;
+
+    int y_dist = toINT(player->pos.y) - toINT(item->pos.y);
+    y_dist = y_dist * y_dist;
+
+    if(dist > x_dist + y_dist)
+    {
+        return true;
+    }
+
+    return false;
 }

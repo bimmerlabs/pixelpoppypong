@@ -98,11 +98,11 @@ void check_inputs(void) {
         }
         if (jo_get_input_type(i) == JoNightsPad) {
             if (jo_is_input_key_down(i, JO_KEY_LEFT) && input->sensitivity > ANALOG_MIN) {
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
+                pcm_play(g_Assets.tickPcm8, PCM_PROTECTED, 6); // tick sound
                 input->sensitivity -= toFIXED(0.01);
             }
             if (jo_is_input_key_down(i, JO_KEY_RIGHT) && input->sensitivity < ANALOG_MAX) {
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6); // tick sound
+                pcm_play(g_Assets.tickPcm8, PCM_PROTECTED, 6); // tick sound
                 input->sensitivity += toFIXED(0.01);
             }
         }
@@ -118,10 +118,10 @@ void check_inputs(void) {
             continue;
         }
         if (jo_get_input_type(i) == JoNightsPad) {
-            jo_nbg0_printf(input_x, input_y, "INPUT %i:%2i", i+1, toINT(jo_fixed_mult(input->sensitivity, toFIXED(100))));
+            jo_nbg0_printf(input_x, input_y, "INPUT %i: - %2i +", i+1, toINT(jo_fixed_mult(input->sensitivity, toFIXED(100))));
         }
         else {
-            jo_nbg0_printf(input_x, input_y, "INPUT %i:DIGITAL", i+1);
+            jo_nbg0_printf(input_x, input_y, "INPUT %i: DIGITAL", i+1);
         }
         input_y += 1;
     }

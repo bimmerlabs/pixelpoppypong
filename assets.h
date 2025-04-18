@@ -97,14 +97,41 @@ typedef struct _assets
     int fishtank[NUM_FISH_SPRITES];
     int shroom[NUM_SHROOM_SPRITES];
 
-    // // audio assets
-    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
+    // audio assets
+    // CORE / MENU SOUNDS
+    // short acceptPcm8; // EXITING MENUS?
+    short cancelPcm8; // b button
+    short cursorPcm8; // d-pad
+    // short finishPcm8; // last menu selection
+    short nextPcm8;   // normal menu selection
+    short startPcm8;  // start button first press
+    short tickPcm8;   // analog adjustment
+    // short cursor1Pcm8; // back NEXT
+    // short cursor2Pcm8; // move CURSOR
+    // short plusPcm8; // next FINISH
+    // short startPcm8; // accept/start
+    
+    // GAMEPLAY SOUNDS
     short gameOverPcm8;
+    short scoreAddPcm8;
+    short scoreTotalPcm8;
+    short chain0Pcm8;
+    short chain1Pcm8;
+    short chain2Pcm8;
+    short chain3Pcm8;
+    short chain5Pcm8;
+    short explod1Pcm8;
+    short dropPcm8;
+    short bouncePcm8;
+    short shieldPcm8;
+    short countdownPcm8;
     short bumpPcm16;
-    #else
-    jo_sound gameOverPcm8;
-    jo_sound bumpPcm16;
-    #endif
+    
+    // NAME ENTRY SOUNDS
+    short name_ketPcm8;
+    short name_curPcm8;
+    short name_canPcm8;
+    short name_brkPcm8;
 
 } ASSETS, *PASSETS;
 

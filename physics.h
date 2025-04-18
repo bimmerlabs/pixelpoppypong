@@ -17,7 +17,7 @@
 typedef struct {
     bool onLeftSide;
     bool hasTouched;
-    Uint16 touchCount;
+    int touchCount;
     Uint8 teamChoice;
 } BallTouchTracker;
 
@@ -25,12 +25,15 @@ extern BallTouchTracker touchedBy[MAX_PLAYERS];
 
 extern Uint16 ballTtouchTimer;
 
-void initTouchCounter(void);
+void initTouchCounter(Uint8 resetTouchCount);
 
 void stopBallMovement(Sprite *ball);
 void start_ball_movement(Sprite *ball);
 
 void adjust_xy_velocity_based_on_spin(Sprite *ball);
+
+// distance formula without the square root
+bool checkDistance(Sprite *player, Sprite *item);
 
 // Function to calculate Z velocity based on X and Y velocity
 // tried to convert to fixed - doesn't work - maybe it overflows?
@@ -68,7 +71,7 @@ static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_colli
     return z_velocity;
 }
 
-static inline void updateBallTouch(PPLAYER player) {
+static __jo_force_inline void updateBallTouch(PPLAYER player) {
     // Reset hasTouched for all players
     for(unsigned int i = 0; i <= g_Game.numPlayers; i++) {
         touchedBy[i].hasTouched = false;
@@ -76,11 +79,33 @@ static inline void updateBallTouch(PPLAYER player) {
 
     // Update the player who last touched the ball
     touchedBy[player->playerID].hasTouched = true;
-    touchedBy[player->playerID].touchCount++;
+    if (player->_sprite->isColliding == false && touchedBy[player->playerID].touchCount < 99) {
+        touchedBy[player->playerID].touchCount++;
+        switch (touchedBy[player->playerID].touchCount) {
+            case 20:
+                pcm_play(g_Assets.chain0Pcm8, PCM_PROTECTED, 7);
+                break;
+            case 40:
+                pcm_play(g_Assets.chain1Pcm8, PCM_PROTECTED, 7);
+                break;
+            case 60:
+                pcm_play(g_Assets.chain2Pcm8, PCM_PROTECTED, 7);
+                break;
+            case 80:
+                pcm_play(g_Assets.chain3Pcm8, PCM_PROTECTED, 7);
+                break;
+            case 99:
+                pcm_play(g_Assets.chain5Pcm8, PCM_PROTECTED, 7);
+                break;
+            default:
+                break;
+        }
+    }
     touchedBy[player->playerID].teamChoice = player->teamChoice; // needs to be initialized, not here
     ballTtouchTimer = 0;
 }
 
+// TODO: move to math?
 static inline FIXED my_fixed_clamp(FIXED value, FIXED min, FIXED max) {
     if (value < min) return min;
     if (value > max) return max;

@@ -31,7 +31,6 @@ void init_credits(void)
     slColorCalcOn(NBG0ON | SPRON);
     transparency_rate = CLRate0_32;
     slColRateNbg0 ( transparency_rate );
-    // slColRateSpr1 ( transparency_rate );
     
     mosaic_in_rate = MOSAIC_SLOW_RATE;
     menu_bg1.mesh = MESHoff;
@@ -209,7 +208,7 @@ void display_credits(void)
 
         else if (credit_id == 8)
         {
-            mosaic_in_rate = MOSAIC_FAST_RATE;
+            // mosaic_in_rate = MOSAIC_SLOW_RATE;
             slColorCalcOn(OFF);
             slScrMosaicOn(OFF);
             slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);
@@ -225,7 +224,7 @@ void display_credits(void)
 
 void    credits_input(void)	{
     if (jo_is_pad1_key_down(JO_KEY_START)) {
-        mosaic_in_rate = MOSAIC_FAST_RATE;
+        // mosaic_in_rate = MOSAIC_SLOW_RATE;
         slColorCalcOn(OFF);
         slScrMosaicOn(OFF);
         slScrMosSize(MOSAIC_MIN, MOSAIC_MIN);

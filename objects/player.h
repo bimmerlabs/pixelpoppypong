@@ -54,7 +54,8 @@ typedef struct _SCORE
 {
     Uint8 stars;
     Uint8 deaths; // last wave player was alive for
-    unsigned int points; // number of boxes opened
+    unsigned int total;  // total score (story mode)
+    unsigned int points; // round score
 
 } SCORE, *PSCORE;
 

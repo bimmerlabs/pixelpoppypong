@@ -140,7 +140,7 @@ competition entry goals: (order of preference)
 	7 item collision?
 		A at least implement craig and garf so they can be unlocked (ball touches count?)
 	8 playtest!
-		transition to credits after name entry / score
+		transition to credits after name entry / score (done)
 		release build
 		turn off some debug stuff (state skip) (done)
 
@@ -163,26 +163,88 @@ friday morning:
 	goal 6b (done)
 	goal 7a (implemented explosion instead)
 	stretch:
-		-sound effects
+		-sound effects (done)
 	
 
 version 0.6:
--lighting
--sound effects
--ending
--high scores (started)
--team high scores? (started?)
+-unlockables:
+	new characters (done)
+	big head mode
+	garfield (special)
+	stadler (special)
 -items: implement collision (started)
+-character select (story mode) (LATER)
+	note: is a combo of team_select and name_entry
+	-load assets (same as team_select
+	-abstractions for the character draw / name input routines (ellipse)
+	-draw portraits depending on unlocks
+	-draw character attributes and paw
+-high scores (started)
+	add up final score after beating a character (DONE)
+	store what character was used?
+	store difficulty selected?
+	store mode played?
+	store big head mode?
+-team high scores? (need to reimplmement teams with 2 people)	
 -save game (done?)
+-remove or re-implement star system (done_
+-endings
+
+-playtest:
+	classic mode:
+		beat the game:
+			easy (done)
+			medium (done)
+			hard (done)
+		die:
+			-out of time (done)
+			-lose to AI (done)
+	story mode:
+		beat the game:
+			easy
+			medium
+			hard
+		die:
+			-out of time (done)
+				bug found: after game over screen, pixel poppy logo was corrupted (overwritten?)
+				is it because of the name select assets?  something being loaded twice?
+				haven't found anything obvious - leave for now
+			-lose to AI (done)
+			-run out of continues
+	vs mode:
+		beat the game:
+			easy (done)
+			medium (done)
+				-bug found: after beating in medium, started a game in hard.  the game immediately went to the "you won" screen (something didn't get set to defaults after winning)
+				team_select.c has an overflow bug on the number of players
+			hard (done)
+		die:
+			-out of time (done)
+			-lose to AI (done)
 
 version 0.7-0.8
+-music
+	-fix glitches at end of songs?
+	-stop song from playing before other one has ended while scoring
+	-continue music
+-sound effects (started)
+	-fix order or meny effects (start, select, back, etc)
+-lighting
+	adjust backgrounds depending on items (bombs, shrooms, etc)
+	flash the goal of the person scored on
+	adjust color of player depending items (shrooms)
+-sound test
+-finish analog adjustment menu
+	graphics/slider
+	"tick" sound (done)
 -AI enhancements
 -polishing?
 -big head mode? (done)
+-remove unused assets
 
 version 0.9? (review build)
 -review mode (debug on, debug display disabled)
--RTC turned off by default
+-RTC turned off by default (done)
 -emulation disclaimer? (kronos is too slow - SSF doesn't work, no other emulators tested that work.  Yabuse and most forks other than Kronos are hopelessly broken.  Mednafen works, but doesn't look the best)
 
 version 1.0:
@@ -196,20 +258,20 @@ version 1.0:
 -player select (done)
 -full gameplay loop
 	-physics (done)
-	-ai opponents
-	-deaths
-	-scoring
+	-ai opponents (done)
+	-deaths (done)
+	-scoring (done)
 	-bosses
 	-ending
 -multiplayer
 	-vs / battle
 	-co-op (dropped)
 	-4 player?
--credit roll (started)
--sound effects
+-credit roll (done)
+-sound effects (started)
 -music by random (started)
 -save game (done)
--high scores (started)
+-high scores (done)
 -lighting (normal maps?)
 -palette animations (done)
 -screen modes (2026)

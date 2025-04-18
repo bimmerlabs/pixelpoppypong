@@ -10,7 +10,9 @@
 
 #define INITIALS_LENGTH 3  // Three-letter initials like "ABC"
 #define SCORE_ENTRIES 10
-
+#define UNLOCK_CRAIG_SCORE 2500000
+#define UNLOCK_GARFIELD_SCORE 5000000
+    
 typedef enum _TEAMS_FOR_SCORING
 {
     ONE_TEAM = 1,
@@ -29,18 +31,6 @@ typedef struct {
 
 extern HighScoreEntry highScores[SCORE_ENTRIES];
 
-// SCORE LEVELS TO UNLOCK NEW CHARACTERS
-typedef enum _CHARACTER_UNLOCK_SCORES
-{
-    UNLOCK_SPARTA = 2500,
-    UNLOCK_POPPY = 5000,
-    UNLOCK_TJ = 10000,
-    UNLOCK_GEORGE = 25000,
-    UNLOCK_WUPPY = 50000,
-    UNLOCK_CRAIG = 100000,
-    UNLOCK_GARFIELD = 250000,
-} UNLOCK_SCORES;
-
 void highScore_init(void);
 void init_scores(void);
 void display_scores(void);
@@ -49,27 +39,9 @@ void score_input(void);
 void sortHighScores(HighScoreEntry scores[]);
 void addHighScore(unsigned int newScore, const char *initials);
 void update_bg_position(void);
+bool updatePlayerLives(Uint8 scoredOnPlayerID);
 
 extern PLAYER g_Players[MAX_PLAYERS];
-
-static __jo_force_inline bool updatePlayerLives(Uint8 scoredOnPlayerID)
-{
-    if (g_Players[scoredOnPlayerID].numLives > 0) {
-        g_Players[scoredOnPlayerID].numLives--;
-        touchedBy[scoredOnPlayerID].touchCount = 0;
-        if (g_Players[scoredOnPlayerID].numLives == 0) {
-            // kill player
-            g_Players[scoredOnPlayerID].score.deaths++;
-            if (g_Players[scoredOnPlayerID].isAI) {
-                g_Game.countofRounds++; // for story mode only
-            }
-            g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
-            g_Game.currentNumPlayers--;
-            return true;
-        }
-    }
-    return false;
-}
 
 static __jo_force_inline void updateLeftPlayerStars(int lastTouchPlayerID)
 {

@@ -104,7 +104,7 @@ void pauseGame(void)
     // #else
     // jo_audio_set_volume(volume);
     // #endif
-    pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+    pcm_play(g_Assets.startPcm8, PCM_PROTECTED, 6);
     // TODO:
     // playCDTrack(track);
     // maybe reduce the audio volume instead
@@ -119,6 +119,16 @@ static void checkForPausePress(void)
 {
     if (!g_Game.isActive || g_Game.selectStoryCharacter)
     {
+        if(g_Game.isPaused) // prevent getting locked in a pause state
+        {
+            // simply unpause
+            mosaic_in_rate = MOSAIC_FAST_RATE;
+            if (g_GameOptions.mosaic_display) {
+                mosaic_in = true;
+            }
+            slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
+            g_Game.isPaused = false;
+        }
         return;
     }
     if (jo_is_pad1_key_down(JO_KEY_START))
@@ -132,13 +142,13 @@ static void checkForPauseMenu(void)
 {
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
-        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
         g_PauseChoice--;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
-        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
         g_PauseChoice++;
     } 
      
@@ -147,7 +157,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
                 g_GameOptions.debug_display = !g_GameOptions.debug_display;
                 break;
             default:
@@ -159,7 +169,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
                 g_GameOptions.debug_display = !g_GameOptions.debug_display;
                 break;
             default:
@@ -176,7 +186,7 @@ static void checkForPauseMenu(void)
         switch(g_PauseChoice)
         {
             case PAUSE_OPTIONS_RESUME:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
@@ -184,16 +194,10 @@ static void checkForPauseMenu(void)
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
-                volume = MAX_VOLUME;
-                #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-                CDDA_SetVolume(volume);
-                #else
-                jo_audio_set_volume(volume);
-                #endif
                 break;
 
             case PAUSE_OPTIONS_RESTART:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.nextPcm8, PCM_PROTECTED, 6);
                 // start a new game without going to title or team select
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
@@ -204,12 +208,12 @@ static void checkForPauseMenu(void)
                 break;
 
             case PAUSE_OPTIONS_QUIT:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 transitionState(GAME_STATE_UNINITIALIZED);
                 break;
 
             case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
@@ -217,15 +221,9 @@ static void checkForPauseMenu(void)
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
-                volume = MAX_VOLUME;
-                #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-                CDDA_SetVolume(volume);
-                #else
-                jo_audio_set_volume(volume);
-                #endif
                 break;
             case PAUSE_OPTIONS_ANALOG:
-                pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
                 mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
@@ -233,9 +231,6 @@ static void checkForPauseMenu(void)
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
-                volume = MAX_VOLUME;
-                // jo_audio_set_volume(volume);
-                CDDA_SetVolume(volume);
                 break;
 
             default:
@@ -245,7 +240,7 @@ static void checkForPauseMenu(void)
     else if (jo_is_pad1_key_down(JO_KEY_B))
     {
         save_game_backup();
-        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
+        pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
         // simply unpause
         mosaic_in_rate = MOSAIC_FAST_RATE;
         if (g_GameOptions.mosaic_display) {
@@ -253,12 +248,6 @@ static void checkForPauseMenu(void)
         }
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
         g_Game.isPaused = false;
-        volume = MAX_VOLUME;
-        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        CDDA_SetVolume(volume);
-        #else
-        jo_audio_set_volume(volume);
-        #endif
     }
 }
 

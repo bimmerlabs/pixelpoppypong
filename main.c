@@ -38,6 +38,7 @@
 #include "ppp_logo.h"
 #include "title_screen.h"
 #include "team_select.h"
+// #include "character_select.h"
 #include "debug.h"
 #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
@@ -52,13 +53,12 @@ ASSETS g_Assets = {0};
 jo_datetime now;
 
 Uint8 frame = 0;
-// Uint16 g_GameTimer = TIMEOUT;
 
 // explcitly create callback names so they can be added / removed as neccesary?
 int run_once_callback = 0;
 
 GameOptions g_GameOptions = {
-    .debug_mode = true,
+    .debug_mode = false,
     .debug_display = false,
     .mesh_display = true,
     .mosaic_display = true,
@@ -172,6 +172,7 @@ void my_input_callback(void) {
             characterSelect_input();
             break;
         case GAME_STATE_GAMEPLAY:
+            pause_input();
             gameplay_input();
             break;
         case GAME_STATE_NAME_ENTRY:
@@ -301,7 +302,7 @@ void			jo_main(void)
     // base assets
     init_font(); // this has to happen first (sprites require 1st palette slot)
     init_nbg1_img();
-    loadSoundAssets();
+    loadSoundAssets(); // maybe load the minimum assets instead of everything?
     init_sprites_img();
     
     initUnlockedCharacters();
@@ -312,7 +313,7 @@ void			jo_main(void)
     jo_core_add_callback(screenTransition_update);
     jo_core_add_callback(game_state_update);
     
-    jo_core_add_callback(pause_input);
+    // jo_core_add_callback(pause_input);
     jo_core_add_callback(pause_draw);   
  
     jo_core_add_callback(my_input_callback);

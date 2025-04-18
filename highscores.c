@@ -5,6 +5,7 @@
 #include "gameplay.h"
 #include "sprites.h"
 #include "name_entry.h"
+#include "backup.h"
 #include "BG_DEF/nbg1.h"
 
 unsigned int g_ScoreTimer = 0;
@@ -13,15 +14,15 @@ HighScoreEntry highScores[SCORE_ENTRIES];
 
 void highScore_init(void) {
     highScores[0] = (HighScoreEntry){10000000, "CDS"}; // could put an actual score here
-    highScores[1] = (HighScoreEntry){5000000, "BUB"};
+    highScores[1] = (HighScoreEntry){5000000, "GBA"};
     highScores[2] = (HighScoreEntry){4500000, "SES"};
-    highScores[3] = (HighScoreEntry){4000000, "DAD"};
-    highScores[4] = (HighScoreEntry){3500000, "OCS"};
+    highScores[3] = (HighScoreEntry){4000000, "OCS"};
+    highScores[4] = (HighScoreEntry){3500000, "WUP"};
     highScores[5] = (HighScoreEntry){3000000, "FOO"};
-    highScores[6] = (HighScoreEntry){2500000, "BAR"};
-    highScores[7] = (HighScoreEntry){2000000, "PPP"};
-    highScores[8] = (HighScoreEntry){1500000, "ITS"};
-    highScores[9] = (HighScoreEntry){1000000, "WUP"};
+    highScores[6] = (HighScoreEntry){2500000, "CRS"};
+    highScores[7] = (HighScoreEntry){2000000, "BAR"};
+    highScores[8] = (HighScoreEntry){1500000, "PPP"};
+    highScores[9] = (HighScoreEntry){1000000, "DAD"};
 }
 
 void init_scores(void)
@@ -67,6 +68,29 @@ void init_scores(void)
     playCDTrack(FINISH_TRACK, false);
 }
 
+bool updatePlayerLives(Uint8 scoredOnPlayerID)
+{
+    if (g_Players[scoredOnPlayerID].numLives > 0) {
+        g_Players[scoredOnPlayerID].numLives--;
+        touchedBy[scoredOnPlayerID].touchCount = 0;
+        if (g_Players[scoredOnPlayerID].numLives == 0) {
+            // kill player
+            g_Players[scoredOnPlayerID].score.deaths++;
+            if (g_Players[scoredOnPlayerID].isAI) {
+                g_Game.countofRounds++; // for story mode only
+                // unlock character once you've beaten them
+                if (!characterUnlocked[g_Game.countofRounds] && g_Game.gameDifficulty > GAME_DIFFICULTY_EASY) {
+                    characterUnlocked[g_Game.countofRounds] = true;
+                    save_game_backup();
+                }
+            }
+            g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
+            g_Game.currentNumPlayers--;
+            return true;
+        }
+    }
+    return false;
+}
 static bool draw_header_text = true;
 void display_scores(void)
 {

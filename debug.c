@@ -94,6 +94,15 @@ void debux_text(void)
             case GAME_STATE_TEAM_SELECT: // menu
                 jo_nbg0_printf(2, 5, "GAMEMODE:%i", g_Game.gameMode);
                 
+                jo_nbg0_printf(20, 14, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
+                jo_nbg0_printf(20, 15, "NUMTEAMS:%i", g_Game.numTeams);
+                
+                // for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+                    // jo_nbg0_printf(2, (8+i), "UNLOCKED:%i", characterUnlocked[i]);
+                // }
+                // for (int i = 0; i < TOTAL_CHARACTERS; i++) {
+                    // jo_nbg0_printf(20, (8+i), "AVAILABLE:%i", characterAvailable[i]);
+                // }
                 // jo_nbg0_printf(2, 7, "P1_INPUT:%i", g_Players[0].input->id);
                 // jo_nbg0_printf(20, 7, "IS SELECTED:%i", g_Players[0].input->isSelected);
                 // jo_nbg0_printf(2, 8, "P2_INPUT:%i", g_Players[1].input->id);
@@ -192,13 +201,11 @@ void debux_text(void)
                 jo_nbg0_printf(2, 8, "CURPOS.DX:%i", g_Players[0].curPos.dx);
                 jo_nbg0_printf(2, 9, "CURPOS.DY:%i", g_Players[0].curPos.dy);
                 
-                // jo_nbg0_printf(2, 8, "MACCHI.X:%i", macchi.pos.x);
-                // jo_nbg0_printf(2, 9, "MACCHI.Y:%i", macchi.pos.y);
-                // jo_nbg0_printf(2, 10, "COLLIDING:%i", macchi.isColliding);
-                // jo_nbg0_printf(2, 11, "BBOXMIN:%i", macchi.bbox.min_x);
-                // jo_nbg0_printf(2, 12, "BBOXMAX:%i", macchi.bbox.max_x);
-                // jo_nbg0_printf(2, 13, "BBOYMIN:%i", macchi.bbox.min_y);
-                // jo_nbg0_printf(2, 14, "BBOYMAX:%i", macchi.bbox.max_y);
+                jo_nbg0_printf(20, 10, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
+                jo_nbg0_printf(20, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
+                jo_nbg0_printf(20, 12, "WINNER:%i", g_Game.winner);
+                jo_nbg0_printf(20, 13, "DELAYTIMER:%i", g_Game.endDelayTimer);
+                jo_nbg0_printf(20, 14, "NUMTEAMS:%i", g_Game.numTeams);
                 
                 // jo_nbg0_printf(2, 10, "POPPY.VEL.X:%i", pixel_poppy.vel.x);
                 // jo_nbg0_printf(2, 11, "POPPY.VEL.Y:%i", pixel_poppy.vel.y);
@@ -206,12 +213,7 @@ void debux_text(void)
                 
                 // jo_nbg0_printf(2, 10, "PLAYER.X:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.x));
                 // jo_nbg0_printf(2, 11, "POPPY.X:%i", JO_FIXED_TO_INT(pixel_poppy.pos.x));
-                
                 // jo_nbg0_printf(2, 14, "POPPY.Y:%i", pixel_poppy.pos.y);
-                // jo_nbg0_printf(2, 15, "ISBALLACTIVE:%i", g_Game.isBallActive);
-                
-                // jo_nbg0_printf(20, 11, "SPR0 ACTIVE:%i", sprite_list[0].active);
-                // jo_nbg0_printf(20, 12, "SPR1 ACTIVE:%i", sprite_list[1].active);
                 
                     // jo_nbg0_printf(2, 17, "TEAM_1 PID:%i", g_goalPlayerId[TEAM_1-1]);
                     // jo_nbg0_printf(2, 18, "TEAM_2 PID:%i", g_goalPlayerId[TEAM_2-1]);

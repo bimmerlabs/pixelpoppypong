@@ -5,7 +5,7 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.62 RC"
+#define VERSION "0.65"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -20,7 +20,6 @@
 
 extern jo_datetime now;
 extern Uint8 frame;
-// extern Uint16 g_GameTimer; // put in game struct?
 extern Uint16 cursor_angle; // for title & pawsed menus
 
 typedef struct {
@@ -78,16 +77,16 @@ typedef enum _GAME_RESOLUTION
 typedef enum _GOAL_SCALE
 {
     GOAL_SCALE_EASY = 20,
-    GOAL_SCALE_MEDIUM = 16,
-    GOAL_SCALE_HARD = 13,
+    GOAL_SCALE_MEDIUM = 20, //16
+    GOAL_SCALE_HARD = 20, //13
     GOAL_SCALE_VS_MODE = 10,
 } GOAL_SCALE;
 
 typedef enum _GOAL_Y_POS
 {
     GOAL_Y_POS_EASY = 140,
-    GOAL_Y_POS_MEDIUM = 120,
-    GOAL_Y_POS_HARD = 100,
+    GOAL_Y_POS_MEDIUM = 140, // 120
+    GOAL_Y_POS_HARD = 140, // 100
     GOAL_Y_POS_MID = 0,
     GOAL_Y_POS_TOP_VS_MODE = 160,
     GOAL_Y_POS_MID_VS_MODE = 79,
@@ -138,6 +137,8 @@ typedef struct _GAME
     Uint16 BombTimer;
     Uint16 RoundOverTimer;
     Uint16 DemoTimer;
+    Uint16 roundBeginTimer;
+    Uint16 dropBallTimer;
 
     bool selectStoryCharacter;
 

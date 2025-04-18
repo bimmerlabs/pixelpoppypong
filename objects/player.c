@@ -10,9 +10,6 @@
 #include "../team_select.h"
 #include "../BG_DEF/sprite_colors.h"
 
-// distance formula without the square root
-bool checkDistance(Sprite *player, Sprite *item);
-
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
 bool characterUnlocked[TOTAL_CHARACTERS] = {0};
@@ -54,7 +51,7 @@ void resetPlayerScores(void)
     
     // dss = getLives();
     g_Game.numStars = getStars();
-    initTouchCounter();
+    initTouchCounter(1);
     
     PPLAYER player = NULL;
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
@@ -64,6 +61,7 @@ void resetPlayerScores(void)
         player->shield.power = SHIELD_POWER;
         player->score.stars  = 0;
         player->score.deaths = 0;
+        player->score.total  = 0;
         player->score.points = 0;
         player->totalLives = getLives(player);
         player->numLives = player->totalLives;
@@ -123,7 +121,7 @@ int getLives(PPLAYER player)
                         // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_MEDIUM:
-                        numLives = 5;
+                        numLives = 6;
                         // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_HARD:
@@ -141,7 +139,7 @@ int getLives(PPLAYER player)
                         // numLives = 1;
                         break;
                     case GAME_DIFFICULTY_MEDIUM:
-                        numLives = 5;
+                        numLives = 6;
                         break;
                     case GAME_DIFFICULTY_HARD:
                         numLives = 4;
@@ -252,6 +250,7 @@ void initPlayers(void)
         
         player->score.deaths = 0;
         player->score.points = 0;
+        player->score.total = 0;
 
         // PLAYER      
         player->startSelection = false;
@@ -261,6 +260,7 @@ void initPlayers(void)
         player->scored = false;
         player->isAI = false;
         player->isExploded = false;
+        player->onLeftSide = false;
         
         // GAMEPLAY
         player->numLives = 9;
@@ -289,6 +289,7 @@ void initPlayers(void)
         player->_bg->zmode = _ZmLC;
         player->_sprite = &paw_blank;
         player->_sprite->spr_id = paw_blank_id; // not sure why this changes
+        player->_sprite->isColliding = false;
         
         // cursors
         if (i == 1) {
@@ -773,6 +774,7 @@ void getClassicModeInput(void)
         if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
         {
             if (player->shield.power > 1) {
+                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);                
                 player->shield.activate = true;
                 player->_sprite->pos.r = SHIELD_RADIUS;
             }
@@ -857,6 +859,7 @@ void getPlayersInput(void)
         if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
         {
             if (player->shield.power > 1) {
+                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);   
                 player->shield.activate = true;
                 player->_sprite->pos.r = SHIELD_RADIUS;
             }
@@ -1181,23 +1184,4 @@ bool explodePLayer(PPLAYER player)
         }
     }
     return true;
-}
-
-// distance formula without the square root
-bool checkDistance(Sprite *player, Sprite *item)
-{
-    int dist = 32*32;
-
-    int x_dist = toINT(player->pos.x) - toINT(item->pos.x);
-    x_dist = x_dist * x_dist;
-
-    int y_dist = toINT(player->pos.y) - toINT(item->pos.y);
-    y_dist = y_dist * y_dist;
-
-    if(dist > x_dist + y_dist)
-    {
-        return true;
-    }
-
-    return false;
 }

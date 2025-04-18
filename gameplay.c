@@ -3,11 +3,11 @@
 #include "input.h"
 #include "gameplay.h"
 #include "storymode.h"
+#include "backup.h"
 #include "screen_transition.h"
 #include "AI.h"
 bool start_gameplay_timer = false;
 bool round_start = false;
-// static bool game_is_over = false;
 
 Uint8 g_goalPlayerId[MAX_PLAYERS];
 static bool draw_demo_text = true;
@@ -56,8 +56,14 @@ void gameplay_init() {
     if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
     }
+    if (g_GameOptions.mesh_display) {
+        menu_bg1.mesh = MESHon;
+        menu_bg1.spr_id = menu_bg1.anim1.asset[4];
+    }
+    else {
+        menu_bg1.mesh = MESHoff;
+    }
     music_in = true;
-    // fade_in = true;
     transition_in = true;
     play_continue_track = false;
 
@@ -65,10 +71,8 @@ void gameplay_init() {
     setGoalSize();
     getContinues();
     
-    // collision detection    // sprite_id = 0;
-
-    reset_ball_movement(&pixel_poppy);
     explode_ball = false;
+    reset_ball_movement(&pixel_poppy);
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
     
@@ -85,7 +89,6 @@ void gameplay_init() {
     jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
     jo_core_set_screens_order(JO_NBG0_SCREEN, JO_SPRITE_SCREEN, JO_NBG1_SCREEN);
-    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN);
     
     g_Game.isPaused = false;
     g_Game.isActive = false;
@@ -95,12 +98,10 @@ void gameplay_init() {
     setGameTimer();
     g_Game.BombTimer = BOMB_TIMER;
     
-    // NEED BETTER NAMES FOR THESE
     g_Game.isRoundOver = false;
     g_Game.countofRounds = 0;
     g_Game.isGoalScored = false;
     g_Game.winner = -2;
-    // game_is_over = false;
     
     slScrPosNbg1(toFIXED(0), toFIXED(0));
     
@@ -125,47 +126,76 @@ void demo_init(void) {
     fade_in = true;
 }
 void setGameTimer(void) {
-    switch(g_Game.gameMode)
-    {
-        case GAME_MODE_BATTLE:
-            g_Game.GameTimer = TIMEOUT_BATTLE;
-            break;
-        case GAME_MODE_CLASSIC:
-            g_Game.GameTimer = TIMEOUT_CLASSIC;
-            break;
-        case GAME_MODE_STORY:
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
-                    g_Game.GameTimer = TIMEOUT_STORY_EASY;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
-                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
-                    break;
-                case GAME_DIFFICULTY_HARD:
-                    g_Game.GameTimer = TIMEOUT_STORY_HARD;
-                    break;
-                default:
-                    g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
-                    break;
-            }
-            break;
-        default:
-            g_Game.GameTimer = TIMEOUT_BATTLE;
-            break;
+    if (g_Game.countofRounds == 0) {
+        switch(g_Game.gameMode)
+        {
+            case GAME_MODE_BATTLE:
+                g_Game.GameTimer = TIMEOUT_BATTLE;
+                break;
+            case GAME_MODE_CLASSIC:
+                g_Game.GameTimer = TIMEOUT_CLASSIC;
+                break;
+            case GAME_MODE_STORY:
+                switch(g_Game.gameDifficulty)
+                {
+                    case GAME_DIFFICULTY_EASY:
+                        g_Game.GameTimer = TIMEOUT_STORY_EASY;
+                        break;
+                    case GAME_DIFFICULTY_MEDIUM:
+                        g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                        break;
+                    case GAME_DIFFICULTY_HARD:
+                        g_Game.GameTimer = TIMEOUT_STORY_HARD;
+                        break;
+                    default:
+                        g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                        break;
+                }
+                break;
+            default:
+                g_Game.GameTimer = TIMEOUT_BATTLE;
+                break;
+        }
     }
+    else if (g_Game.gameMode == GAME_MODE_STORY) {
+        switch(g_Game.gameDifficulty)
+        {
+            case GAME_DIFFICULTY_EASY:
+                g_Game.GameTimer += TIMEOUT_STORY_EASY/10 + 1;
+                // if (g_Game.GameTimer > TIMEOUT_STORY_EASY)
+                    // g_Game.GameTimer = TIMEOUT_STORY_EASY;
+                break;
+            case GAME_DIFFICULTY_MEDIUM:
+                g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
+                // if (g_Game.GameTimer > TIMEOUT_STORY_MEDIUM) // need to playtest to see if needed?
+                    // g_Game.GameTimer = TIMEOUT_STORY_MEDIUM; // reward player for being faster at beginning?
+                break;
+            case GAME_DIFFICULTY_HARD:
+                g_Game.GameTimer += TIMEOUT_STORY_HARD/10 + 1;
+                // if (g_Game.GameTimer > TIMEOUT_STORY_HARD)
+                    // g_Game.GameTimer = TIMEOUT_STORY_HARD;
+                break;
+            default:
+                g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
+                // if (g_Game.GameTimer > TIMEOUT_STORY_MEDIUM)
+                    // g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                break;
+        }
+    }
+    g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL;
+    g_Game.dropBallTimer = DROP_BALL_TIME_NORMAL;
     time_over = false;
     start_gameplay_timer = false;
     round_start = false;
-    // poorly named - a delay timer before transitioning to the "end"
-    g_Game.endDelayTimer = 5*60;
+    g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
     g_Game.BeginTimer = 0;
     convertNumberToDigits(g_Game.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
 }
-void setGoalSize(void)
+
+// TODO: eliminate?void setGoalSize(void)
 {
     switch(g_Game.gameMode)
     {
@@ -233,11 +263,11 @@ void demo_update(void)
     }
 }void gameplay_timer(void)
 {
-    // wait 3 seconds to start the game
-    if (g_Game.BeginTimer > GAME_BEGIN_TIME && !start_gameplay_timer) {
+    if (g_Game.BeginTimer > g_Game.roundBeginTimer && !start_gameplay_timer) {
         start_gameplay_timer = true;
+        g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL; // reset if the ball explodes
     }
-    if (g_Game.BeginTimer > DROP_BALL_TIME && !g_Game.isBallActive) {
+    if (g_Game.BeginTimer > g_Game.dropBallTimer && !g_Game.isBallActive) {
         g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
     }
     if (!start_gameplay_timer) {
@@ -253,11 +283,12 @@ void demo_update(void)
         round_start = false;
     }
     
-    if (g_Game.isRoundOver) { // NEED ANOTHER WAY TO STOP THE TIMER
+    if (g_Game.isRoundOver) {
         return;
     }
     
     // game timer
+    // TODO: minutes/seconds?
     convertNumberToDigits(g_Game.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
@@ -265,21 +296,23 @@ void demo_update(void)
     
     if (g_Game.GameTimer > 0 && frame % 60 == 0) { // modulus
         g_Game.GameTimer--;
+        if (g_Game.GameTimer <= 10)
+            pcm_play(g_Assets.countdownPcm8, PCM_PROTECTED, 7);
     }
     else if (g_Game.GameTimer == 0) {
         time_over = true;
     }
     
-    // explode ball if it hasn't been touched after 5 seconds
-    // jo_nbg0_printf(2, 20, "TOUCHTIMER:%i", ballTtouchTimer); 
-    // jo_nbg0_printf(2, 21, "EXPLODE_BALL:%i", explode_ball); 
     if (!explode_ball) {
         ballTtouchTimer++;
     }
-    if (ballTtouchTimer == 360) {
+    if (ballTtouchTimer == BALL_TOUCH_TIMEOUT) {
         stopBallMovement(&pixel_poppy);
+        pcm_play(g_Assets.explod1Pcm8, PCM_PROTECTED, 7);
         explode_ball = explode_animation(&pixel_poppy);
         if (!explode_ball) {
+            g_Game.roundBeginTimer = ROUND_BEGIN_TIME_FAST;
+            g_Game.dropBallTimer = DROP_BALL_TIME_FAST;
             ballTtouchTimer = 0;
             initPixelPoppy();
             resetPlayerAttacks();
@@ -305,21 +338,9 @@ void demo_update(void)
     {
         return;
     }
-    // jo_nbg0_printf(2, 24, "WINNER:%i", g_Game.winner);   
-    // jo_nbg0_printf(2, 25, "ROUNDS:%i", g_Game.countofRounds);  
-    // jo_nbg0_printf(2, 26, "DEATHS:%i", g_Players[0].score.deaths);  
-    // jo_nbg0_printf(2, 27, "SUBSTATE:%i", g_Players[0].subState);  
-    // jo_nbg0_printf(2, 28, "SELECTCHAR:%i", g_Game.selectStoryCharacter); 
-    
-    // jo_nbg0_printf(24, 26, "DEATHS:%i", g_Players[1].score.deaths);  
-    // jo_nbg0_printf(24, 27, "SUBSTATE:%i", g_Players[1].subState); 
-    
-    // if (play_continue_track) {
-        // playCDTrack(CONTINUE_TRACK, false); // doesn't work
-    // }
                    
     if (g_Game.endDelayTimer == 0) {
-        // // game ending
+        // game ending
         if (g_Game.nextState == GAME_STATE_GAMEPLAY && g_Game.countofRounds == MAX_ROUNDS) {
             // TODO:  game ending
             transitionState(GAME_STATE_NAME_ENTRY);
@@ -332,13 +353,23 @@ void demo_update(void)
             g_Players[1].numLives = getLives(&g_Players[1]);
             g_Players[0].subState = PLAYER_STATE_ACTIVE;
             g_Players[1].subState = PLAYER_STATE_ACTIVE;
-            // g_Players[0].score.points = 0; // lose points??
+            g_Players[0].score.points = 0;
+            g_Players[1].score.points = 0;
             g_Players[0].score.stars = 0;
             g_Players[1].score.stars = 0;
-            g_Game.endDelayTimer = 5*60;
+            g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
             g_Game.currentNumPlayers = 2;
             initVsModePlayers();
-            sprite_frame_reset(&pixel_poppy);
+            
+            initPixelPoppy();
+            start_gameplay_timer = false;
+            g_Game.isBallActive = false;
+            g_Game.isActive = false;
+            g_Game.BeginTimer = 0;
+            g_Game.winner = -2;
+            initTouchCounter(1);
+            
+            // resetPlayerAttacks(); // not sure if needed
             boundPlayer(&g_Players[0]);
             boundPlayer(&g_Players[1]);
             g_StartStoryFrames = CHARACTER_SELECT_TIMER;
@@ -355,10 +386,12 @@ void demo_update(void)
             setGameTimer();
             g_Players[0].numLives = getLives(&g_Players[0]);
             g_Players[1].numLives = getLives(&g_Players[1]);
+            g_Players[0].score.points = 0;
+            g_Players[1].score.points = 0;
             g_Players[0].score.stars = 0;
             g_Players[1].score.stars = 0;
             g_Players[1].score.deaths = 0;
-            g_Game.endDelayTimer = 5*60;
+            g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
             g_Game.currentNumPlayers = 2;
             nextStoryCharacter();
             sprite_frame_reset(&pixel_poppy);
@@ -368,19 +401,39 @@ void demo_update(void)
             time_over = false;
             play_continue_track = false;
             g_Game.isRoundOver = false;
+            g_Game.winner = -2;
             slScrPosNbg0(toFIXED(0), toFIXED(4));
             playCDTrack(BEGIN_GAME_TRACK, false);
         }
         else {
             if (g_Game.isRoundOver) {
-                pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 7);
+                pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 6); // play different sound if player wins vs loses?
                 g_Game.isRoundOver = false;
             }
             if (frame == 240) { // this is a hack
+                if (g_Game.gameMode == GAME_MODE_STORY) {
+                    g_Players[0].score.points = g_Players[0].score.total;
+                    // unlock stadler
+                    if (!characterUnlocked[CHARACTER_WALRUS] && 
+                         g_Game.gameDifficulty == GAME_DIFFICULTY_MEDIUM && 
+                         g_Players[0].score.points >= UNLOCK_CRAIG_SCORE)
+                        {
+                            characterUnlocked[CHARACTER_WALRUS] = true;
+                            save_game_backup();
+                        }
+                    // unlock garfield
+                    if (!characterUnlocked[CHARACTER_GARF] && 
+                        (g_Game.gameDifficulty == GAME_DIFFICULTY_HARD || 
+                         g_Players[0].score.points >= UNLOCK_GARFIELD_SCORE))
+                        {
+                            characterUnlocked[CHARACTER_GARF] = true;
+                            save_game_backup();
+                        }
+                }
                 transitionState(g_Game.nextState);
             }
         }
-    } 
+    }
     else if (g_Game.currentNumPlayers == 1) {
         if (!g_Game.isRoundOver) {
             g_Game.isRoundOver = true;
@@ -389,10 +442,10 @@ void demo_update(void)
             transition_out = true;
             story_fade_out = true;
         }       
-            g_Game.endDelayTimer--;
             switch(g_Game.gameMode)
             {
                 case GAME_MODE_BATTLE:
+                    g_Game.endDelayTimer--;
                     if (g_Game.winner > -1) {
                         jo_nbg0_printf(17, 14, "GAME OVER!");
                         jo_nbg0_printf(15, 16, "PLAYER %i WINS!", g_Game.winner+1);
@@ -405,6 +458,7 @@ void demo_update(void)
                     }
                     break;
                 case GAME_MODE_CLASSIC:
+                    g_Game.endDelayTimer--;
                     if (g_Game.winner > -1) {
                         jo_nbg0_printf(17, 14, "GAME OVER!");
                         jo_nbg0_printf(15, 16, "PLAYER %i WINS!", g_Game.winner+1);
@@ -419,17 +473,21 @@ void demo_update(void)
                 case GAME_MODE_STORY:
                     if (g_Game.winner == 0 && g_Game.countofRounds == MAX_ROUNDS) {
                         // this has to be more complex to move on to the next round
-                        jo_nbg0_printf(17, 14, "GAME OVER!");
-                        jo_nbg0_printf(17, 16, "YOU WIN!!!");
+                        jo_nbg0_printf(17, 10, "GAME OVER!");
+                        tallyScore();                        
+                        if (g_Players[0].score.points == 0)
+                            jo_nbg0_printf(17, 18, "YOU WIN!!!");
                         g_Game.nextState = GAME_STATE_NAME_ENTRY;
                     }
                     else if (g_Game.winner == -1) {
+                        g_Game.endDelayTimer--;
                         // check for continues
                         if (g_Players[0].score.deaths < (g_Game.numContinues+1)) {
                             g_Game.nextState = GAME_STATE_GAMEPLAY;
                             play_continue_track = true;
                             jo_nbg0_printf(17, 14, "TRY AGAIN!");
                             jo_nbg0_printf(16, 16, "CONTINUES: %i", g_Game.numContinues + 1 - g_Players[0].score.deaths);
+                            
                         }
                         else {
                             jo_nbg0_printf(17, 14, "GAME OVER!");
@@ -438,22 +496,25 @@ void demo_update(void)
                         }
                     }
                     else {
-                        // this has to be more complex to move on to the next round
-                        jo_nbg0_printf(16, 15, "NEXT BATTLE..");
+                        tallyScore();                        
+                        if (g_Players[0].score.points == 0)
+                            jo_nbg0_printf(15, 16, "NEXT BATTLE..");
                         g_Game.nextState = GAME_STATE_GAMEPLAY;
                     }
                     break;
                 default:
+                    g_Game.endDelayTimer--;
                     break;
             }
     }
     else if (time_over) {
         if (!g_Game.isRoundOver) {
-            frame = 0; // this is a hack
+            stopBallMovement(&pixel_poppy);
             g_Game.isRoundOver = true;
+            frame = 0; // this is a hack
             transition_out = true;
             story_fade_out = true;
-        }
+        }       
         jo_nbg0_printf(16, 14, "OUTTA TIME!");
         g_Game.endDelayTimer--;
             switch(g_Game.gameMode)
@@ -467,15 +528,15 @@ void demo_update(void)
                     g_Game.nextState = GAME_STATE_UNINITIALIZED;
                     break;
                 case GAME_MODE_STORY:
-                    // both players are active - kill player 1
-                    if (g_Players[0].subState == PLAYER_STATE_ACTIVE && g_Players[1].subState == PLAYER_STATE_ACTIVE) {
+                    g_Game.winner = -1;
+                    // kill player 1
+                    if (g_Players[0].subState == PLAYER_STATE_ACTIVE) {
                         g_Players[0].score.deaths++;
                         g_Players[0].subState = PLAYER_STATE_DEAD;
                     }
                     if (g_Players[0].score.deaths < (g_Game.numContinues+1)) {
                         g_Game.nextState = GAME_STATE_GAMEPLAY;
                         play_continue_track = true;
-                        jo_nbg0_printf(17, 14, "TRY AGAIN!");
                         jo_nbg0_printf(16, 16, "CONTINUES: %i", g_Game.numContinues + 1 - g_Players[0].score.deaths);
                     }
                     else {
@@ -498,7 +559,7 @@ void demo_update(void)
         storySelectUpdate();
     } 
     else if (!g_Game.isPaused) {
-        // move to draw/HUD timer function
+        // TODO: move to draw/HUD timer function
         gameplay_timer();
         switch(g_Game.gameMode)
         {
@@ -511,12 +572,38 @@ void demo_update(void)
                 drawGameUI();
                 break;
             case GAME_MODE_STORY:
-                drawStoryMode();
+                drawVsMode(); // eliminated story mode for now
                 drawGameUI();
                 break;
             default:
                 break;
         }
+    }
+}
+
+void tallyScore(void) {
+    Uint16 thresholds[] = {10000, 1000, 100, 50, 1};
+    if (g_Players[0].score.points > 0) {
+        jo_nbg0_printf(10, 12, "ROUND SCORE:%09d", g_Players[0].score.points);
+    }
+    jo_nbg0_printf(10, 14, "TOTAL SCORE:%09d", g_Players[0].score.total);
+    for (Uint8 i = 0; i < 5; i++) {
+        Uint16 threshold = thresholds[i];
+        if (g_Players[0].score.points > threshold) {
+            pcm_play(g_Assets.scoreAddPcm8, PCM_PROTECTED, 7);
+            g_Players[0].score.points -= threshold;
+            g_Players[0].score.total += threshold;
+            return;
+        }
+    }
+
+    if (g_Players[0].score.points > 0) {
+        pcm_play(g_Assets.scoreTotalPcm8, PCM_PROTECTED, 7);
+        g_Players[0].score.points--;
+        g_Players[0].score.total++;
+    } 
+    else {
+        g_Game.endDelayTimer--;
     }
 }
 
@@ -557,82 +644,57 @@ void gameScore_draw(void) {
 
 // todo: move things from switch statement that are the same in each case to the end
 void gameplayUI_draw(PPLAYER player) {
+    // TODO: replace magic numbers
     static int color_multiplier = 5;
     static int power_meter_height = 3;
     set_spr_scale(player->_portrait, 1.1, 1);
-    switch (player->teamChoice) 
+
+    // calculate power meter color
+    hslSprites.color[p_rangePmenu[player->playerID].lower].h = player->shield.power*color_multiplier;
+    calculate_sprites_color(&p_rangePmenu[player->playerID]);
+    do_update_Pmenu[player->playerID] = true;
+
+    player->_bg->spr_id = player->_bg->anim1.asset[player->playerID];
+    set_spr_scale(player->_bg, player->shield.power, power_meter_height);            // TODO:  eliminate magic numbers
+    switch (player->teamChoice)
     {
         case TEAM_1: {
-            int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
-            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
-            int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
-                        // If speed is an issue, can create a sprite object for each portrait during gameplay
+            int heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
+            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
+            int star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
-            
-            // calculate power meter color            hslSprites.color[p_rangePmenu[0].lower].h = player->shield.power*color_multiplier;            calculate_sprites_color(&p_rangePmenu[0]);
-            do_update_Pmenu[0] = true;
-            
-            player->_bg->spr_id = player->_bg->anim1.asset[0];
-            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_2: {
-            int heart_x = GAMEPLAY_PORTRAIT_X - 40;
-            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 12);
-            int star_y = -(GAMEPLAY_PORTRAIT_Y + 12);
-            
+            int heart_x = GAMEPLAY_PORTRAIT_X - 54;
+            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
+            int star_x = GAMEPLAY_PORTRAIT_X - 208;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
-            
-            // calculate power meter color
-            hslSprites.color[p_rangePmenu[1].lower].h = player->shield.power*color_multiplier;
-            calculate_sprites_color(&p_rangePmenu[1]);
-            do_update_Pmenu[1] = true;
-            
-            player->_bg->spr_id = player->_bg->anim1.asset[1];
-            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            draw_star_element(&star, player->score.stars, star_x, heart_y, -16);
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_3: {
-            int heart_x = -(GAMEPLAY_PORTRAIT_X - 40);
+            int heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
             int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
-            int star_y = GAMEPLAY_PORTRAIT_Y - 12;
-            
+            int star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            draw_ui_element(&star, player->score.stars, heart_x, star_y, 16);
-            
-            // calculate power meter color
-            hslSprites.color[p_rangePmenu[2].lower].h = player->shield.power*color_multiplier;
-            calculate_sprites_color(&p_rangePmenu[2]);
-            do_update_Pmenu[2] = true;
-            
-            player->_bg->spr_id = player->_bg->anim1.asset[2];
-            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_4: {
-            int heart_x = GAMEPLAY_PORTRAIT_X - 40;
+            int heart_x = GAMEPLAY_PORTRAIT_X - 54;
             int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
-            int star_y = GAMEPLAY_PORTRAIT_Y - 12;
-
+            int star_x = GAMEPLAY_PORTRAIT_X - 208;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            draw_ui_element(&star, player->score.stars, heart_x, star_y, -16);
-            
-            // calculate power meter color
-            hslSprites.color[p_rangePmenu[3].lower].h = player->shield.power*color_multiplier;
-            calculate_sprites_color(&p_rangePmenu[3]);
-            do_update_Pmenu[3] = true;
-            
-            player->_bg->spr_id = player->_bg->anim1.asset[3];
-            set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+            draw_star_element(&star, player->score.stars, star_x, heart_y, -16);            
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
@@ -650,12 +712,11 @@ void reset_ball_movement(Sprite *ball) {
     ball_bounce = false;
     ball->pos.x = toFIXED(0);
     ball->pos.y = toFIXED(-280);
-    // ball->rot.z = 0;
     ball->vel.x = toFIXED(0);
     ball->vel.y = toFIXED(0);
     ball->vel.z = 0;
     
-    // big head option? (only with 2 players)    
+    // big head option (only with 2 players)    
     if(g_GameOptions.bigHeadMode && g_Game.numPlayers < 3)
     {
         ball->pos.r = EASY_BALL_RADIUS;
@@ -730,9 +791,7 @@ void gameplay_update(void)
     }
 
     updatePlayers();
-    playerAI(&pixel_poppy);
-    // sweep_and_prune();
-    
+    playerAI(&pixel_poppy);    
         // TODO: implement this!!    
     // if(g_Game.isRoundOver == true)
     // {
@@ -750,7 +809,6 @@ void gameplay_update(void)
 }
 void gameplay_input(void)
 {
-    // if(g_Game.isPaused == true || start_gameplay_timer == false)
     if(g_Game.isPaused == true)
     {
         return;
@@ -776,4 +834,71 @@ void    demo_input(void)	{
         transitionState(GAME_STATE_TITLE_SCREEN);
         g_Game.DemoTimer = 0;
     }
+}
+
+int ball_velocity = 0;
+bool ball_falling = false;
+bool ball_bounce = false;
+bool drop_ball_animation(Sprite *ball) {    
+    // jo_nbg0_printf(2, 17, "BALL_FALLING:%i", ball_falling);
+    // jo_nbg0_printf(2, 18, "BALL_BOUNCE:%i", ball_bounce);
+    // jo_nbg0_printf(2, 19, "BALL_VELOCITY:%i", ball_velocity); 
+    // jo_nbg0_printf(2, 20, "BALLPOS.Y:%i", ball->pos.y);
+    // ball is falling
+    if (ball_falling && !ball_bounce) {
+        pcm_play(g_Assets.dropPcm8, PCM_PROTECTED, 6);
+        if (ball_velocity < BALL_VELOCITY) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                ball_velocity += toFIXED(1);
+            }
+        }              
+        if (ball->pos.y < toFIXED(0)) {
+            ball->pos.y += ball_velocity;
+        }
+        // ball has hit the "ground"
+        else {
+            ball_falling = false;
+            ball_bounce = true;
+        }
+        return false;
+    }
+    // ball is bouncing
+    if (ball_bounce && !ball_falling) {
+        ball->pos.y -= ball_velocity;
+        if (ball_velocity > 0) {
+            ball_velocity -= toFIXED(1.5);
+        }
+        else {
+            // ball_velocity = 0;
+            pcm_play(g_Assets.bouncePcm8, PCM_VOLATILE, 5);
+            ball_falling = true;
+            ball_bounce = true;
+        }
+        return false;
+    }
+    // first bounce has already happened
+    else if (ball_bounce && ball_falling) {
+        ball_falling = false;
+        ball_bounce = false;
+        return false;
+    }
+    // falling again
+    else if (!ball_bounce && !ball_falling) {
+        if (ball_velocity < BALL_VELOCITY) {
+            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+                ball_velocity += toFIXED(1.5);
+            }
+            
+        }
+        // final resting place
+        if (ball->pos.y < toFIXED(0)) {
+            ball->pos.y += ball_velocity;
+        }
+        else {
+            pcm_play(g_Assets.bouncePcm8, PCM_VOLATILE, 5);
+            g_Game.dropBallTimer = DROP_BALL_TIME_NORMAL;
+            return true;
+        }
+    }
+    return false;
 }

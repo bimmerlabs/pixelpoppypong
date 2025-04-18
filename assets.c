@@ -77,15 +77,37 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
 
 void loadSoundAssets(void)
 {
-    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-    g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
+    // load_8bit_pcm returns the ID of the sound loaded
+    // use pcm_reset, giving the id of the last sound you want to keep, to unload extra sounds
+    
+    // CORE / MENU SOUNDS
+    g_Assets.cancelPcm8 = load_8bit_pcm((Sint8 *)"CANCEL.PCM", 15360);
+    g_Assets.cursorPcm8 = load_8bit_pcm((Sint8 *)"CURSOR.PCM", 15360);
+    g_Assets.nextPcm8 = load_8bit_pcm((Sint8 *)"NEXT.PCM", 15360);
+    g_Assets.startPcm8 = load_8bit_pcm((Sint8 *)"START.PCM", 15360);
+    g_Assets.tickPcm8 = load_8bit_pcm((Sint8 *)"TICK.PCM", 15360);
+    
+    // GAMEPLAY SOUNDS
+    g_Assets.scoreTotalPcm8 = load_8bit_pcm((Sint8 *)"SCORET.PCM", 15360);
+    g_Assets.scoreAddPcm8 = load_8bit_pcm((Sint8 *)"SCOREA.PCM", 15360);
+    g_Assets.chain0Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN0.PCM", 15360);
+    g_Assets.chain1Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN1.PCM", 15360);
+    g_Assets.chain2Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN2.PCM", 15360);
+    g_Assets.chain3Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN3.PCM", 15360);
+    g_Assets.chain5Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN5.PCM", 15360);
+    g_Assets.explod1Pcm8 = load_8bit_pcm((Sint8 *)"EXPLOD1.PCM", 15360);
+    g_Assets.dropPcm8 = load_8bit_pcm((Sint8 *)"DROP.PCM", 15360);
+    g_Assets.bouncePcm8 = load_8bit_pcm((Sint8 *)"BOUNCE.PCM", 15360);
+    g_Assets.shieldPcm8 = load_8bit_pcm((Sint8 *)"SHIELD.PCM", 15360);
+    g_Assets.countdownPcm8 = load_8bit_pcm((Sint8 *)"C_DOWN.PCM", 15360);
     g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"BUMP.PCM", 15360);
-    #else
-    jo_audio_load_pcm("GMOVR8.PCM", JoSoundStereo8Bit, &g_Assets.gameOverPcm8);
-    g_Assets.gameOverPcm8.sample_rate = 32000;
-    jo_audio_load_pcm("A.PCM", JoSoundMono16Bit, &g_Assets.bumpPcm16);
-    g_Assets.bumpPcm16.sample_rate = 32000;
-    #endif
+    g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
+    
+    // NAME ENTRY SOUNDS
+    g_Assets.name_ketPcm8 = load_8bit_pcm((Sint8 *)"NAME_KET.PCM", 15360);
+    g_Assets.name_curPcm8 = load_8bit_pcm((Sint8 *)"NAME_CUR.PCM", 15360);
+    g_Assets.name_canPcm8 = load_8bit_pcm((Sint8 *)"NAME_CAN.PCM", 15360);
+    g_Assets.name_brkPcm8 = load_8bit_pcm((Sint8 *)"NAME_BRK.PCM", 15360);
 }
 
 void loadCommonAssets(void)

@@ -16,6 +16,9 @@ const char letters[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.< ";
 static char initials[4];  // 3 letters + null terminator
 static int char_id[3];
 
+bool rotateLeft = false;
+bool rotateRight = false;
+
 #define NAME_X_RADIUS toFIXED(140)
 #define NAME_Y_RADIUS toFIXED(50)
 #define NAME_Y_POS 170
@@ -34,7 +37,6 @@ static bool endNameEntry = false;
 
 void nameEntryInit(void)
 {
-    // g_Game.isLoading = true; // don't show loading, it's too short and looks bad
     loadNameEntryAssets();
     initNameEntryColors();
     
@@ -80,13 +82,6 @@ void nameEntryInput(void)
      if (endNameEntry) {
          return;
      }
-    // if(jo_is_pad1_key_down(JO_KEY_START))
-    // {
-        // // turn off display first?
-        // transitionState(GAME_STATE_HIGHSCORES);
-        // // unloadNameEntryAssets(); // this needs to happen before the next state is loaded
-        // return;
-    // }
     if(jo_is_pad1_key_pressed(JO_KEY_UP))
     {
         if (yRadius < toFIXED(0)) {
@@ -133,22 +128,23 @@ void nameEntryInput(void)
     else if(jo_is_pad1_key_down(JO_KEY_A) || jo_is_pad1_key_down(JO_KEY_C))
     {
         if (isNameEntryFinished && nameEntryAngle == 12) {
+            pcm_play(g_Assets.name_brkPcm8, PCM_VOLATILE, 6);
             endNameEntry = true;
-            pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
             return;
         }
         if (!isNameEntryFinished && nameEntryAngle != 12) {
+            pcm_play(g_Assets.name_ketPcm8, PCM_PROTECTED, 7);
             g_NameEntrySelection++;
-            pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
         }
         if (g_NameEntrySelection == MAX_INITIAL) {
+            pcm_play(g_Assets.name_brkPcm8, PCM_VOLATILE, 6);
             isNameEntryFinished = true;
             isAngleSnapped = false;
-            pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
         }
     }
     else if(jo_is_pad1_key_down(JO_KEY_B))
     {
+        pcm_play(g_Assets.name_canPcm8, PCM_PROTECTED, 7);
         if (g_NameEntrySelection == MAX_INITIAL) {
             nameEntryAngle = 360;
             g_NameEntrySelection--;
@@ -159,16 +155,13 @@ void nameEntryInput(void)
             rotateRight = false;
             rotateLeft = false;
             pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
-            pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
         }
         else if (g_NameEntrySelection > FIRST_INITIAL) {
             g_NameEntrySelection--;
-            pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
         }
     }
     if (isAngleSnapped == false) {
         pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
-        pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 7);
     }
     else {
         pixel_poppy.spr_id = pixel_poppy.anim1.asset[1];
@@ -242,11 +235,9 @@ void nameEntryUpdate(void)
     initials[1] = letters[char_id[SECOND_INITIAL]];
     initials[2] = letters[char_id[THIRD_INITIAL]];
     initials[3] = '\0';
-    // jo_nbg0_printf(17, 27, "TEST:%s", initials); // FOR DEBUG
     
     if(g_NameEntryTimer == 0 || xRadius <= END_RADIUS)
     {
-        // TODO: SAVE HIGH SCORE
         addHighScore(g_Players[g_Game.winner].score.points, initials);
         save_game_backup();
         g_Game.lastState = GAME_STATE_NAME_ENTRY;
@@ -259,13 +250,12 @@ void nameEntryUpdate(void)
 void nameEntryDraw(void)
 {
     if (!isNameEntryFinished) {
-        nameEntryAngle = snap_to_nearest_12(nameEntryAngle, pressedLeft, pressedRight, &isAngleSnapped);
+        nameEntryAngle = snap_to_nearest_12(nameEntryAngle);
     }
     if (isNameEntryFinished) {
-        nameEntryAngle = snap_to_end(nameEntryAngle, &isAngleSnapped);
+        nameEntryAngle = snap_to_end(nameEntryAngle);
     }
     for (gapAngle = 0; gapAngle <= 360; gapAngle += GAP_ANGLE) {
-        // if (!isAngleSnapped)
             nameEntryPositionUpdate((nameEntryAngle+ 6 + gapAngle), (gapAngle + 102));
     }
     do_update_font2All = calculate_sprites_color(&p_rangeFont2All);
@@ -350,6 +340,68 @@ void nameEntryPositionUpdate(int angle, int sprAngle) {
     
     font.spr_id = font.anim1.asset[spr_id];
     my_sprite_draw(&font);
+}
+
+int snap_to_nearest_12(int angle) {
+    // If already snapped, do nothing
+    if (isAngleSnapped) {
+        return angle;
+    }
+
+    // Adjust angle only when a button is pressed
+    if (pressedRight) {
+        angle--;  // Move counterclockwise
+        if (angle < 0)
+            angle += 360;
+    } else if (pressedLeft) {
+        angle++;  // Move clockwise
+        if (angle > 360)
+            angle -= 360;
+    }
+
+    // If angle is now a multiple of 12, stop adjusting
+    if (angle % 12 == 0) {
+        pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
+        isAngleSnapped = true;  // Mark snapping complete
+    }
+
+    return angle;
+}
+
+int snap_to_end(int angle) {
+    // If already snapped, do nothing
+    if (isAngleSnapped) {
+        return angle;
+    }
+    if (angle == 0)
+        angle = 360;
+    if (!rotateLeft && !rotateRight) {
+        if (angle - 180 < 0) {
+            rotateRight = true;
+        }
+        else {
+            rotateLeft = true;
+        }
+    }
+    // Adjust angle only when a button is pressed
+    if (rotateRight) { // need to compare to original angle value and set a boolean?
+        angle -= 6;  // Move counterclockwise
+        pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
+        if (angle < 0)
+            angle += 360;
+    }
+    if (rotateLeft) {
+        angle += 6;  // Move clockwise
+        pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
+        if (angle > 360)
+            angle -= 360;
+    }
+    // If angle is now a multiple of 12, stop adjusting
+    if (angle == 12) {
+        isAngleSnapped = true;  // Mark snapping complete
+    }
+
+    return angle;
 }
 
 // original (secret mode?)
