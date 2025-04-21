@@ -5,8 +5,9 @@
 
 #define MIN_VELOCITY_X toFIXED(7)
 #define MIN_VELOCITY_Y toFIXED(3)
+#define MAX_VELOCITY_Z 70
 #define EASY_MAX_VELOCITY toFIXED(8.5) // 8 = easy, 10 = medium, 13 = hard?
-#define MEDIUM_MAX_VELOCITY toFIXED(10) // 8 = easy, 10 = medium, 13 = hard?
+#define MEDIUM_MAX_VELOCITY toFIXED(10.5) // 8 = easy, 10 = medium, 13 = hard?
 #define HARD_MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)
 #define BALL_FRICTION_X toFIXED(1.15)
@@ -23,7 +24,7 @@ typedef struct {
 
 extern BallTouchTracker touchedBy[MAX_PLAYERS];
 
-extern Uint16 ballTtouchTimer;
+extern unsigned int ballTtouchTimer;
 
 void initTouchCounter(Uint8 resetTouchCount);
 
@@ -38,14 +39,11 @@ bool checkDistance(Sprite *player, Sprite *item);
 // Function to calculate Z velocity based on X and Y velocity
 // tried to convert to fixed - doesn't work - maybe it overflows?
 static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_collision) {
-    // Convert velocity from fixed-point to float
-    // comment out to use fixed
     float fx = (float)(vx) / (1 << 16);
     float fy = (float)(vy) / (1 << 16);
 
     // Calculate magnitude of velocity vector (speed)
     float speed = jo_sqrtf((fx * fx) + (fy * fy));
-    // FIXED speed = jo_fixed_sqrt((vx * vx) + (vy * vy));
 
     // Scale rotation velocity based on speed
     int z_velocity = (int)(speed * BALL_ROTATION); // Scale factor can be adjusted to match gameplay
@@ -64,8 +62,12 @@ static inline int calculate_z_velocity(FIXED vx, FIXED vy, bool horizontal_colli
         z_velocity = 1;
     }
     // speed limit z_velocity
-    else if (z_velocity > 10) {
-        z_velocity = 1;
+    else if (z_velocity > MAX_VELOCITY_Z) {
+        z_velocity = MAX_VELOCITY_Z;
+    }
+    // speed limit z_velocity
+    else if (z_velocity < -MAX_VELOCITY_Z) {
+        z_velocity = -MAX_VELOCITY_Z;
     }
 
     return z_velocity;
@@ -105,17 +107,10 @@ static __jo_force_inline void updateBallTouch(PPLAYER player) {
     ballTtouchTimer = 0;
 }
 
-// TODO: move to math?
-static inline FIXED my_fixed_clamp(FIXED value, FIXED min, FIXED max) {
-    if (value < min) return min;
-    if (value > max) return max;
-    return value;
-}
-
 // Function to update the ball's position and check for collisions
 void update_ball(Sprite *ball);
 
 // // Function to detect and handle ball-player collision
 bool detect_player_ball_collision(Sprite *ball, PPLAYER player);
 
-void handle_ball_player_reaction(Sprite *ball, PPLAYER player);
+void handle_ball_player_reaction(Sprite *ball, PPLAYER player, int distance_squared, FIXED dx, FIXED dy);

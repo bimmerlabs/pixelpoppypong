@@ -201,33 +201,34 @@ void debux_text(void)
                 jo_nbg0_printf(2, 8, "CURPOS.DX:%i", g_Players[0].curPos.dx);
                 jo_nbg0_printf(2, 9, "CURPOS.DY:%i", g_Players[0].curPos.dy);
                 
-                jo_nbg0_printf(20, 10, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
-                jo_nbg0_printf(20, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
-                jo_nbg0_printf(20, 12, "WINNER:%i", g_Game.winner);
-                jo_nbg0_printf(20, 13, "DELAYTIMER:%i", g_Game.endDelayTimer);
-                jo_nbg0_printf(20, 14, "NUMTEAMS:%i", g_Game.numTeams);
+                // jo_nbg0_printf(20, 10, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
+                // jo_nbg0_printf(20, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
+                // jo_nbg0_printf(20, 12, "WINNER:%i", g_Game.winner);
+                // jo_nbg0_printf(20, 13, "DELAYTIMER:%i", g_Game.endDelayTimer);
+                // jo_nbg0_printf(20, 14, "NUMTEAMS:%i", g_Game.numTeams);
                 
-                // jo_nbg0_printf(2, 10, "POPPY.VEL.X:%i", pixel_poppy.vel.x);
-                // jo_nbg0_printf(2, 11, "POPPY.VEL.Y:%i", pixel_poppy.vel.y);
-                // jo_nbg0_printf(2, 12, "POPPY.VEL.Z:%i", pixel_poppy.vel.z);
-                
-                // jo_nbg0_printf(2, 10, "PLAYER.X:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.x));
-                // jo_nbg0_printf(2, 11, "POPPY.X:%i", JO_FIXED_TO_INT(pixel_poppy.pos.x));
-                // jo_nbg0_printf(2, 14, "POPPY.Y:%i", pixel_poppy.pos.y);
+                jo_nbg0_printf(22, 10, "POPPY.VEL.X:%i", JO_FIXED_TO_INT(pixel_poppy.vel.x));
+                jo_nbg0_printf(22, 11, "POPPY.VEL.Y:%i", JO_FIXED_TO_INT(pixel_poppy.vel.y));
+                jo_nbg0_printf(22, 12, "POPPY.VEL.Z:%i", pixel_poppy.vel.z);
+                jo_nbg0_printf(22, 13, "POPPY.POS.X:%i", JO_FIXED_TO_INT(pixel_poppy.pos.x));
+                jo_nbg0_printf(22, 14, "POPPY.POS.Y:%i", JO_FIXED_TO_INT(pixel_poppy.pos.y));
+                jo_nbg0_printf(22, 15, "BALL.COLLIDING:%i", pixel_poppy.isColliding);
+                jo_nbg0_printf(2,  16, "P1.COLLIDING:%i", g_Players[0]._sprite->isColliding);
+                jo_nbg0_printf(2,  17, "P1.LEFTSIDE:%i", g_Players[0].onLeftSide);
+                jo_nbg0_printf(22, 16, "P2.COLLIDING:%i", g_Players[1]._sprite->isColliding);
+                jo_nbg0_printf(22, 17, "P2.LEFTSIDE:%i", g_Players[1].onLeftSide);
                 
                     // jo_nbg0_printf(2, 17, "TEAM_1 PID:%i", g_goalPlayerId[TEAM_1-1]);
                     // jo_nbg0_printf(2, 18, "TEAM_2 PID:%i", g_goalPlayerId[TEAM_2-1]);
                     // jo_nbg0_printf(2, 19, "TEAM_3 PID:%i", g_goalPlayerId[TEAM_3-1]);
                     // jo_nbg0_printf(2, 20, "TEAM_4 PID:%i", g_goalPlayerId[TEAM_4-1]);
                          
-                if (g_Players[0].isPlaying && g_GameOptions.testCollision) {
-                    jo_nbg0_printf(2, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
-                    // jo_nbg0_printf(2, 12, "LEFTSIDE:%i", g_Players[0].onLeftSide);
-                }
-                if (g_Players[1].isPlaying && g_GameOptions.testCollision) {
-                    jo_nbg0_printf(22, 11, "ISCOLLIDING:%i", g_Players[1]._sprite->isColliding);
-                    // jo_nbg0_printf(22, 12, "LEFTSIDE:%i", g_Players[1].onLeftSide);
-                } 
+                // if (g_Players[0].isPlaying && g_GameOptions.testCollision) {
+                    // jo_nbg0_printf(2, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
+                // }
+                // if (g_Players[1].isPlaying && g_GameOptions.testCollision) {
+                    // jo_nbg0_printf(22, 11, "ISCOLLIDING:%i", g_Players[1]._sprite->isColliding);
+                // } 
                                          
                 // if (g_Players[0].isPlaying) {
                     // jo_nbg0_printf(2, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[0].power), g_Players[0].power);

@@ -12,8 +12,6 @@
 int g_PauseChoice = 0;
 int g_PauseCursor = 0;
 
-// #define PAUSE_TRACK 0
-
 extern PLAYER g_Players[MAX_PLAYERS];
 
 typedef enum _PAUSE_OPTIONS
@@ -98,16 +96,7 @@ void pauseGame(void)
     }
     g_Game.isPaused = true;
     mosaic_in_rate = MOSAIC_FAST_RATE;
-    // volume = LOWER_VOLUME;
-    // #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-    // CDDA_SetVolume(volume);
-    // #else
-    // jo_audio_set_volume(volume);
-    // #endif
     pcm_play(g_Assets.startPcm8, PCM_PROTECTED, 6);
-    // TODO:
-    // playCDTrack(track);
-    // maybe reduce the audio volume instead
 }
 
 //
@@ -261,12 +250,7 @@ static void drawPauseMenu(int options_y)
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "QUIT");
     options_y += 2;
-    if (g_GameOptions.debug_display) {
-        jo_nbg0_printf(options_x, options_y, "DEBUG:ON");
-    }
-    else {
-        jo_nbg0_printf(options_x, options_y, "DEBUG:OFF");
-    }
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "DEBUG:ON" : "DEBUG:OFF");
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "ANALOG ADJUSTMENT:");
     options_y += 1;

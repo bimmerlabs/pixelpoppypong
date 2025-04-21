@@ -9,19 +9,16 @@
 
 #define X_SPEED_INC toFIXED(1.5)
 #define Y_SPEED_INC toFIXED(5.0)
-// #define X_FRICTION_SPEED toFIXED(0.375)
 
-#define MAX_Y_SPEED               toFIXED(15.0)  // don't fall faster than this
-// #define MAX_Y_SPEED2              toFIXED(-14.0)
-#define MAX_X_SPEED               toFIXED(10.0)  // don't move faster than this
-// #define MAX_X_SPEED2              toFIXED(-12.0) // don't move faster than this
-#define AI_X_SPEED                toFIXED(10.0)  // don't move faster than this
+#define MAX_Y_SPEED toFIXED(15.0)
+#define MAX_X_SPEED toFIXED(10.0)
+#define AI_X_SPEED  toFIXED(10.0)
 
 #define PLAYER_HEIGHT toFIXED(20)
 #define PLAYER_WIDTH toFIXED(40)
 #define PLAYER_BOUNDARY_RIGHT  toFIXED(328.0)
 #define PLAYER_BOUNDARY_LEFT  toFIXED(-328.0)
-#define PLAYER_BOUNDARY_MIDDLE  toFIXED(88.0) // 76 might be a better value
+#define PLAYER_BOUNDARY_MIDDLE  toFIXED(88.0)
 
 #define PLAYER_MOVEMENT_SPEED toFIXED(0.0015)
 
@@ -53,7 +50,7 @@ typedef enum _PLAYER_STATE
 typedef struct _SCORE
 {
     Uint8 stars;
-    Uint8 deaths; // last wave player was alive for
+    Uint8 deaths; // used as a proxy for continues
     unsigned int total;  // total score (story mode)
     unsigned int points; // round score
 
@@ -122,7 +119,7 @@ typedef struct _PLAYER
     SCORE score;
     CHARACTER character;
     
-    // 0-11, controller ID (replace with actual inputs)
+    // 0-11, controller ID
     PINPUT input;
     int playerID;
 
@@ -140,7 +137,6 @@ typedef struct _PLAYER
     int totalLives;
     
     // Team (replaces team struct values)
-    // make into a struct again?
     Uint8 teamChoice;
     Uint8 teamOldTeam;
     bool teamSelected;

@@ -20,12 +20,11 @@ extern int g_StartStoryFrames;
 extern const char *characterQuotes[];
 void initStoryMode(void);
 void storySelectUpdate(void);
-// void storySelectCharacter(void);
 
 static __jo_force_inline void drawCharacterList(void) {
     my_sprite_draw(&menu_bg2);
     my_sprite_draw(g_Players[0]._cursor);
-    character_pos_y = character_pos_selected; // will scroll up at some point
+    character_pos_y = character_pos_selected;
     for(unsigned int i = 1; i <= MAX_ROUNDS; i++) {
         character_portrait.spr_id = character_portrait.anim1.asset[i];
         set_spr_position(&character_portrait, character_pos_x, character_pos_y, PORTRAIT_DEPTH);

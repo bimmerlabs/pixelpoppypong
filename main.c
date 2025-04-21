@@ -65,6 +65,7 @@ GameOptions g_GameOptions = {
     .use_rtc = false,
     .bigHeadMode = false,
     .testCollision = false,
+    .releaseCanidate = false, // TODO: implement elsewhere so I don't have to comment stuff out, or use makefile?
 };
 
 void loading_screen(void)
@@ -115,16 +116,16 @@ void main_loop(void) {
 // returns to title screen if player one presses ABC+Start
 void abcStart_callback(void)
 {
-    // if (g_GameOptions.debug_mode) {
-        // // manually switch states
-        // if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
-            // g_Game.nextState = g_Game.gameState +1;
-            // if (g_Game.nextState == GAME_STATE_TRANSITION) {
-                // g_Game.nextState = GAME_STATE_UNINITIALIZED;
-            // }
-            // transitionState(g_Game.nextState);
-        // }
-    // }
+    if (g_GameOptions.debug_mode) {
+        // manually switch states
+        if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
+            g_Game.nextState = g_Game.gameState +1;
+            if (g_Game.nextState == GAME_STATE_TRANSITION) {
+                g_Game.nextState = GAME_STATE_UNINITIALIZED;
+            }
+            transitionState(g_Game.nextState);
+        }
+    }
     if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
     {        
         return;
@@ -172,8 +173,8 @@ void my_input_callback(void) {
             characterSelect_input();
             break;
         case GAME_STATE_GAMEPLAY:
-            pause_input();
             gameplay_input();
+            pause_input();
             break;
         case GAME_STATE_NAME_ENTRY:
             nameEntryInput();
@@ -313,7 +314,6 @@ void			jo_main(void)
     jo_core_add_callback(screenTransition_update);
     jo_core_add_callback(game_state_update);
     
-    // jo_core_add_callback(pause_input);
     jo_core_add_callback(pause_draw);   
  
     jo_core_add_callback(my_input_callback);

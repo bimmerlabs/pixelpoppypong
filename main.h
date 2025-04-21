@@ -5,7 +5,7 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.65"
+#define VERSION "0.67"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -30,6 +30,7 @@ typedef struct {
     bool use_rtc;
     bool bigHeadMode;
     bool testCollision;
+    bool releaseCanidate;
 } GameOptions, *PGameOptions;
 
 extern GameOptions g_GameOptions;
@@ -124,6 +125,7 @@ typedef struct _GAME
     GOAL_Y_POS goalYPosBot;
     Uint8 goalYPosMid;
     
+    FIXED maxBallVelocity;
     // debug level
     int debug;
     

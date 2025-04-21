@@ -6,7 +6,6 @@
 #include "font.h"
 #include "title_screen.h"
 #include "screen_transition.h"
-// #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
 #include "BG_DEF/sprite_colors.h"
 
@@ -87,9 +86,7 @@ void titleScreen_init(void)
     slColOffsetAUse(NBG0ON);
     slColOffsetBUse(NBG1ON | SPRON);
     
-    // jo_set_default_background_color(JO_COLOR_Black);
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
-    // slColorCalc(CC_ADD | CC_TOP | JO_NBG1_SCREEN); // not really being used..
     
     // init menu options
     g_TitleScreenChoice = TITLE_OPTION_GAME_MODE;
@@ -192,17 +189,17 @@ void drawTitle(void)
         return;
     }
     // title graphic
-    // jo_nbg0_printf(14, 23, "GAME LOGO HERE!");
     if (frame % 10 == 0) { // modulus
         draw_start_text = !draw_start_text;
     }
     if (draw_start_text) {
         jo_nbg0_printf(16, 27, "PRESS START");
     }
-    if (g_GameOptions.debug_mode) {
-        // version number
+    if (g_GameOptions.releaseCanidate) {
+        jo_nbg0_printf(18, 28, "%s RC", VERSION);
+    }
+    else if (g_GameOptions.debug_mode) {
         jo_nbg0_printf(20, 28, "%s", VERSION); // Regular version
-        // jo_nbg0_printf(18, 28, "%s", VERSION); // RC
     }
 
     if (poppy_scale < POPPY_MAX_SCALE) {
@@ -883,32 +880,15 @@ void drawOptions(void)
     
     options_y += 4;
     jo_nbg0_printf(title_x, options_y, "DEBUG MODE:");
-    if (g_GameOptions.debug_mode) {
-        jo_nbg0_printf(options_x, options_y, "ON");
-    }
-    else {
-        jo_nbg0_printf(options_x, options_y, "OFF");
-    }
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_mode ? "ON" : "OFF");
     
-    // if (g_GameOptions.debug_mode) {
-        options_y += 2;
-        jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
-        if (g_GameOptions.debug_display) {
-            jo_nbg0_printf(options_x, options_y, "ON");
-        }
-        else {
-            jo_nbg0_printf(options_x, options_y, "OFF");
-        }
-    // }
+    options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "ON" : "OFF");
     
-        // options_y += 2;
-        // jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
-        // if (g_GameOptions.testCollision) {
-            // jo_nbg0_printf(options_x, options_y, "ON");
-        // }
-        // else {
-            // jo_nbg0_printf(options_x, options_y, "OFF");
-        // }
+    // options_y += 2;
+    // jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
+    // jo_nbg0_printf(options_x, options_y, g_GameOptions.testCollision ? "ON" : "OFF");
 
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "MESH TRANSPARENCY:");
@@ -938,21 +918,11 @@ void drawOptions(void)
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "USE RTC:");
-    if (g_GameOptions.use_rtc) {
-        jo_nbg0_printf(options_x, options_y, "YES");
-    }
-    else {
-        jo_nbg0_printf(options_x, options_y, "NO");
-    }    
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.use_rtc ? "YES" : "NO");
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "BIG HEAD MODE:");
-    if (g_GameOptions.bigHeadMode) {
-        jo_nbg0_printf(options_x, options_y, "YES");
-    }
-    else {
-        jo_nbg0_printf(options_x, options_y, "NO");
-    }
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.bigHeadMode ? "YES" : "NO");
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "ANALOG ADJUSTMENT:");

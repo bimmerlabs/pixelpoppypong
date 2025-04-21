@@ -35,8 +35,7 @@ void reset_inputs(void) {
         input->isSelected = false;
         input->isAnalog = false;
     }
-}
-
+}
 // check to see if a controller is plugged in and what type it is
 void check_inputs(void) {
     PINPUT input = NULL;
@@ -46,7 +45,7 @@ void check_inputs(void) {
         if (!jo_is_input_available(i)) {
             continue;
         }
-        if (jo_get_input_type(i) == JoNightsPad) { // need to handle analog inputs for menu screens
+        if (jo_get_input_type(i) == JoNightsPad) { // TODO: handle analog inputs for menu screens
                 input->isAnalog = true;
             	// X and Y are centered at 128
 		char axis_x_raw = jo_get_input_axis(i, JoAxis1) - 0x80;
@@ -65,27 +64,6 @@ void check_inputs(void) {
         else {
             input->isAnalog = false;
         }
-        
-        // if (g_GameOptions.debug_display && i == 0) {
-            // PPLAYER player = &g_Players[i];
-            // jo_nbg0_printf(2, 21, "P1_SELECTED:%i", g_Players[0].input->isSelected);
-            // jo_nbg0_printf(2, 22, "P2_SELECTED:%i", g_Players[1].input->isSelected);
-            // jo_nbg0_printf(20, 21, "P3_SELECTED:%i", g_Players[2].input->isSelected);
-            // jo_nbg0_printf(20, 22, "P4_SELECTED:%i", g_Players[3].input->isSelected);
-            // if (input->isAnalog)
-            // {
-                    // jo_nbg0_printf(20, 23, "ANALOG:YES");
-            // }
-            // else
-            // {
-                    // jo_nbg0_printf(20, 23, "ANALOG:NO");
-            // }
-            // jo_nbg0_printf(20, 24, "AXIS_X:%02i", toINT(player->input->axis_x));
-            // jo_nbg0_printf(20, 25, "AXIS_Y:%02i", toINT(player->input->axis_y));
-            // jo_nbg0_printf(20, 26, "LEFT_TRIGGER:%03i", toINT(player->input->left_trigger));
-            // jo_nbg0_printf(20, 27, "RIGHT_TRIGGER:%03i", toINT(player->input->right_trigger));
-            // jo_nbg0_printf(20, 28, "SENSITIVITY:%3i", toINT(jo_fixed_mult(player->input->sensitivity, toFIXED(100))));
-        // }
     }
 }
 void analogAdjustmentScreen_input(void) {

@@ -100,7 +100,7 @@ static inline void selectGameMode(void) {
         g_Game.numPlayers = g_Game.minPlayers;
         g_Game.minTeams = 2;
         g_Game.maxTeams = 2;
-        g_Game.numTeams = 1;
+        g_Game.numTeams = 1; // why is this here?
     }
     else {
         g_Game.minPlayers = TWO_PLAYER;

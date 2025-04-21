@@ -9,7 +9,7 @@
 extern PLAYER g_Players[MAX_PLAYERS];
 
 BallTouchTracker touchedBy[MAX_PLAYERS];
-Uint16 ballTtouchTimer = 0;
+unsigned int ballTtouchTimer = 0;
 
 void initTouchCounter(Uint8 resetTouchCount) {
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
@@ -30,31 +30,35 @@ void stopBallMovement(Sprite *ball) {
 }
 
 // Function to initialize the ball's movement
-void start_ball_movement(Sprite *ball) {
+void start_ball_movement(Sprite *ball) {    
     switch(g_Game.gameDifficulty)
     {
         case GAME_DIFFICULTY_EASY:
+            g_Game.maxBallVelocity = EASY_MAX_VELOCITY;
             ball->vel.x = my_random_range(toFIXED(5), toFIXED(9));
             ball->vel.y = my_random_range(toFIXED(2), toFIXED(8));
             ball->vel.z = my_random_range(0, 5);
             break;
         case GAME_DIFFICULTY_MEDIUM:
+            g_Game.maxBallVelocity = MEDIUM_MAX_VELOCITY;
             ball->vel.x = my_random_range(toFIXED(6), toFIXED(10));
             ball->vel.y = my_random_range(toFIXED(3), toFIXED(9));
-            ball->vel.z = my_random_range(0, 6);
+            ball->vel.z = my_random_range(0, 10);
             break;
         case GAME_DIFFICULTY_HARD:
+            g_Game.maxBallVelocity = HARD_MAX_VELOCITY;
             ball->vel.x = my_random_range(toFIXED(7), toFIXED(11));
             ball->vel.y = my_random_range(toFIXED(4), toFIXED(10));
-            ball->vel.z = my_random_range(0, 7);
+            ball->vel.z = my_random_range(0, 20);
             break;
         default:
+            g_Game.maxBallVelocity = MEDIUM_MAX_VELOCITY;
             ball->vel.x = my_random_range(toFIXED(6), toFIXED(10));
             ball->vel.y = my_random_range(toFIXED(3), toFIXED(9));
-            ball->vel.z = my_random_range(0, 6);
+            ball->vel.z = my_random_range(0, 10);
             break;
     }
-           
+               
     // Randomize direction
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.x = -ball->vel.x; // modulus
     if (JO_MOD_POW2(jo_random(999 * ball->rot.z), 2)) ball->vel.y = -ball->vel.y; // modulus
@@ -87,28 +91,24 @@ void update_ball(Sprite *ball) {
     ball->rot.z += ball->vel.z;
     
     if (!explode_ball) {
-        switch (ball->vel.z) {
-            case 1:
-                ball->spr_id = ball->anim1.asset[0];
-                break;
-            case 2:
-                ball->spr_id = ball->anim1.asset[1];
-                break;
-            case 3:
-                ball->spr_id = ball->anim1.asset[2];
-                break;
-            case 4:
-                ball->spr_id = ball->anim1.asset[3];
-                break;
-            case 5:
-                ball->spr_id = ball->anim1.asset[4];
-                break;
-            case 6:
-                ball->spr_id = ball->anim1.asset[5];
-                break;
-            default:
-                ball->spr_id = ball->anim1.asset[0];
-                break;
+        Uint8 spin = ABS(ball->vel.z);
+        if (spin > 50) {
+            ball->spr_id = ball->anim1.asset[6];
+        }
+        else if (spin > 40 && spin <= 50) {
+            ball->spr_id = ball->anim1.asset[5];
+        }
+        else if (spin > 30 && spin <= 40) {
+            ball->spr_id = ball->anim1.asset[4];
+        }
+        else if (spin > 20 && spin <= 30) {
+            ball->spr_id = ball->anim1.asset[3];
+        }
+        else if (spin > 10 && spin <= 20) {
+            ball->spr_id = ball->anim1.asset[1];
+        }
+        else if (spin > 0 && spin <= 10) {
+            ball->spr_id = ball->anim1.asset[0];
         }
     }
     
@@ -141,7 +141,7 @@ void update_ball(Sprite *ball) {
         // Adjust Z velocity for horizontal collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, true);        
     }
-    else if (ball->pos.x <= SCREEN_LEFT) {
+    if (ball->pos.x <= SCREEN_LEFT) {
         ball->pos.x = SCREEN_LEFT;
         pcm_play(g_Assets.bumpPcm16, PCM_VOLATILE, 6);
         ball->vel.x = -ball->vel.x; // Reverse X velocity
@@ -187,42 +187,25 @@ void update_ball(Sprite *ball) {
         // Adjust Z velocity for vertical collision
         ball->vel.z = calculate_z_velocity(ball->vel.x, ball->vel.y, false);
     }
-        
-    // physics init?
-    FIXED max_velocity;
-    switch(g_Game.gameDifficulty)
-    {
-        case GAME_DIFFICULTY_EASY:
-            max_velocity = EASY_MAX_VELOCITY;
-            break;
-        case GAME_DIFFICULTY_MEDIUM:
-            max_velocity = MEDIUM_MAX_VELOCITY;
-            break;
-        case GAME_DIFFICULTY_HARD:
-            max_velocity = HARD_MAX_VELOCITY;
-            break;
-        default:
-            max_velocity = MEDIUM_MAX_VELOCITY;
-            break;
-    }
+
     // control ball speed
-    if (ball->vel.x > max_velocity) {
-        ball->vel.x = max_velocity;
+    if (ball->vel.x > g_Game.maxBallVelocity) {
+        ball->vel.x = g_Game.maxBallVelocity;
     }
-    else if (ball->vel.x < -max_velocity) {
-        ball->vel.x = -max_velocity;
+    else if (ball->vel.x < -g_Game.maxBallVelocity) {
+        ball->vel.x = -g_Game.maxBallVelocity;
     }
-    if (ball->vel.y > max_velocity) {
-        ball->vel.y = max_velocity;
+    if (ball->vel.y > g_Game.maxBallVelocity) {
+        ball->vel.y = g_Game.maxBallVelocity;
     }
-    else if (ball->vel.y < -max_velocity) {
-        ball->vel.y = -max_velocity;
+    else if (ball->vel.y < -g_Game.maxBallVelocity) {
+        ball->vel.y = -g_Game.maxBallVelocity;
     }
     
     adjust_xy_velocity_based_on_spin(ball);
     
     // Keep rotation within 0-359 degrees
-    if (ball->rot.z == 360) {
+    if (ABS(ball->rot.z) == 360) {
         ball->rot.z = 0;
     }
 }
@@ -241,7 +224,9 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     // Relative position vector
     FIXED dx = ball->pos.x - player->_sprite->pos.x;
     FIXED dy = ball->pos.y - player->_sprite->pos.y;
-
+    // Distance squared between ball and player center
+    int distance_squared = (toINT(dx) * toINT(dx)) + (toINT(dy) * toINT(dy));
+    
     // Radius of the player (used for the semicircle)
     int player_radius = toINT(player->_sprite->pos.r);
     
@@ -265,7 +250,7 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
         if (!explode_ball) {
             updateBallTouch(player);
         }
-        handle_ball_player_reaction(ball, player);
+        handle_ball_player_reaction(ball, player, distance_squared, dx, dy);
         return true;
     }    
     
@@ -274,14 +259,11 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     int radius_sum = player_radius + ball_radius;
     int radius_squared = radius_sum * radius_sum;
 
-    // Distance squared between ball and player center
-    int distance_squared = (toINT(dx) * toINT(dx)) + (toINT(dy) * toINT(dy));
-
     if (distance_squared <= radius_squared) {
         if (!explode_ball) {
             updateBallTouch(player);
         }
-        handle_ball_player_reaction(ball, player);
+        handle_ball_player_reaction(ball, player, distance_squared, dx, dy);
         return true;
     }
 
@@ -291,23 +273,15 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
 }
 
 // SIMPLER / BETTER? (ball/circle)
-void handle_ball_player_reaction(Sprite *ball, PPLAYER player) {
+void handle_ball_player_reaction(Sprite *ball, PPLAYER player, int distance_squared, FIXED dx, FIXED dy) {
     if (explode_ball && !player->isExploded) {
         player->isExploded = explodePLayer(player);
         player->_sprite->isColliding = false;
         return;
-    }
-    player->_sprite->isColliding = true;
-    // Calculate relative position vector
-    FIXED dx = ball->pos.x - player->_sprite->pos.x;
-    FIXED dy = ball->pos.y - player->_sprite->pos.y;
-
-    // Calculate squared distance to avoid sqrt unless necessary
-    FIXED distance_squared = jo_fixed_mult(dx, dx) + jo_fixed_mult(dy, dy);
-
-    // Compute collision normal (unit vector)
-    FIXED collision_normal_x = jo_fixed_div(dx, jo_fixed_sqrt(distance_squared));
-    FIXED collision_normal_y = jo_fixed_div(dy, jo_fixed_sqrt(distance_squared));
+    }    
+    // Calculate relative position vector    
+    FIXED collision_normal_x = jo_fixed_div(dx, toFIXED(ApproximateIntegerSqrt(distance_squared)));
+    FIXED collision_normal_y = jo_fixed_div(dy, toFIXED(ApproximateIntegerSqrt(distance_squared)));
 
     // Compute the dot product of relative velocity and collision normal
     FIXED dot_product = jo_fixed_mult(ball->vel.x, collision_normal_x) +

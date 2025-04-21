@@ -26,14 +26,8 @@ void gameplay_init() {
         }
         loadGameAssets();
     }
-    
-    if (g_Game.lastState != GAME_STATE_GAMEPLAY) {
-        initPlayerGoals(); // don't initialize if restarting within gameplay.
-    }
-    g_Game.lastState = GAME_STATE_GAMEPLAY;
-        if (g_Game.nextState == GAME_STATE_GAMEPLAY)
+    g_Game.lastState = GAME_STATE_GAMEPLAY;    if (g_Game.nextState == GAME_STATE_GAMEPLAY)
     {
-        // do different inits depending on game mode (demo etc)
         switch(g_Game.gameMode)
         {
             case GAME_MODE_BATTLE:
@@ -52,6 +46,9 @@ void gameplay_init() {
                 break;
         }
     }
+    
+    resetSpriteColors();
+    initPlayerGoals();
 
     if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
@@ -76,12 +73,6 @@ void gameplay_init() {
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
     
-    explode_bomb = false;
-    draw_bomb = true;
-    sprite_frame_reset(&bomb_item);
-    sprite_frame_reset(&fishtank_item);
-    sprite_frame_reset(&shroom_item);
-    
     for (int i = 0; i < MAX_PLAYERS; i++) {
         sprite_frame_reset(&shield[0]);
     }
@@ -93,15 +84,14 @@ void gameplay_init() {
     g_Game.isPaused = false;
     g_Game.isActive = false;
     g_Game.isBallActive = false;
-    
-    // reset timer
-    setGameTimer();
-    g_Game.BombTimer = BOMB_TIMER;
-    
+        
     g_Game.isRoundOver = false;
     g_Game.countofRounds = 0;
     g_Game.isGoalScored = false;
     g_Game.winner = -2;
+    
+    // reset timers
+    setGameTimer();
     
     slScrPosNbg1(toFIXED(0), toFIXED(0));
     
@@ -109,6 +99,9 @@ void gameplay_init() {
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
+    currentItem = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
+    sprite_frame_reset(&fishtank_item);
+    sprite_frame_reset(&shroom_item);
     setItemPositions();    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
@@ -347,7 +340,6 @@ void demo_update(void)
         }
         // you ran out of time or died
         else if (g_Game.nextState == GAME_STATE_GAMEPLAY &&  g_Game.winner == -1) {
-            // jo_nbg0_printf(2, 20, "PLAYER IS DEAD?");
             setGameTimer();
             g_Players[0].numLives = getLives(&g_Players[0]);
             g_Players[1].numLives = getLives(&g_Players[1]);
@@ -369,7 +361,6 @@ void demo_update(void)
             g_Game.winner = -2;
             initTouchCounter(1);
             
-            // resetPlayerAttacks(); // not sure if needed
             boundPlayer(&g_Players[0]);
             boundPlayer(&g_Players[1]);
             g_StartStoryFrames = CHARACTER_SELECT_TIMER;
@@ -382,7 +373,6 @@ void demo_update(void)
             playCDTrack(BEGIN_GAME_TRACK, false);
         }
         else if (g_Game.nextState == GAME_STATE_GAMEPLAY &&  g_Game.winner == 0) {
-            // jo_nbg0_printf(2, 20, "PLAYER IS ALIVE?");
             setGameTimer();
             g_Players[0].numLives = getLives(&g_Players[0]);
             g_Players[1].numLives = getLives(&g_Players[1]);
@@ -411,7 +401,7 @@ void demo_update(void)
                 g_Game.isRoundOver = false;
             }
             if (frame == 240) { // this is a hack
-                if (g_Game.gameMode == GAME_MODE_STORY) {
+                if (g_Game.gameMode == GAME_MODE_STORY &&  g_Players[0].subState == PLAYER_STATE_ACTIVE) {
                     g_Players[0].score.points = g_Players[0].score.total;
                     // unlock stadler
                     if (!characterUnlocked[CHARACTER_WALRUS] && 
@@ -559,7 +549,6 @@ void demo_update(void)
         storySelectUpdate();
     } 
     else if (!g_Game.isPaused) {
-        // TODO: move to draw/HUD timer function
         gameplay_timer();
         switch(g_Game.gameMode)
         {
@@ -582,13 +571,13 @@ void demo_update(void)
 }
 
 void tallyScore(void) {
-    Uint16 thresholds[] = {10000, 1000, 100, 50, 1};
+    unsigned int thresholds[] = {250000, 10000, 1000, 100, 50, 1};
     if (g_Players[0].score.points > 0) {
         jo_nbg0_printf(10, 12, "ROUND SCORE:%09d", g_Players[0].score.points);
     }
     jo_nbg0_printf(10, 14, "TOTAL SCORE:%09d", g_Players[0].score.total);
-    for (Uint8 i = 0; i < 5; i++) {
-        Uint16 threshold = thresholds[i];
+    for (Uint8 i = 0; i < 6; i++) {
+        unsigned int threshold = thresholds[i];
         if (g_Players[0].score.points > threshold) {
             pcm_play(g_Assets.scoreAddPcm8, PCM_PROTECTED, 7);
             g_Players[0].score.points -= threshold;
@@ -642,20 +631,15 @@ void gameScore_draw(void) {
     }
 }
 
-// todo: move things from switch statement that are the same in each case to the end
 void gameplayUI_draw(PPLAYER player) {
-    // TODO: replace magic numbers
-    static int color_multiplier = 5;
-    static int power_meter_height = 3;
-    set_spr_scale(player->_portrait, 1.1, 1);
-
+    set_spr_scale(player->_portrait, 1.1, 1); // only really needs to do this once, after displaying the story/campaign screen
     // calculate power meter color
-    hslSprites.color[p_rangePmenu[player->playerID].lower].h = player->shield.power*color_multiplier;
+    hslSprites.color[p_rangePmenu[player->playerID].lower].h = player->shield.power*COLOR_MULTIPLIER;
     calculate_sprites_color(&p_rangePmenu[player->playerID]);
     do_update_Pmenu[player->playerID] = true;
 
     player->_bg->spr_id = player->_bg->anim1.asset[player->playerID];
-    set_spr_scale(player->_bg, player->shield.power, power_meter_height);            // TODO:  eliminate magic numbers
+    set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);            // TODO:  eliminate magic numbers
     switch (player->teamChoice)
     {
         case TEAM_1: {
@@ -701,7 +685,7 @@ void gameplayUI_draw(PPLAYER player) {
         default:
             break;
     }
-    set_spr_scale(player->_bg, player->shield.power, power_meter_height);
+    set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);
     my_sprite_draw(player->_bg);
     my_sprite_draw(player->_portrait);
 }
@@ -816,11 +800,7 @@ void gameplay_update(void)
     check_inputs();
     switch (g_Game.gameMode) {
         case GAME_MODE_CLASSIC:
-            if (!g_GameOptions.testCollision) {
-                getClassicModeInput();
-            } else {
-                getPlayersInput();
-            }
+            getClassicModeInput();
             break;
         default:
             getPlayersInput();
@@ -839,11 +819,7 @@ void    demo_input(void)	{
 int ball_velocity = 0;
 bool ball_falling = false;
 bool ball_bounce = false;
-bool drop_ball_animation(Sprite *ball) {    
-    // jo_nbg0_printf(2, 17, "BALL_FALLING:%i", ball_falling);
-    // jo_nbg0_printf(2, 18, "BALL_BOUNCE:%i", ball_bounce);
-    // jo_nbg0_printf(2, 19, "BALL_VELOCITY:%i", ball_velocity); 
-    // jo_nbg0_printf(2, 20, "BALLPOS.Y:%i", ball->pos.y);
+bool drop_ball_animation(Sprite *ball) {
     // ball is falling
     if (ball_falling && !ball_bounce) {
         pcm_play(g_Assets.dropPcm8, PCM_PROTECTED, 6);

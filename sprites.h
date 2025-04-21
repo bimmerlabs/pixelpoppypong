@@ -114,17 +114,6 @@ extern Sprite shroom_item;
 extern Sprite craig_item;
 extern Sprite garfield_item;
 
-// static int ball_velocity = 0;
-// static bool ball_falling = false;
-// static bool ball_bounce = false;
-
-// #define BALL_VELOCITY toFIXED(10)
-// extern int ball_velocity;
-// extern bool ball_falling;
-// extern bool ball_bounce;
-
-// bool drop_ball_animation(Sprite *ball);
-
 static inline void set_item_position(Sprite *sprite) {
     sprite->pos.x = toFIXED(my_random_range(-250, 250));
     sprite->pos.y = toFIXED(my_random_range(-160, 160));
@@ -148,7 +137,7 @@ static inline void set_shield_position(Sprite *_player, Sprite *_shield, FIXED s
     _shield->pos.z = _player->pos.z;
 }
 
-static inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
+static __jo_force_inline void set_spr_scale(Sprite *sprite, float sx, float sy) {
     sprite->scl.x = toFIXED(sx);
     sprite->scl.y = toFIXED(sy);
 }
@@ -227,6 +216,9 @@ static __jo_force_inline void sprite_frame_reset(Sprite *sprite) {
     sprite->anim2.frame = 0;
 }
 
+void ball_animation_reset(Sprite *ball);
+
+void drawGoalSprites(Sprite *sprite, int sprite_id, int shadow_id, int zmode, int flip, int x, int y, int scale_y);
 
 // SPR_ATTRIBUTE
 // Format

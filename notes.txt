@@ -170,8 +170,8 @@ version 0.6:
 -unlockables:
 	new characters (done)
 	big head mode
-	garfield (special)
-	stadler (special)
+	garfield (special) (done)
+	stadler (special) (done)
 -items: implement collision (started)
 -character select (story mode) (LATER)
 	note: is a combo of team_select and name_entry
@@ -187,7 +187,7 @@ version 0.6:
 	store big head mode?
 -team high scores? (need to reimplmement teams with 2 people)	
 -save game (done?)
--remove or re-implement star system (done_
+-remove or re-implement star system (done)
 -endings
 
 -playtest:
@@ -202,7 +202,7 @@ version 0.6:
 	story mode:
 		beat the game:
 			easy
-			medium
+			medium (done)
 			hard
 		die:
 			-out of time (done)
@@ -210,13 +210,13 @@ version 0.6:
 				is it because of the name select assets?  something being loaded twice?
 				haven't found anything obvious - leave for now
 			-lose to AI (done)
-			-run out of continues
+			-run out of continues (done)
 	vs mode:
 		beat the game:
 			easy (done)
 			medium (done)
 				-bug found: after beating in medium, started a game in hard.  the game immediately went to the "you won" screen (something didn't get set to defaults after winning)
-				team_select.c has an overflow bug on the number of players
+				team_select.c has an overflow bug on the number of players (fixed)
 			hard (done)
 		die:
 			-out of time (done)
@@ -228,7 +228,8 @@ version 0.7-0.8
 	-stop song from playing before other one has ended while scoring
 	-continue music
 -sound effects (started)
-	-fix order or meny effects (start, select, back, etc)
+	-fix order or menu effects (start, select, back, etc) (done)
+	-additional effects?
 -lighting
 	adjust backgrounds depending on items (bombs, shrooms, etc)
 	flash the goal of the person scored on
@@ -302,3 +303,5 @@ gameplay loop:
 classic - 2 players, no items, use screen edges (make this first)
 story - 1 player, fight each character in order, Wuppy is the final boss (?)
 battle - 2-4 players, items, high scores, unlock garfield and craig as characters
+
+TODO:

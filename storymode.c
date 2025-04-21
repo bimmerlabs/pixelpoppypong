@@ -91,7 +91,7 @@ void initStoryMode(void)
     player->isAI = false;
     boundPlayer(player);
     draw_story_cursor = false;
-    resetSpriteColors();
+    // resetSpriteColors();
     
     slScrPosNbg0(toFIXED(0), toFIXED(4));
     
@@ -154,55 +154,3 @@ void resetSpriteColors(void) {
     updateAllPalette();
 }
 
-
-// void storySelectCharacter(void)
-// {    
-        // PPLAYER player = &g_Players[1];
-        // player->character.choice = g_Game.countofRounds +1;
-
-            // // ASSIGN STATS (not complete)
-            // player->maxSpeed = characterAttributes[player->character.choice].maxSpeed;
-            // player->acceleration = toFIXED(characterAttributes[player->character.choice].acceleration);
-            // player->power = characterAttributes[player->character.choice].power;
-            // player->teamChoice = TEAM_2;
-            // player->_sprite->flip = sprHflip;
-            // player->character.selected = true;
-            // characterAvailable[player->character.choice] = false;
-            // switch (player->character.choice)
-            // {
-                // case CHARACTER_JELLY:
-                    // player->_sprite = &jelly;
-                    // break;
-                // case CHARACTER_PENNY:
-                    // player->_sprite = &penny;
-                    // break;
-                // case CHARACTER_POPPY:
-                    // player->_sprite = &poppy;
-                    // break;
-                // case CHARACTER_POTTER:
-                    // player->_sprite = &potter;
-                    // break;
-                // case CHARACTER_SPARTA:
-                    // player->_sprite = &sparta;
-                    // break;
-                // case CHARACTER_TJ:
-                    // player->_sprite = &tj;
-                    // break;
-                // case CHARACTER_GEORGE:
-                    // player->_sprite = &george;
-                    // break;
-                // case CHARACTER_WUPPY:
-                    // player->_sprite = &wuppy;
-                    // break;
-                // case CHARACTER_WALRUS:
-                    // player->_sprite = &stadler;
-                    // break;
-                // case CHARACTER_GARF:
-                    // player->_sprite = &garfield;
-                    // break;
-                // default:
-                    // break;
-            // }
-    // // set to first frame
-    // player->_sprite->spr_id = player->_sprite->anim1.asset[0];
-// }

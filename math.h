@@ -23,6 +23,12 @@ static  __jo_force_inline void      my_fixed_3d_rotate_matrix_rad(jo_rot3D_fixed
 	slRotZ(RADtoANG(jo_fixed2float(r->rz)));
 }
 
+static inline FIXED my_fixed_clamp(FIXED value, FIXED min, FIXED max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
+}
+
 // from danny duarte
 Uint32 ApproximateIntegerSqrt(Uint32 value);
 

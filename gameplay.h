@@ -8,8 +8,6 @@
 #include "objects/player.h"
 #include "BG_DEF/sprite_colors.h"
 
-// #define ROUND_OVER_TIME (4 * 60)
-
 #define ROUND_BEGIN_TIME_NORMAL (6 * 60)
 #define DROP_BALL_TIME_NORMAL (4 * 60) // MAYBE THIS VARIES BASED ON SCORE OR EXPLODING?
 #define ROUND_BEGIN_TIME_FAST (3.5 * 60)
@@ -17,16 +15,19 @@
 #define DEMO_TIME (30 * 60)
 #define BOMB_TIMER (15 * 60)
 #define TIMEOUT_BATTLE 999 // seconds
-#define TIMEOUT_CLASSIC 299
+#define TIMEOUT_CLASSIC 199
 #define TIMEOUT_STORY_EASY 599
-#define TIMEOUT_STORY_MEDIUM 299
-#define TIMEOUT_STORY_HARD 259
+#define TIMEOUT_STORY_MEDIUM 399
+#define TIMEOUT_STORY_HARD 349
 
 #define BALL_TOUCH_TIMEOUT (5 * 60)
 #define GAME_END_DELAY_TIMEOUT (5 * 60)
 
 #define MAX_ROUNDS 8
 
+#define COLOR_MULTIPLIER 5
+#define POWER_METER_HEIGHT 3
+    
 #define GAMEPLAY_PORTRAIT_X 300
 #define GAMEPLAY_PORTRAIT_Y 190
 #define GAMEPLAY_PORTRAIT_Y 190
@@ -42,6 +43,17 @@ extern bool play_continue_track;
 
 static bool draw_bomb;
 static bool explode_bomb;
+
+typedef enum _GAME_ITEMS
+{
+    GAME_ITEM_BOMB = 0,
+    GAME_ITEM_FISH,
+    GAME_ITEM_SHROOM,
+    GAME_ITEM_GARF,
+    GAME_ITEM_CRAIG,
+    GAME_ITEM_MAX,
+} GAME_ITEMS;
+static unsigned int currentItem;
 
 void gameplay_init(void);
 void demo_init(void);
@@ -67,19 +79,11 @@ extern bool ball_bounce;
 bool drop_ball_animation(Sprite *ball);
 
 static __jo_force_inline void initPixelPoppy(void) {
+    ball_animation_reset(&pixel_poppy);
     reset_ball_movement(&pixel_poppy);
-    sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
     g_Game.isGoalScored = false;
-}
-static __jo_force_inline void setItemPositions(void) {
-    set_item_position(&bomb_item);
-    set_item_position(&fishtank_item);
-    set_item_position(&shroom_item);
-    set_item_position(&garfield_item);
-    set_item_position(&craig_item);
-}
-static inline void draw_star_element(Sprite *sprite, Uint8 num, int x, int y, int offset) {
+}static inline void draw_star_element(Sprite *sprite, Uint8 num, int x, int y, int offset) {
     for (int i = 0; i < num; i++) {
         set_spr_position(sprite, x, y, 90);
         my_sprite_draw(sprite);
@@ -153,8 +157,7 @@ static __jo_force_inline void gameplayScore_draw(PPLAYER player) {
 static __jo_force_inline void drawGoals(PPLAYER player) {
     if (player->subState == PLAYER_STATE_DEAD) {
         return;
-    }    
-        // Set goal asset by team selection
+    }    // Set goal asset by team selection
     Uint8 i = player->teamChoice-1;
     int x_position = 0;
     int y_position_top = 0;
@@ -179,7 +182,7 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
                 y_position_top = -g_Game.goalYPosTop;
                 y_position_mid = g_Game.goalYPosMid;
                 y_position_bot = g_Game.goalYPosBot;
-                goal_scale = g_Game.goalScale; // adjust for difficulty
+                goal_scale = g_Game.goalScale;
             }
             else {
                 x_position = -GOAL_X_POS;
@@ -208,7 +211,7 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
                 y_position_top = -GOAL_Y_POS_TOP_VS_MODE;
                 y_position_mid = -GOAL_Y_POS_MID_VS_MODE;
                 y_position_bot = -GOAL_Y_POS_BOT_VS_MODE;
-                goal_scale = GOAL_SCALE_VS_MODE; // adjust for difficulty              
+                goal_scale = GOAL_SCALE_VS_MODE;            
             }
             break;
         }
@@ -242,70 +245,120 @@ static __jo_force_inline void drawGoals(PPLAYER player) {
             break;
     }
     
-        // TODO: make a subfunction
-    // top
-    goal[i].spr_id = goal[i].anim1.asset[0];
-    goal[i].zmode = top_zmode;
-    goal[i].flip = top_flip;
-    set_spr_position(&goal[i], x_position, y_position_top, 120);
-    set_spr_scale(&goal[i], 2, 2);
-    my_sprite_draw(&goal[i]);
-    // shadow
-    goal[i].spr_id = goal[i].anim1.asset[2];
-    set_spr_position(&goal[i], x_position+2, y_position_top+2, 125);
-    my_sprite_draw(&goal[i]);
+    drawGoalSprites(&goal[i], 0, 2, top_zmode, top_flip, x_position, y_position_top, 2);
+    drawGoalSprites(&goal[i], 1, 3, mid_zmode, top_flip, x_position, y_position_mid, goal_scale);
+    drawGoalSprites(&goal[i], 0, 2, bot_zmode, bot_flip, x_position, y_position_bot, 2);
+}
 
-    // middle
-    goal[i].spr_id = goal[i].anim1.asset[1];
-    goal[i].zmode = mid_zmode;
-    set_spr_position(&goal[i], x_position, y_position_mid, 120);
-    set_spr_scale(&goal[i], 2, goal_scale);
-    my_sprite_draw(&goal[i]);
-    // shadow
-    goal[i].spr_id = goal[i].anim1.asset[3];
-    set_spr_position(&goal[i], x_position+2, y_position_mid+2, 125);
-    my_sprite_draw(&goal[i]);
+static float item_scale = 0.1;
+static float item_velocity = 0.0;
 
-    // bottom
-    goal[i].spr_id = goal[i].anim1.asset[0];
-    goal[i].zmode = bot_zmode;
-    goal[i].flip = bot_flip;
-    set_spr_position(&goal[i], x_position, y_position_bot, 120);
-    set_spr_scale(&goal[i], 2, 2);
-    my_sprite_draw(&goal[i]);
-    // shadow
-    goal[i].spr_id = goal[i].anim1.asset[2];
-    set_spr_position(&goal[i], x_position+2, y_position_bot+2, 125);
-    my_sprite_draw(&goal[i]);
+static __jo_force_inline void setItemPositions(void) {
+    item_scale = 0.1;
+    item_velocity = 0.0;
+    explode_bomb = false;
+    draw_bomb = true;
+    g_Game.BombTimer = BOMB_TIMER;
+    sprite_frame_reset(&bomb_item);
+    set_item_position(&bomb_item);
+    set_spr_scale(&bomb_item, item_scale, item_scale);
+    
+    set_item_position(&fishtank_item);
+    set_spr_scale(&fishtank_item, item_scale, item_scale);
+    
+    set_item_position(&shroom_item);
+    set_spr_scale(&shroom_item, item_scale, item_scale);
+    
+    set_item_position(&garfield_item);
+    set_spr_scale(&garfield_item, item_scale, item_scale);
+    
+    set_item_position(&craig_item);
+    set_spr_scale(&craig_item, item_scale, item_scale);
+    
+    // currentItem = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
+    currentItem++;
+    if (currentItem == GAME_ITEM_MAX) {
+        currentItem = GAME_ITEM_BOMB;
+    }
 }
 
 static __jo_force_inline void drawGameItems(void) {
-    if (draw_bomb) {
-        my_sprite_draw(&bomb_item);
-    }
-    if (fishtank_item.visible)
-        my_sprite_draw(&fishtank_item);
-    if (shroom_item.visible)
-        my_sprite_draw(&shroom_item);
-    if (garfield_item.visible)
-        my_sprite_draw(&garfield_item);
-    if (craig_item.visible)
-        my_sprite_draw(&craig_item);
-
-    //ANIMATIONS
-    if (!explode_bomb) {
-        looped_animation_pow(&bomb_item, 4);
-    }
-    else {
-        explode_bomb = explode_animation(&bomb_item);
-        if (explode_bomb == false) {
-            draw_bomb = false;
-        }
-    }
-    looped_animation_pow(&fishtank_item, 8);
-    looped_animation_pow(&shroom_item, 4);
-    hsl_incSprites.h += 2;
-    do_update_shroom = true;
+    switch (currentItem) {
+        case GAME_ITEM_BOMB:
+            if (draw_bomb) {
+                if (item_scale < 2.0) {
+                    if (item_velocity < 0.5) {
+                        item_velocity += 0.01;
+                    }
+                    item_scale += item_velocity;
+                    set_spr_scale(&bomb_item, item_scale, item_scale);
+                }
+                my_sprite_draw(&bomb_item);
+                if (!explode_bomb) {
+                    looped_animation_pow(&bomb_item, 4);
+                }
+                else {
+                    explode_bomb = explode_animation(&bomb_item);
+                    if (explode_bomb == false) {
+                        draw_bomb = false;
+                    }
+                }
+            }
+            break;
+        case GAME_ITEM_FISH:
+            if (fishtank_item.visible) {
+                if (item_scale < 2.0) {
+                    if (item_velocity < 0.5) {
+                        item_velocity += 0.01;
+                    }
+                    item_scale += item_velocity;
+                    set_spr_scale(&fishtank_item, item_scale, item_scale);
+                }
+                my_sprite_draw(&fishtank_item);
+                looped_animation_pow(&fishtank_item, 8);
+            }
+            break;
+        case GAME_ITEM_SHROOM:
+            if (shroom_item.visible) {
+                if (item_scale < 2.0) {
+                    if (item_velocity < 0.5) {
+                        item_velocity += 0.01;
+                    }
+                    item_scale += item_velocity;
+                    set_spr_scale(&shroom_item, item_scale, item_scale);
+                }
+                my_sprite_draw(&shroom_item);
+                looped_animation_pow(&shroom_item, 4);
+                hsl_incSprites.h += 2;
+                do_update_shroom = true;
+            }
+            break;
+        case GAME_ITEM_GARF:
+            if (garfield_item.visible) {
+                if (item_scale < 1.0) {
+                    if (item_velocity < 0.5) {
+                        item_velocity += 0.01;
+                    }
+                    item_scale += item_velocity;
+                    set_spr_scale(&garfield_item, item_scale, item_scale);
+                }
+                my_sprite_draw(&garfield_item);
+            }
+            break;
+        case GAME_ITEM_CRAIG:
+            if (craig_item.visible) {
+                if (item_scale < 1.6) {
+                    if (item_velocity < 0.5) {
+                        item_velocity += 0.01;
+                    }
+                    item_scale += item_velocity;
+                    set_spr_scale(&craig_item, item_scale, item_scale);
+                }
+                my_sprite_draw(&craig_item);
+            }
+            break;
+        default:
+            break;    }
 }
 static __jo_force_inline void drawVsMode(void) {
         // SPRITES
@@ -315,7 +368,9 @@ static __jo_force_inline void drawGameItems(void) {
         my_sprite_draw(&timer_num1);  // ones
         
         drawPlayers();
-        drawGameItems();
+        if (g_Game.isActive) {
+            drawGameItems();
+        }
         // don't draw until poppy is reset
         if (!g_Game.isGoalScored && !g_Game.isRoundOver) {
             if (g_Game.isBallActive) {
@@ -331,8 +386,7 @@ static __jo_force_inline void drawGameItems(void) {
             g_Game.isBallActive = false;
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
-            // g_Game.countofRounds++; // ??
-            setItemPositions(); // reset items after each goal
+            // setItemPositions(); // move to after ball drop?
         }
 }
 static __jo_force_inline void drawClassicMode(void) {
@@ -401,6 +455,7 @@ static __jo_force_inline bool startGameplay(void) {
         if (!g_GameOptions.testCollision) {
             start_ball_movement(&pixel_poppy);
         }
+        setItemPositions();
         initTouchCounter(0);
         g_Game.isRoundOver = false;
         g_Game.isGoalScored = false;

@@ -17,12 +17,10 @@ bool characterAvailable[TOTAL_CHARACTERS] = {0};
 bool teamAvailable[MAX_TEAMS+1] = {0};
 int teamCount[MAX_TEAMS+1] = {0};
 
-void respawnPlayer(PPLAYER player, bool deductLife);
-
 const CHARACTER_ATTRIBUTES characterAttributes[] = {
   // s   a   p    // speed, acceleration, power - scale 0-100
-    {70, 60, 55}, // MACCHI: High speed, medium acceleration, medium power
-    {55, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
+    {70, 60, 60}, // MACCHI: High speed, medium acceleration, medium power
+    {60, 70, 60}, // JELLY: Medium speed, high acceleration, medium-high power
     {60, 50, 70}, // PENNY: Medium-high speed, medium acceleration, high power
     {60, 45, 80}, // POPPY: Low attributes (for cursors) (was 4 4 4)
     {50, 60, 70}, // POTTER: Low attributes (for cursors) (was 4 4 4)
@@ -35,21 +33,8 @@ const CHARACTER_ATTRIBUTES characterAttributes[] = {
     {60, 60, 60}, // NONE: Medium attributes (for CPU)
 };
 
-// void spawnPlayers(void)
-// {
-    // PPLAYER player = NULL;
-
-    // for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
-    // {
-        // player = &g_Players[i];
-        // respawnPlayer(player, false);
-    // }
-// }
-
 void resetPlayerScores(void)
 {
-    
-    // dss = getLives();
     g_Game.numStars = getStars();
     initTouchCounter(1);
     
@@ -57,7 +42,6 @@ void resetPlayerScores(void)
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         player = &g_Players[i];
-
         player->shield.power = SHIELD_POWER;
         player->score.stars  = 0;
         player->score.deaths = 0;
@@ -211,13 +195,13 @@ void getContinues(void)
             switch(g_Game.gameDifficulty)
             {
                 case GAME_DIFFICULTY_EASY:
-                    g_Game.numContinues = 3;
+                    g_Game.numContinues = 4;
                     break;
                 case GAME_DIFFICULTY_MEDIUM:
-                    g_Game.numContinues = 2;
+                    g_Game.numContinues = 3;
                     break;
                 case GAME_DIFFICULTY_HARD:
-                    g_Game.numContinues = 1;
+                    g_Game.numContinues = 2;
                     break;
                 default:
                     break;
@@ -410,11 +394,6 @@ void initVsModePlayers(void)
         g_goalPlayerId[player->teamChoice-1] = i;
         assignCharacterStats(player);
         
-        // player_bg.mesh = MESHoff;
-        // add_sprite_to_sweep_and_prune(player->_sprite);
-        
-
-        
         // PLAYER SPECIFIC ATTRIBUTES
         switch (player->teamChoice) {
             case TEAM_1: {
@@ -495,15 +474,12 @@ void initDemoPlayers(void)
     for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
-        // add_sprite_to_sweep_and_prune(player->_sprite);
         if (i == 0) {
             player->_sprite = &macchi;
             player->_sprite->spr_id = player->_sprite->anim1.asset[0];
             player->_sprite->flip = sprNoflip;
             player->onLeftSide = true;
             player->teamChoice = TEAM_1;
-            // g_Assets.drawSingleGoal[i] = false;
-            // set_spr_position(player->_sprite, -1*PLAYER_X, -100, PLAYER_DEPTH);
             if (g_Game.numPlayers >= THREE_PLAYER) {
                 g_Assets.drawSingleGoal[0] = false;
                 set_spr_position(player->_sprite, -1*PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
@@ -534,7 +510,6 @@ void initDemoPlayers(void)
             player->_sprite->flip = sprHflip;
             player->onLeftSide = false;
             player->teamChoice = TEAM_2;
-            // set_spr_position(player->_sprite, PLAYER_X, -100, PLAYER_DEPTH);
             
             if (g_Game.numPlayers <= THREE_PLAYER) {
                 g_Assets.drawSingleGoal[i] = true;
@@ -724,27 +699,22 @@ void initPlayerGoals(void)
 void getClassicModeInput(void)
 {
     PPLAYER player = NULL;
-
-    // check inputs for all players
-    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
-
         if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == true)
         {
-            // TODO: hit a button to respawn??
             continue;
         }
-        
-        // switch state for game mode (handle inputs differently)?
-        
+        player->moveHorizontal = false;
+        player->moveVertical = false;
         if (player->input->isAnalog) {
             player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
-            player->moveVertical = true;
+            if (player->curPos.dy > toFIXED(0) || player->curPos.dy < toFIXED(0)) {
+                player->moveVertical = true;
+            }
         }
         else {
-            player->moveVertical = false;
-
             if (jo_is_input_key_pressed(player->input->id, JO_KEY_UP))
             {
                 player->curPos.dy -= X_SPEED_INC;
@@ -756,64 +726,39 @@ void getClassicModeInput(void)
                 player->moveVertical = true;
             }
         }
-        
         if(player->moveVertical == false)
         {
             player->curPos.dy = 0;
             player->_sprite->vel.y = 0;
         }
-        
         regenPlayerPower(player);
-        
-        if (!g_Game.isActive) {
-            return;
-        }        
-        playerAttack(player); // need to disable before start of game?
-        
-        // SHIELD
-        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
-        {
-            if (player->shield.power > 1) {
-                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);                
-                player->shield.activate = true;
-                player->_sprite->pos.r = SHIELD_RADIUS;
-            }
-            player->shield.power--;
-        }
-        else {
-            player->shield.activate = false;
-            player->_sprite->pos.r = PLAYER_RADIUS;
-        }
+        playerAttack(player);
     }
 }
 
 void getPlayersInput(void)
 {
     PPLAYER player = NULL;
-    
-    // check inputs for all players
-    for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         player = &g_Players[i];
-
         if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == true || player->subState == PLAYER_STATE_DEAD)
         {
-            // TODO: hit a button to respawn??
             continue;
         }
-        
-        // switch state for game mode (handle inputs differently)?       
+        player->moveHorizontal = false;
+        player->moveVertical = false;
         if (player->input->isAnalog) {
             player->curPos.dx = player->input->axis_x;
-            // don't process in classic mode?
             player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
-            player->moveHorizontal = true;
-            player->moveVertical = true;
+            if (player->curPos.dx > toFIXED(0) || player->curPos.dx < toFIXED(0)) {
+                player->moveHorizontal = true;
+            }
+            if (player->curPos.dy > toFIXED(0) || player->curPos.dy < toFIXED(0)) {
+                player->moveVertical = true;
+            }
         }
         else {
-            player->moveHorizontal = false;
-            player->moveVertical = false;
-            // don't process in classic mode?
             if (jo_is_input_key_pressed(player->input->id, JO_KEY_LEFT))
             {
                 player->curPos.dx -= X_SPEED_INC;
@@ -836,7 +781,6 @@ void getPlayersInput(void)
                 player->moveVertical = true;
             }
         }
-        
         if(player->moveHorizontal == false)
         {
             player->curPos.dx = 0;
@@ -847,32 +791,15 @@ void getPlayersInput(void)
             player->curPos.dy = 0;
             player->_sprite->vel.y = 0;
         }
-        
         regenPlayerPower(player);
-        
-        if (!g_Game.isActive) {
-            return;
-        }        
-        playerAttack(player); // need to disable before start of game?
-        
-        // SHIELD
-        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
-        {
-            if (player->shield.power > 1) {
-                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);   
-                player->shield.activate = true;
-                player->_sprite->pos.r = SHIELD_RADIUS;
-            }
-            player->shield.power--;
-        }
-        else {
-            player->shield.activate = false;
-            player->_sprite->pos.r = PLAYER_RADIUS;
-        }
+        playerAttack(player);
     }
 }
 
 void playerAttack(PPLAYER player) {
+        if (!g_Game.isActive) {
+            return;
+        }        
         // ATTACK1
         if (jo_is_input_key_down(player->input->id, JO_KEY_A) && player->shield.power > ATTACK1_COST && !player->attack1)
         {
@@ -923,6 +850,20 @@ void playerAttack(PPLAYER player) {
         else if (player->attack2 && player->attack2Frames < ATTACK_FRAMES) {
             player->attack2Frames++;
         }
+        // SHIELD
+        if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
+        {
+            if (player->shield.power > 1) {
+                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);   
+                player->shield.activate = true;
+                player->_sprite->pos.r = SHIELD_RADIUS;
+            }
+            player->shield.power--;
+        }
+        else {
+            player->shield.activate = false;
+            player->_sprite->pos.r = PLAYER_RADIUS;
+        }
 }
 
 void regenPlayerPower(PPLAYER player)
@@ -950,35 +891,6 @@ void updatePlayers(void)
             continue;
         }
 
-        // if(player->subState == PLAYER_STATE_EXPLODING)
-        // {
-            // player->frameCount--;
-            // if(player->frameCount <= 0)
-            // {
-                // // transition from exploding to exploded state
-                // //player->objectState = OBJECT_STATE_INACTIVE;
-                // player->curPos.dx = 0;
-                // player->curPos.dy = 0;
-                // player->ds = 0;
-                // player->da = 0;
-
-                // player->frameCount = EXPLODE_FRAME_COUNT;
-                // player->subState = PLAYER_STATE_EXPLODED;
-                // jo_audio_play_sound(&g_Assets.crackPCM);
-
-            // }
-            // //continue;
-        // }
-
-        // if(player->subState == PLAYER_STATE_EXPLODED)
-        // {
-            // player->frameCount--;
-            // if(player->frameCount <= 0)
-            // {
-                // respawnPlayer(player, true);
-            // }
-        // }
-
         speedLimitPlayer(player);
 
         // move the player
@@ -986,7 +898,6 @@ void updatePlayers(void)
         player->_sprite->pos.x += player->curPos.dx;
         player->_sprite->vel.x += player->curPos.dx;
         player->_sprite->vel.y += player->curPos.dy;
-        // update_bounding_box(player->_sprite);
         detect_player_ball_collision(&pixel_poppy, player);
         boundPlayer(player);
     }
@@ -1001,10 +912,6 @@ void speedLimitPlayer(PPLAYER player)
     FIXED x_l_speed;
     FIXED x_r_speed;
     if (player->isAI == true) {
-        // y_up_speed = AI_X_SPEED;
-        // y_dn_speed = -AI_X_SPEED;
-        // x_l_speed  = MAX_X_SPEED;
-        // x_r_speed  = -MAX_X_SPEED;
         y_up_speed = player->maxSpeed;
         y_dn_speed = -player->maxSpeed;
         x_l_speed  = MAX_X_SPEED;
@@ -1095,77 +1002,6 @@ void boundPlayer(PPLAYER player)
     {
         player->_sprite->pos.y = SCREEN_TOP + PLAYER_HEIGHT;
     }
-}
-
-// void explodeNeighbors(PPLAYER player)
-// {
-    // bool neighbor = false;
-
-    // // for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
-    // // {
-        // // PPLAYER victim = &g_Players[i];
-
-        // // if(victim->objectState != OBJECT_STATE_ACTIVE)
-        // // {
-            // // continue;
-        // // }
-
-        // // if(victim->subState != PLAYER_STATE_ACTIVE)
-        // // {
-            // // continue;
-        // // }
-
-        // // if(player->input->id == victim->playerID)
-        // // {
-            // // continue;
-        // // }
-
-        // // // check if player is nearby
-        // // neighbor = checkDistance(player, victim);
-        // // if(neighbor == true)
-        // // {
-            // // explodePlayer(victim, false, false);
-        // // }
-    // // }
-// }
-
-void respawnPlayer(PPLAYER player, bool deductLife)
-{
-    if(player->objectState != OBJECT_STATE_ACTIVE)
-    {
-        return;
-    }
-
-    if(g_Game.gameState != GAME_STATE_GAMEPLAY)
-    {
-        // only respawn during gameplay
-        player->subState = PLAYER_STATE_DEAD;
-        return;
-    }
-
-    if(player->numLives <= 0)
-    {
-        // no lives
-        player->subState = PLAYER_STATE_DEAD;
-        return;
-    }
-
-    if(deductLife == true)
-    {
-        player->numLives--;
-    }
-
-    // set position
-    player->curPos.x = toFIXED(jo_random(660) - 330);
-    player->curPos.y = toFIXED(jo_random(330) - 150);
-    // player->angle = 0;
-    // player->size = toFIXED(1);
-
-    // reset speed to zero
-    player->curPos.dx = 0;
-    player->curPos.dy = 0;
-
-    player->subState = PLAYER_STATE_ACTIVE;
 }
 
 bool explodePLayer(PPLAYER player)

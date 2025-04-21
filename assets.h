@@ -25,31 +25,8 @@
 #define NUM_EXPLOD_SPRITES 6
 #define NUM_FISH_SPRITES 4
 #define NUM_SHROOM_SPRITES 8
-    
-// // sprites Z-depth
-// // lower numbers are closer to the screen
-// // larger numbers are farther away
-// typedef enum _SPRITE_DEPTH
-// {
-    // SCORE_Z = 480,
-
-    // CRACKS_Z = 490,
-    // TITLE_MENU_Z = 491,
-
-    // TITLE_SCREEN_Z = 495,
-
-    // EXPLOSION_Z = 498,
-
-    // PLAYER_Z = 500,
-
-    // GRID_Z = 510,
-
-    // SSMTF_GRID_Z = 510,
-
-// } SPRITE_DEPTH;
 
 // holds sprite and audio assets
-// only really using these for animations?
 typedef struct _assets
 {
     // title screen
@@ -99,17 +76,11 @@ typedef struct _assets
 
     // audio assets
     // CORE / MENU SOUNDS
-    // short acceptPcm8; // EXITING MENUS?
     short cancelPcm8; // b button
     short cursorPcm8; // d-pad
-    // short finishPcm8; // last menu selection
     short nextPcm8;   // normal menu selection
     short startPcm8;  // start button first press
     short tickPcm8;   // analog adjustment
-    // short cursor1Pcm8; // back NEXT
-    // short cursor2Pcm8; // move CURSOR
-    // short plusPcm8; // next FINISH
-    // short startPcm8; // accept/start
     
     // GAMEPLAY SOUNDS
     short gameOverPcm8;
@@ -139,7 +110,6 @@ extern ASSETS g_Assets;
 extern int paw_blank_id;
 
 // initialize assets
-// void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets, int frames, int w, int h, unsigned int spritesPerRow, bool animation1or2);
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int frames, int w, int h, bool asset1or2);
 void loadSoundAssets(void);
 void loadCommonAssets(void);
