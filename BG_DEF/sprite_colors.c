@@ -203,7 +203,6 @@ PaletteRange p_rangeNormalMap = { 234, 254 };   // normal map
 GlobalHSL hsl_incSprites = {0, 0, 0};
 
 // initial image setup: hue, saturation, luminance, x_pos, y_pos, x_scale, y_scale, x_scroll (rate), y_scroll (rate), min_sat_id, max_sat_id, min_lum_id, max_lum_id
-// TODO: adjust attrSprites hue based on time (normal mapping) original was 288
 ImageAttr attrSprites = { 200, 255, 255, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
 
 void init_sprites_img(void) {
@@ -240,7 +239,6 @@ bool update_sprites_palette(PaletteRange *range) {
 }
 
 void reset_sprites (void) {
-    // hsl_incSprites = (GlobalHSL){0, 0, 0}; // is this neccesary?
     MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSpritesAll);
     min_max_sl_id(&hslSprites, &p_rangeSpritesAll, &attrSprites);
     MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, &p_rangeSpritesAll);
