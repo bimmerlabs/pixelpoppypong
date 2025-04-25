@@ -4,14 +4,17 @@
 #include "gameplay.h"
 #include "storymode.h"
 #include "backup.h"
-#include "screen_transition.h"
 #include "AI.h"
 bool start_gameplay_timer = false;
 bool round_start = false;
 
-Uint8 g_goalPlayerId[MAX_PLAYERS];
+Uint8 g_goalPlayerId[MAX_PLAYERS];
+
+Item g_item = {0};
+
 static bool draw_demo_text = true;
 static bool time_over = false;
+// static bool explode = false;
 bool play_continue_track = false;
 // TODO: implement this function
 // static bool isRoundOver(void);
@@ -99,10 +102,10 @@ void gameplay_init() {
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
-    currentItem = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
-    sprite_frame_reset(&fishtank_item);
-    sprite_frame_reset(&shroom_item);
-    setItemPositions();    
+    // g_item.id = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
+    // setItemPositions();
+    // g_Game.explodeBomb = false;
+    explosion_flash = false;    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
 }
@@ -155,23 +158,15 @@ void demo_init(void) {
         {
             case GAME_DIFFICULTY_EASY:
                 g_Game.GameTimer += TIMEOUT_STORY_EASY/10 + 1;
-                // if (g_Game.GameTimer > TIMEOUT_STORY_EASY)
-                    // g_Game.GameTimer = TIMEOUT_STORY_EASY;
                 break;
             case GAME_DIFFICULTY_MEDIUM:
                 g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
-                // if (g_Game.GameTimer > TIMEOUT_STORY_MEDIUM) // need to playtest to see if needed?
-                    // g_Game.GameTimer = TIMEOUT_STORY_MEDIUM; // reward player for being faster at beginning?
                 break;
             case GAME_DIFFICULTY_HARD:
                 g_Game.GameTimer += TIMEOUT_STORY_HARD/10 + 1;
-                // if (g_Game.GameTimer > TIMEOUT_STORY_HARD)
-                    // g_Game.GameTimer = TIMEOUT_STORY_HARD;
                 break;
             default:
                 g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
-                // if (g_Game.GameTimer > TIMEOUT_STORY_MEDIUM)
-                    // g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
                 break;
         }
     }
@@ -186,6 +181,10 @@ void demo_init(void) {
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        g_item.timer[i] = 0;
+    }
 }
 
 // TODO: eliminate?void setGoalSize(void)
@@ -272,9 +271,9 @@ void demo_update(void)
     // start round    if (round_start) {
         round_start = startGameplay(); // returns true until ball is active
     }
-    else {
-        round_start = false;
-    }
+    // else {
+        // round_start = false;
+    // }
     
     if (g_Game.isRoundOver) {
         return;
@@ -296,12 +295,26 @@ void demo_update(void)
         time_over = true;
     }
     
+    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
+    {
+        if (g_item.timer[i] > 0) {
+            g_item.timer[i]--;
+        }
+    }
+    // if (!explode_ball && !g_GameOptions.testCollision) {
     if (!explode_ball) {
         ballTtouchTimer++;
     }
-    if (ballTtouchTimer == BALL_TOUCH_TIMEOUT) {
+    if (ballTtouchTimer == BALL_TOUCH_TIMEOUT && !explode_ball) {
         stopBallMovement(&pixel_poppy);
-        pcm_play(g_Assets.explod1Pcm8, PCM_PROTECTED, 7);
+        explode_ball = true;
+        explosion_flash = true;
+    }
+    
+    if (explode_ball) {
+        if (explosion_flash) {
+            explosion_flash = explosionEffect();
+        }
         explode_ball = explode_animation(&pixel_poppy);
         if (!explode_ball) {
             g_Game.roundBeginTimer = ROUND_BEGIN_TIME_FAST;
@@ -314,16 +327,15 @@ void demo_update(void)
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
         }
-    }
-    
-    // test
-    if (g_Game.BombTimer == 0) {
-        explode_bomb = true;
+    }        
+    // bomb explodes at a specific time
+    if (g_Game.BombTimer == 0 && !g_Game.explodeBomb) {
+        g_Game.explodeBomb = true;
+        explosion_flash = true;
     }
     else {
         g_Game.BombTimer--;
     }
-    
 }
 void gameplay_draw(void)
 {    
@@ -768,6 +780,10 @@ void gameplay_update(void)
         return;
     }
 
+    if (fade_out) { // works for both ball and bomb..
+        fade_out = fadeOut(8, NEUTRAL_FADE);
+    }
+    
     // don't do anything if the game is paused
     if(g_Game.isPaused == true)
     {

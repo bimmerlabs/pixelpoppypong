@@ -2,12 +2,16 @@
 #include "assets.h"
 #include "sprites.h"
 #include "util.h"
-#include "pcmsys.h"
 
 // NOTE: Palette is loaded with the font and shared with all other sprites.
 
 Uint8 palette_transparent_index = 2;
 int paw_blank_id = 0;
+
+ASSETS g_Assets = {
+    .GameplaySoundsLoaded = false,
+    .NameEntrySoundsLoaded = false,
+};
 
 // tilesets
 jo_tile paw_tileset[NUM_PAW_SPRITES] = {0};
@@ -52,7 +56,6 @@ static void initTileset(jo_tile* tileset, unsigned int numSprites, unsigned int 
     }
 }
 
-// void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int num_tilesets , int frames, int w, int h, unsigned int spritesPerRow, bool animation1or2) {
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int frames, int w, int h, bool asset1or2) {
     initTileset(tileset, frames, 1, w, h);
     asset[0] = jo_sprite_add_tga_tileset(NULL, file, palette_transparent_index, tileset, frames);
@@ -68,14 +71,11 @@ void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, 
         else { // use asset2
             sprite->anim2.asset = asset;
             sprite->anim2.max = frames-1;
-            // sprite->spr_id = sprite->anim2.asset[sprite->anim2.frame]; // don't set here
         }
         sprite->pos.r = h; // is this needed?
-        // sprite->bbox.width = toFIXED(w*1.5);
-        // sprite->bbox.height = toFIXED(h*1.5);
 }
 
-void loadSoundAssets(void)
+void loadCoreSoundAssets(void)
 {
     // load_8bit_pcm returns the ID of the sound loaded
     // use pcm_reset, giving the id of the last sound you want to keep, to unload extra sounds
@@ -86,7 +86,10 @@ void loadSoundAssets(void)
     g_Assets.nextPcm8 = load_8bit_pcm((Sint8 *)"NEXT.PCM", 15360);
     g_Assets.startPcm8 = load_8bit_pcm((Sint8 *)"START.PCM", 15360);
     g_Assets.tickPcm8 = load_8bit_pcm((Sint8 *)"TICK.PCM", 15360);
-    
+}
+
+bool loadGameplaySoundAssets(void)
+{
     // GAMEPLAY SOUNDS
     g_Assets.scoreTotalPcm8 = load_8bit_pcm((Sint8 *)"SCORET.PCM", 15360);
     g_Assets.scoreAddPcm8 = load_8bit_pcm((Sint8 *)"SCOREA.PCM", 15360);
@@ -96,6 +99,10 @@ void loadSoundAssets(void)
     g_Assets.chain3Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN3.PCM", 15360);
     g_Assets.chain5Pcm8 = load_8bit_pcm((Sint8 *)"CHAIN5.PCM", 15360);
     g_Assets.explod1Pcm8 = load_8bit_pcm((Sint8 *)"EXPLOD1.PCM", 15360);
+    g_Assets.growPcm8 = load_8bit_pcm((Sint8 *)"GROW.PCM", 15360);
+    g_Assets.shrinkPcm8 = load_8bit_pcm((Sint8 *)"SHRINK.PCM", 15360);
+    g_Assets.bloopPcm8 = load_8bit_pcm((Sint8 *)"BLOOP.PCM", 15360);
+    g_Assets.stadlerPcm8 = load_8bit_pcm((Sint8 *)"STADLER.PCM", 15360);
     g_Assets.dropPcm8 = load_8bit_pcm((Sint8 *)"DROP.PCM", 15360);
     g_Assets.bouncePcm8 = load_8bit_pcm((Sint8 *)"BOUNCE.PCM", 15360);
     g_Assets.shieldPcm8 = load_8bit_pcm((Sint8 *)"SHIELD.PCM", 15360);
@@ -103,11 +110,28 @@ void loadSoundAssets(void)
     g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"BUMP.PCM", 15360);
     g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
     
+    // CAT SOUNDS
+    g_Assets.meowPcm8[0] = load_8bit_pcm((Sint8 *)"MEOW1.PCM", 15360);
+    g_Assets.meowPcm8[1] = load_8bit_pcm((Sint8 *)"MEOW5.PCM", 15360);
+    g_Assets.meowPcm8[2] = load_8bit_pcm((Sint8 *)"MEOW2.PCM", 15360);
+    g_Assets.meowPcm8[3] = load_8bit_pcm((Sint8 *)"MEOW6.PCM", 15360);
+    g_Assets.meowPcm8[4] = load_8bit_pcm((Sint8 *)"MEOW3.PCM", 15360);
+    g_Assets.meowPcm8[5] = load_8bit_pcm((Sint8 *)"MEOW7.PCM", 15360);
+    g_Assets.meowPcm8[6] = load_8bit_pcm((Sint8 *)"MEOW4.PCM", 15360);
+    g_Assets.meowPcm8[7] = load_8bit_pcm((Sint8 *)"MEOW8.PCM", 15360);
+    g_Assets.meowPcm8[8] = load_8bit_pcm((Sint8 *)"MEOW9.PCM", 15360);
+    g_Assets.meowID = MEOW1;
+    return true;
+}
+
+bool loadNameEntrySoundAssets(void)
+{   
     // NAME ENTRY SOUNDS
     g_Assets.name_ketPcm8 = load_8bit_pcm((Sint8 *)"NAME_KET.PCM", 15360);
     g_Assets.name_curPcm8 = load_8bit_pcm((Sint8 *)"NAME_CUR.PCM", 15360);
     g_Assets.name_canPcm8 = load_8bit_pcm((Sint8 *)"NAME_CAN.PCM", 15360);
     g_Assets.name_brkPcm8 = load_8bit_pcm((Sint8 *)"NAME_BRK.PCM", 15360);
+    return true;
 }
 
 void loadCommonAssets(void)
@@ -115,8 +139,6 @@ void loadCommonAssets(void)
     jo_sprite_free_all();
     // pixel poppy
     loadSprite(&pixel_poppy, g_Assets.pixel_poppy1, "POPPY.TGA", pixel_poppy1_tileset, NUM_POPPY_SPRITES, 64, 50, true);
-    // pixel_poppy_shadow.anim1.asset = g_Assets.pixel_poppy1;
-    // pixel_poppy_shadow.spr_id = pixel_poppy_shadow.anim1.asset[7];
     // menu cursor
     cursor.spr_id = jo_sprite_add_tga(NULL, "CURSOR.TGA", palette_transparent_index);
     
@@ -150,14 +172,18 @@ void unloadPPPLogoAssets(void)
 }
 
 void loadNameEntryAssets(void)
-{        
+{
+    if (!g_Assets.NameEntrySoundsLoaded) {
+            g_Game.isSoundLoading = true;
+            g_Assets.NameEntrySoundsLoaded = loadNameEntrySoundAssets();
+            g_Game.isSoundLoading = false;            
+    }
     loadSprite(&font, g_Assets.font, "FONT2.TGA", font_char_tileset, NUM_FONT_CHARS, 24, 24, true);
     g_Game.isLoading = false;
 }
 
 void unloadNameEntryAssets(void)
 {
-    // g_Game.isLoading = true;
     // unloads everything after this point
     jo_sprite_free_from(font.spr_id);
     
@@ -212,6 +238,11 @@ void loadCharacterAssets(void)
 void loadGameAssets(void)
 {
     g_Game.isLoading = true;
+    if (!g_Assets.GameplaySoundsLoaded) {
+            g_Game.isSoundLoading = true;
+            g_Assets.GameplaySoundsLoaded = loadGameplaySoundAssets();
+            g_Game.isSoundLoading = false;            
+    }
     // UI elements
     loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, NUM_TIMER_SPRITES, 16, 16, true);
     timer_num10.anim1.asset = g_Assets.timer;

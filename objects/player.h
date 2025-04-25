@@ -18,7 +18,7 @@
 #define PLAYER_WIDTH toFIXED(40)
 #define PLAYER_BOUNDARY_RIGHT  toFIXED(328.0)
 #define PLAYER_BOUNDARY_LEFT  toFIXED(-328.0)
-#define PLAYER_BOUNDARY_MIDDLE  toFIXED(88.0)
+#define PLAYER_BOUNDARY_MIDDLE  toFIXED(72.0)
 
 #define PLAYER_MOVEMENT_SPEED toFIXED(0.0015)
 
@@ -31,11 +31,21 @@
 #define SHIELD_POWER 26
 #define SHIELD_REGEN 8 // POWER OF 2!!
 
+#define PLAYER_RADIUS_SMALL toFIXED(10)
+#define PLAYER_RADIUS_LARGE toFIXED(60)
+#define SHIELD_RADIUS_SMALL toFIXED(30)
+#define SHIELD_RADIUS_LARGE toFIXED(100)
+
 #define ATTACK1 toFIXED(10)
 #define ATTACK1_COST 4
 #define ATTACK2 toFIXED(20)
 #define ATTACK2_COST 6
 #define ATTACK_FRAMES 8 // POWER OF 2!!
+
+#define LARGE_PLAYER_SPRITE toFIXED(4)
+#define SMALL_PLAYER_SPRITE toFIXED(1)
+#define NORMAL_PLAYER_SPRITE toFIXED(2)
+#define PLAYER_SPRITE_RATE toFIXED(0.1)
 
 typedef enum _PLAYER_STATE
 {
@@ -133,6 +143,8 @@ typedef struct _PLAYER
     bool scored;
     bool isAI;
     bool isExploded;
+    bool isBig;
+    bool isSmall;
     int numLives;
     int totalLives;
     
@@ -163,7 +175,7 @@ typedef struct _PLAYER
     // timers (in frames)
     int invulnerabilityFrames; // how long player in invulerable
     int respawnFrames; // how long before respawning player after death
-    int crackChoice; // style of cracked screen graphic
+    int shroomFrames; // how long the mushroom effect lasts
 
     // used for movement acceleration
     bool moveHorizontal;
@@ -222,4 +234,28 @@ static __jo_force_inline void drawPlayers(void)
         }
         my_sprite_draw(player->_sprite);
     }
+}
+
+static __jo_force_inline bool growPlayerSprite(PPLAYER player, FIXED targetSize)
+{
+    if (player->_sprite->scl.x < targetSize) {
+        player->_sprite->scl.x = player->_sprite->scl.x + PLAYER_SPRITE_RATE;
+        player->_sprite->scl.y = player->_sprite->scl.y + PLAYER_SPRITE_RATE;
+        shield[player->playerID].scl.x = player->_sprite->scl.x;
+        shield[player->playerID].scl.y = player->_sprite->scl.y;
+        return true;
+    }
+    return false;
+}
+
+static __jo_force_inline bool shrinkPlayerSprite(PPLAYER player, FIXED targetSize)
+{
+    if (player->_sprite->scl.x > targetSize) {
+        player->_sprite->scl.x = player->_sprite->scl.x - PLAYER_SPRITE_RATE;
+        player->_sprite->scl.y = player->_sprite->scl.y - PLAYER_SPRITE_RATE;
+        shield[player->playerID].scl.x = player->_sprite->scl.x;
+        shield[player->playerID].scl.y = player->_sprite->scl.y;
+        return true;
+    }
+    return false;
 }

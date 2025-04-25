@@ -49,6 +49,11 @@ void resetPlayerScores(void)
         player->score.points = 0;
         player->totalLives = getLives(player);
         player->numLives = player->totalLives;
+        set_spr_scale(player->_sprite, 2, 2);
+        set_spr_scale(&shield[i], 2, 2);
+        player->isBig = false;
+        player->isSmall = false;
+        player->shroomFrames = SHROOM_TIMER;
     }
 }
 
@@ -63,6 +68,10 @@ void resetPlayerAttacks(void)
         player->_sprite->pos.r = PLAYER_RADIUS;
         sprite_frame_reset(&shield[i]);
         player->isExploded = false;
+        // set_spr_scale(player->_sprite, 2, 2);
+        // set_spr_scale(&shield[i], 2, 2);
+        // player->isBig = false;
+        // player->isSmall = false;
         
         if (player->attack1) {
             if (player->onLeftSide) {
@@ -245,6 +254,8 @@ void initPlayers(void)
         player->isAI = false;
         player->isExploded = false;
         player->onLeftSide = false;
+        player->isBig = false;
+        player->isSmall = false;
         
         // GAMEPLAY
         player->numLives = 9;
@@ -272,6 +283,7 @@ void initPlayers(void)
         player->_bg = &player_bg;
         player->_bg->zmode = _ZmLC;
         player->_sprite = &paw_blank;
+        set_spr_scale(player->_sprite, 2, 2);
         player->_sprite->spr_id = paw_blank_id; // not sure why this changes
         player->_sprite->isColliding = false;
         
@@ -302,6 +314,8 @@ void initPlayers(void)
         player->shield.activate = false;
         
         player->_portrait = &character_portrait;
+        
+        player->shroomFrames = SHROOM_TIMER;
     }
 }
 
@@ -854,15 +868,35 @@ void playerAttack(PPLAYER player) {
         if (jo_is_input_key_pressed(player->input->id, JO_KEY_B) && player->shield.power > 0)
         {
             if (player->shield.power > 1) {
-                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);   
+                pcm_play(g_Assets.shieldPcm8, PCM_PROTECTED, 6);
+                if (!player->shield.activate) {                
+                    if (player->isBig) {
+                        player->_sprite->pos.r = SHIELD_RADIUS_LARGE;
+                    }
+                    else if (player->isSmall) {
+                        player->_sprite->pos.r = SHIELD_RADIUS_SMALL;
+                    }
+                    else {
+                        player->_sprite->pos.r = SHIELD_RADIUS;
+                    }
+                }
                 player->shield.activate = true;
-                player->_sprite->pos.r = SHIELD_RADIUS;
             }
             player->shield.power--;
         }
         else {
+            if (player->shield.activate) {  
+                if (player->isBig) {
+                    player->_sprite->pos.r = PLAYER_RADIUS_LARGE;
+                }
+                else if (player->isSmall) {
+                    player->_sprite->pos.r = PLAYER_RADIUS_SMALL;
+                }
+                else {
+                    player->_sprite->pos.r = PLAYER_RADIUS;
+                }
+            }
             player->shield.activate = false;
-            player->_sprite->pos.r = PLAYER_RADIUS;
         }
 }
 
@@ -898,8 +932,40 @@ void updatePlayers(void)
         player->_sprite->pos.x += player->curPos.dx;
         player->_sprite->vel.x += player->curPos.dx;
         player->_sprite->vel.y += player->curPos.dy;
-        detect_player_ball_collision(&pixel_poppy, player);
         boundPlayer(player);
+        
+        // ball collision
+        detect_player_ball_collision(&pixel_poppy, player);
+        
+        // item collision
+        if (g_item._sprite->visible) {
+            g_item._sprite->isColliding = checkItemDistance(player->_sprite, g_item._sprite);
+        }
+        else {
+            g_item._sprite->isColliding = false;
+        }
+        if (g_item._sprite->isColliding) {
+            handlePlayerItemCollision(player);
+        }
+        
+        if (player->isBig) {
+            if (g_item.timer[i] == 0) {
+                pcm_play(g_Assets.shrinkPcm8, PCM_PROTECTED, 7);
+                player->isBig = shrinkPlayerSprite(player, NORMAL_PLAYER_SPRITE);
+            }
+            else {
+                growPlayerSprite(player, LARGE_PLAYER_SPRITE);
+            }
+        }
+        if (player->isSmall) {
+            if (g_item.timer[i] == 0) {
+                pcm_play(g_Assets.growPcm8, PCM_PROTECTED, 7);
+                player->isSmall = growPlayerSprite(player, NORMAL_PLAYER_SPRITE);
+            }
+            else {
+                shrinkPlayerSprite(player, SMALL_PLAYER_SPRITE);
+            }
+        }
     }
 }
 

@@ -223,11 +223,14 @@ version 0.6:
 			-lose to AI (done)
 
 version 0.7-0.8
+-fix loading screen at first boot (audio takes a while)
+-add makefile option to turn off all debug stuff for "release" build
 -music
 	-fix glitches at end of songs?
 	-stop song from playing before other one has ended while scoring
 	-continue music
 -sound effects (started)
+	-add consistent volume setting (like CD playback)
 	-fix order or menu effects (start, select, back, etc) (done)
 	-additional effects?
 -lighting

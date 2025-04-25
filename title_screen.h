@@ -50,11 +50,13 @@ typedef enum _OPTIONS
 {
     OPTION_DEBUG_MODE = 0,
     OPTION_DEBUG_TEXT,
-    // OPTION_DEBUG_COLLISION,
+    OPTION_DEBUG_COLLISION,
     OPTION_DRAWMESH,
     OPTION_DRAWMOSAIC,
     OPTION_USE_RTC,
     OPTION_BIG_HEAD,
+    OPTION_ITEMS,
+    OPTION_MEOW,
     OPTION_ANALOG,
     OPTION_EXIT,
     OPTION_MAX,
@@ -104,7 +106,12 @@ static inline void selectGameMode(void) {
     }
     else {
         g_Game.minPlayers = TWO_PLAYER;
-        g_Game.maxPlayers = FOUR_PLAYER;
+        if (!releaseCanidate) {
+            g_Game.maxPlayers = FOUR_PLAYER;
+        }
+        else {
+            g_Game.maxPlayers = TWO_PLAYER;
+        }
         g_Game.numPlayers = g_Game.minPlayers;
         g_Game.minTeams = 2;
         g_Game.maxTeams = 2;

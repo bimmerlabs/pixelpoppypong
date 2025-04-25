@@ -5,7 +5,7 @@
 #define QUARTER_FADE -63
 #define EIGTH_FADE -31
 #define NEUTRAL_FADE 0
-#define MAXIMUM_FADE 254
+#define MAXIMUM_FADE 254 // 255?
 #define PAUSE_FADE -75
 #define STORY_FADE -100
 
@@ -30,6 +30,7 @@ extern bool story_fade_out;
 extern bool fade_in;
 extern bool story_fade_in;
 extern bool slow_fade_in;
+extern bool explosion_flash;
 
 extern unsigned short mosaic_x;
 extern unsigned short mosaic_y;
@@ -52,3 +53,4 @@ bool mosaicIn(jo_scroll_screen screens);
 void mosaicRandom(jo_scroll_screen screens);
 bool musicOut(void);
 bool musicIn(void);
+bool explosionEffect(void);

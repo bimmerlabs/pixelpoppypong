@@ -250,6 +250,12 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
         if (!explode_ball) {
             updateBallTouch(player);
         }
+        if (g_GameOptions.enableMeows && !player->_sprite->isColliding) {
+            pcm_play(g_Assets.meowPcm8[g_Assets.meowID], PCM_PROTECTED, 7);
+            g_Assets.meowID++;
+            if (g_Assets.meowID > MEOW9)
+                g_Assets.meowID = MEOW1;
+        }
         handle_ball_player_reaction(ball, player, distance_squared, dx, dy);
         return true;
     }    
@@ -262,6 +268,12 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
     if (distance_squared <= radius_squared) {
         if (!explode_ball) {
             updateBallTouch(player);
+        }
+        if (g_GameOptions.enableMeows && !player->_sprite->isColliding) {
+            pcm_play(g_Assets.meowPcm8[g_Assets.meowID], PCM_PROTECTED, 7);
+            g_Assets.meowID++;
+            if (g_Assets.meowID > MEOW9)
+                g_Assets.meowID = MEOW1;
         }
         handle_ball_player_reaction(ball, player, distance_squared, dx, dy);
         return true;
@@ -309,10 +321,15 @@ void handle_ball_player_reaction(Sprite *ball, PPLAYER player, int distance_squa
 }
 
 // distance formula without the square root
-bool checkDistance(Sprite *player, Sprite *item)
+bool checkItemDistance(Sprite *player, Sprite *item)
 {
-    int dist = 32*32;
-
+    if (!g_Game.isActive) {
+        return false;
+    }
+    
+    int total_radius = toINT(player->pos.r) + ITEM_RADIUS;
+    int dist = total_radius * total_radius;
+    
     int x_dist = toINT(player->pos.x) - toINT(item->pos.x);
     x_dist = x_dist * x_dist;
 
@@ -323,6 +340,5 @@ bool checkDistance(Sprite *player, Sprite *item)
     {
         return true;
     }
-
     return false;
 }

@@ -3,6 +3,7 @@
 #include "main.h"
 #include "state.h"
 #include "math.h"
+#include "assets.h"
 
 unsigned int g_TransitionTimer = 0;
 bool transition_out = false;
@@ -20,6 +21,7 @@ bool story_fade_out = false;
 bool fade_in = false;
 bool slow_fade_in = false;
 bool story_fade_in = false;
+bool explosion_flash = false;
 
 unsigned short mosaic_x = MOSAIC_MIN;
 unsigned short mosaic_y = MOSAIC_MIN;
@@ -237,3 +239,13 @@ bool musicIn(void) {
     }
 }
 
+bool explosionEffect(void) {
+    pcm_play(g_Assets.explod1Pcm8, PCM_PROTECTED, 7);
+    fade_out = true;
+    nbg1_rate = MAXIMUM_FADE;
+    if (!g_GameOptions.debug_display) {
+        slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
+    }
+    slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
+    return false;
+}

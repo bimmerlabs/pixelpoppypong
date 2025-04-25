@@ -6,7 +6,7 @@
 #define MIN_VELOCITY_X toFIXED(7)
 #define MIN_VELOCITY_Y toFIXED(3)
 #define MAX_VELOCITY_Z 70
-#define EASY_MAX_VELOCITY toFIXED(8.5) // 8 = easy, 10 = medium, 13 = hard?
+#define EASY_MAX_VELOCITY toFIXED(9) // 8 = easy, 10 = medium, 13 = hard?
 #define MEDIUM_MAX_VELOCITY toFIXED(10.5) // 8 = easy, 10 = medium, 13 = hard?
 #define HARD_MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)
@@ -14,6 +14,7 @@
 #define BALL_ROTATION 1.7 // IDEA:  PICK UP A BOOMERANG ITEM - MAKE THIS NUMBER HIGHER?
 #define REBOUND toFIXED(0.1) // the lower this is, the bigger the rebound?
 #define FRICTION_COEFFICIENT toFIXED(2.5) // Adjust this value to alter the ball curve
+#define ITEM_RADIUS 32 // Adjust this value to alter the ball curve
 
 typedef struct {
     bool onLeftSide;
@@ -34,7 +35,7 @@ void start_ball_movement(Sprite *ball);
 void adjust_xy_velocity_based_on_spin(Sprite *ball);
 
 // distance formula without the square root
-bool checkDistance(Sprite *player, Sprite *item);
+bool checkItemDistance(Sprite *player, Sprite *item);
 
 // Function to calculate Z velocity based on X and Y velocity
 // tried to convert to fixed - doesn't work - maybe it overflows?

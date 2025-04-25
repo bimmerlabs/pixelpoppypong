@@ -120,7 +120,11 @@ void titleScreen_input(void)
     }
     if (jo_is_pad1_key_down(JO_KEY_START)) {
         pcm_play(g_Assets.startPcm8, PCM_VOLATILE, 6);
-        changeState(GAME_STATE_TITLE_MENU);
+        changeState(GAME_STATE_TITLE_MENU); 
+        if (g_GameOptions.mosaic_display) {
+            mosaic_out = true;
+            transition_out = true;
+        }
     }
 }
 
@@ -195,7 +199,7 @@ void drawTitle(void)
     if (draw_start_text) {
         jo_nbg0_printf(16, 27, "PRESS START");
     }
-    if (g_GameOptions.releaseCanidate) {
+    if (releaseCanidate) {
         jo_nbg0_printf(18, 28, "%s RC", VERSION);
     }
     else if (g_GameOptions.debug_mode) {
@@ -782,16 +786,23 @@ void optionsScreen_input(void)
         switch(g_OptionScreenChoice)
         {
             case OPTION_DEBUG_MODE:
-                pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
-                g_GameOptions.debug_mode = !g_GameOptions.debug_mode;
+                if (!releaseCanidate) {
+                    // pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
+                    g_GameOptions.debug_mode = !g_GameOptions.debug_mode;
+                }
                 break;
             case OPTION_DEBUG_TEXT:
-                pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
-                g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                if (!releaseCanidate) {
+                    // pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
+                    g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                }
                 break;
-            // case OPTION_DEBUG_COLLISION:
-                // g_GameOptions.testCollision = !g_GameOptions.testCollision;
-                // break;
+            case OPTION_DEBUG_COLLISION:
+                if (!releaseCanidate) {
+                    // pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
+                    g_GameOptions.testCollision = !g_GameOptions.testCollision;
+                }
+                break;
             case OPTION_DRAWMESH:
                 pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
                 g_GameOptions.mesh_display = !g_GameOptions.mesh_display;
@@ -807,6 +818,14 @@ void optionsScreen_input(void)
             case OPTION_BIG_HEAD:
                 pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
                 g_GameOptions.bigHeadMode = !g_GameOptions.bigHeadMode;
+                break;
+            case OPTION_ITEMS:
+                pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
+                g_GameOptions.enableItems = !g_GameOptions.enableItems;
+                break;
+            case OPTION_MEOW:
+                pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
+                g_GameOptions.enableMeows = !g_GameOptions.enableMeows;
                 break;
             default:
                 break;
@@ -874,11 +893,11 @@ void drawOptions(void)
     }
     int title_x = 8;
     int options_x = 27;
-    int options_y = 4;
+    int options_y = 2;
     
     jo_nbg0_printf(18, options_y, "OPTIONS");
     
-    options_y += 4;
+    options_y += 2;
     jo_nbg0_printf(title_x, options_y, "DEBUG MODE:");
     jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_mode ? "ON" : "OFF");
     
@@ -886,9 +905,9 @@ void drawOptions(void)
     jo_nbg0_printf(title_x, options_y, "DEBUG DISPLAY:");
     jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "ON" : "OFF");
     
-    // options_y += 2;
-    // jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
-    // jo_nbg0_printf(options_x, options_y, g_GameOptions.testCollision ? "ON" : "OFF");
+    options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "DEBUG COLLISION:");
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.testCollision ? "ON" : "OFF");
 
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "MESH TRANSPARENCY:");
@@ -923,6 +942,14 @@ void drawOptions(void)
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "BIG HEAD MODE:");
     jo_nbg0_printf(options_x, options_y, g_GameOptions.bigHeadMode ? "YES" : "NO");
+    
+    options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "ENABLE POWER-UPS:");
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.enableItems ? "YES" : "NO");
+    
+    options_y += 2;
+    jo_nbg0_printf(title_x, options_y, "REAL TIME MEOW:");
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.enableMeows ? "YES" : "NO");
     
     options_y += 2;
     jo_nbg0_printf(title_x, options_y, "ANALOG ADJUSTMENT:");
@@ -979,7 +1006,7 @@ void drawOptionsCursor(void)
     }
     FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
     cursor.pos.x = toFIXED(-240) + offset;
-    cursor.pos.y = toFIXED(-96 + (g_OptionScreenChoice * 32)); // vertical position varies based on selection
+    cursor.pos.y = toFIXED(-160 + (g_OptionScreenChoice * 32)); // vertical position varies based on selection
     if (g_OptionScreenChoice == OPTION_EXIT) 
     {
         for(unsigned int i = 0; i < COUNTOF(g_Inputs); i++)

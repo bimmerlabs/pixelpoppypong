@@ -48,7 +48,6 @@
 #include "name_entry.h"
 
 GAME g_Game = {0};
-ASSETS g_Assets = {0};
 
 jo_datetime now;
 
@@ -60,13 +59,16 @@ int run_once_callback = 0;
 GameOptions g_GameOptions = {
     .debug_mode = false,
     .debug_display = false,
+    .testCollision = false,
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = false,
     .bigHeadMode = false,
-    .testCollision = false,
-    .releaseCanidate = false, // TODO: implement elsewhere so I don't have to comment stuff out, or use makefile?
+    .enableItems = true,
+    .enableMeows = true,
 };
+
+bool releaseCanidate = true;
 
 void loading_screen(void)
 {
@@ -77,29 +79,42 @@ void loading_screen(void)
         slColOffsetOn(NBG0ON | NBG1ON);
         jo_set_displayed_screens(JO_NBG0_SCREEN);
         slColOffsetOn(NBG1ON);
+        
         jo_nbg0_printf(17, 12, "LOADING!");
         
-        if (g_GameOptions.debug_mode) {
-            jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+        if (g_Game.isSoundLoading) {
+            if (g_GameOptions.debug_mode) {
+                jo_nbg0_printf(15, 14, "SOUNDFX: %i", numberPCMs);
+            }
+            // Generate dot string
+            char dots[50];
+            for (int i = 0; i < numberPCMs; i++) {
+                dots[i] = '.';
+            }
+            dots[numberPCMs] = '\0'; // Null-terminate the string
+            // Display dots on screen
+            jo_nbg0_printf(0, 15, "%s", dots);            
         }
-        
-        // loading bar        
-        char dots[50];
-        int sprite_count = jo_sprite_count()/3;
-        
-        // Clamp sprite count to prevent overflow
-        if (sprite_count >= 50) {
-            sprite_count = 49; // Reserve 1 byte for null-terminator
+        else {
+            if (g_GameOptions.debug_mode) {
+                jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+            }
+            // loading bar      
+            int sprite_count = jo_sprite_count()/3;
+            // Clamp sprite count to prevent overflow
+            if (sprite_count >= 50) {
+                sprite_count = 49; // Reserve 1 byte for null-terminator
+            }
+            char dots[50];            
+            // Generate dot string
+            for (int i = 0; i < sprite_count; i++) {
+                dots[i] = '.';
+            }
+            dots[sprite_count] = '\0'; // Null-terminate the string
+            
+            // Display dots on screen
+            jo_nbg0_printf(0, 15, "%s", dots);            
         }
-        
-        // Generate dot string
-        for (int i = 0; i < sprite_count; i++) {
-            dots[i] = '.';
-        }
-        dots[sprite_count] = '\0'; // Null-terminate the string
-        
-        // Display dots on screen
-        jo_nbg0_printf(0, 15, "%s", dots);
     }
 }
 
@@ -303,7 +318,7 @@ void			jo_main(void)
     // base assets
     init_font(); // this has to happen first (sprites require 1st palette slot)
     init_nbg1_img();
-    loadSoundAssets(); // maybe load the minimum assets instead of everything?
+    loadCoreSoundAssets();
     init_sprites_img();
     
     initUnlockedCharacters();

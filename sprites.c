@@ -8,6 +8,8 @@
 
 // sprite structs - used with my_sprite_draw
 
+// Sprite *g_gameItem = {0};
+    
 Sprite font = {
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
     .spr_id = 0,                                       // Sprite ID initialized to 0

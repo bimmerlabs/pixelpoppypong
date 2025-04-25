@@ -239,8 +239,6 @@ void drawCharacterSelectGrid(void)
                 set_spr_position(&menu_bg1, portrait_x, portrait_y, MENU_BG1_DEPTH);
                 my_sprite_draw(&menu_bg1);
                 // PAW
-                // set_spr_position(&paw_blank, paw_x, portrait_y, PORTRAIT_DEPTH); // use for 'random' choice
-                // my_sprite_draw(&paw_blank); 
                 set_spr_position(player->_sprite, paw_x, portrait_y, PORTRAIT_DEPTH);
                 my_sprite_draw(player->_sprite);
                 break;
@@ -283,7 +281,6 @@ void drawCharacterSelectGrid(void)
         // CHARACTER METER
         if (player->startSelection) {
             // SPEED
-            // Uint8 maxSpeed = JO_FIXED_TO_INT(player->maxSpeed);
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
             }
@@ -319,7 +316,6 @@ void drawCharacterSelectGrid(void)
             set_spr_position(&meter, (METER_X+(2*acceleration)), portrait_y-METER_Y2, PORTRAIT_DEPTH);
             my_sprite_draw(&meter);
             // POWER
-            // Uint8 power = JO_FIXED_TO_INT(player->power);
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y3, "POWER:%i", player->power);
             }
@@ -392,7 +388,6 @@ void characterSelect_input(void)
             {
                 pcm_play(g_Assets.cancelPcm8, PCM_VOLATILE, 6);
                 player->startSelection = false;
-                // player->input->isSelected = false; // only change inputs on state change
                 characterAvailable[player->character.choice] = true;
                 player->_sprite = &paw_blank;
                 player->character.choice = CHARACTER_NONE;
@@ -458,7 +453,8 @@ void characterSelect_input(void)
                  default:
                     break;
                 }
-                // set to first frame
+                // set to first frame and make sure the scale is normal
+                set_spr_scale(player->_sprite, 2, 2);
                player->_sprite->spr_id = player->_sprite->anim1.asset[0];
         }
         // BEGIN CHARACTER SELECTION
@@ -605,8 +601,6 @@ void teamSelect_input(void)
             {
                 if(!validateTeamCount())
                 {
-                    // todo: play bad noise
-                    // jo_audio_play_sound(&g_Assets.crackPCM);
                     return;
                 }
                  pcm_play(g_Assets.nextPcm8, PCM_VOLATILE, 7);
@@ -629,7 +623,7 @@ void teamSelect_input(void)
                 player->pressedB = true;
                 g_Game.numTeams--;
                 if (g_Game.currentNumPlayers > 0)
-                    g_Game.currentNumPlayers--; // you can't press B after you are marked "ready"?
+                    g_Game.currentNumPlayers--;
                 return;
             }
         }

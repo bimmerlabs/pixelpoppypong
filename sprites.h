@@ -65,6 +65,10 @@ typedef struct {
     Animation anim2;
 } Sprite;
 
+
+// item reference
+// extern Sprite *g_gameItem;
+
 extern Sprite font; // VDP1 font
 extern Sprite ppplogo;
 extern Sprite pppshadow;
@@ -115,7 +119,7 @@ extern Sprite craig_item;
 extern Sprite garfield_item;
 
 static inline void set_item_position(Sprite *sprite) {
-    sprite->pos.x = toFIXED(my_random_range(-250, 250));
+    sprite->pos.x = toFIXED(my_random_range(-240, 240));
     sprite->pos.y = toFIXED(my_random_range(-160, 160));
     if (JO_MOD_POW2(jo_random(9999), 2)) { // sprite flip
         sprite->flip = sprHflip;

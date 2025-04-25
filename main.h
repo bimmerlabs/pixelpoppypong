@@ -5,7 +5,7 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.67"
+#define VERSION "0.70"
 #define MAX_PLAYERS 4
 #define MAX_TEAMS 4
 
@@ -25,15 +25,18 @@ extern Uint16 cursor_angle; // for title & pawsed menus
 typedef struct {
     bool debug_mode;
     bool debug_display;
+    bool testCollision;
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
     bool bigHeadMode;
-    bool testCollision;
-    bool releaseCanidate;
+    bool enableItems;
+    bool enableMeows;
 } GameOptions, *PGameOptions;
 
 extern GameOptions g_GameOptions;
+
+extern bool releaseCanidate;
 
 // 1-4 players
 typedef enum _NUMBER_OF_PLAYERS
@@ -146,6 +149,7 @@ typedef struct _GAME
 
     // is the game loading?
     bool isLoading;
+    bool isSoundLoading;
 
     // is the game is paused?
     bool isPaused;
@@ -165,13 +169,13 @@ typedef struct _GAME
     
     // is the game playing?
     bool isActive;
-    
-    // is the game playing?
     bool isBallActive;
+    
+    bool explodeBomb;
 
     // how many frames since all players were dead
     int gameOverFrames;
-
+    
 } GAME, *PGAME;
 
 // globals

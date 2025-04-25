@@ -29,7 +29,7 @@ void save_game_backup(void) {
     jo_backup_save_file_contents(
         backup_device,
         // "PPPONG25",
-        "PPP25BT",
+        "PPP25RC",
         "PIXELPOPPY",
         &save_game, 
         sizeof (SaveGame));
@@ -52,8 +52,8 @@ bool load_game_backup(void) {
         return false;
     }
     // load save if it exists
-    if (jo_backup_file_exists(backup_device, "PPP25BT")) {
-        loaded_save =  (SaveGame *)jo_backup_load_file_contents(backup_device, "PPP25BT", JO_NULL);
+    if (jo_backup_file_exists(backup_device, "PPP25RC")) {
+        loaded_save =  (SaveGame *)jo_backup_load_file_contents(backup_device, "PPP25RC", JO_NULL);
         if (!loaded_save) {
             jo_backup_unmount(backup_device);
             memory_access = 0;
