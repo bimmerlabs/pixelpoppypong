@@ -60,14 +60,6 @@ void initAvailableCharacters(void) {
     }
 }
 
-void initTeams(void) {
-    for(unsigned int i = 1; i <= MAX_TEAMS; i++)
-    {
-        teamAvailable[i] = true;
-        teamCount[i] = 0;
-    }
-}
-
 void teamSelect_init(void)
 {
     g_Game.lastState = GAME_STATE_TEAM_SELECT;
@@ -81,8 +73,8 @@ void teamSelect_init(void)
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
-    g_Game.numTeams = 0;
-    g_Game.minTeams = 1;
+    g_Team.numTeams = -1;
+    g_Team.minTeams = TEAM_1;
     
     if (g_GameOptions.mesh_display) {
         menu_bg1.mesh = MESHon;
@@ -200,7 +192,7 @@ void drawCharacterSelectGrid(void)
                 jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y, "%s", characterNames[player->character.choice]);
             }           
             if (player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
-                jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y+2, "TEAM %i", player->teamChoice);
+                jo_nbg0_printf(text_x, text_y+CHARACTER_TEXT_Y+2, "TEAM %i", player->teamChoice+1);
             }
         }
             
@@ -208,21 +200,21 @@ void drawCharacterSelectGrid(void)
             if (player->isReady) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "READY");
             }
-            else if (player->teamSelected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+            else if (player->teamSelected && g_Team.numTeams >= g_Team.minTeams && !player->isReady && !draw_portrait) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "PRESS");
             }
             else if (!player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "TEAM:");
             }
 
-            if (player->teamSelected && g_Game.numTeams >= g_Game.minTeams && !player->isReady && !draw_portrait) {
+            if (player->teamSelected && g_Team.numTeams >= g_Team.minTeams && !player->isReady && !draw_portrait) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "START");
             }
-            else if (player->teamSelected && g_Game.numTeams < g_Game.minTeams) {
+            else if (player->teamSelected && g_Team.numTeams < g_Team.minTeams) {
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y+TEAM_TEXT_Y, "WAIT.");
             }
             else if (!player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
-                jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->teamChoice);
+                jo_nbg0_printf(text_x+TEAM_TEXT_X2, text_y+TEAM_TEXT_Y, "%i", player->teamChoice+1);
             }
         }
 
@@ -522,7 +514,7 @@ void teamSelect_input(void)
             if (g_Game.numPlayers == ONE_PLAYER) {
                 // default team
                 player->teamChoice = TEAM_1;
-                g_Game.numTeams++;
+                g_Team.numTeams++;
             }
             // CHOOSE A TEAM
             if (jo_is_input_key_down(player->input->id, JO_KEY_LEFT) && g_Game.numPlayers != ONE_PLAYER) {
@@ -530,12 +522,12 @@ void teamSelect_input(void)
                 do {
                     player->teamChoice--;
                     if (player->teamChoice < TEAM_1) {
-                        player->teamChoice = g_Game.maxTeams;
+                        player->teamChoice = g_Team.maxTeams;
                     }
-                } while (!teamAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
+                } while (!g_Team.isAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
 
                 // Flip the sprite based on even/odd team
-                if (player->teamChoice % 2 == 0) { // modulus
+                if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;
@@ -547,14 +539,14 @@ void teamSelect_input(void)
                 pcm_play(g_Assets.cursorPcm8, PCM_VOLATILE, 6);
                 do {
                     player->teamChoice++;
-                    if (player->teamChoice > g_Game.maxTeams) {
+                    if (player->teamChoice > g_Team.maxTeams) {
                         player->teamChoice = TEAM_1;
                     }
-                } while (!teamAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
+                } while (!g_Team.isAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
 
 
                 // Flip the sprite based on even/odd team
-                if (player->teamChoice % 2 == 0) { // modulus
+                if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
                     player->_sprite->flip = sprHflip;
                 } else {
                     player->_sprite->flip = sprNoflip;
@@ -579,11 +571,11 @@ void teamSelect_input(void)
                 jo_is_input_key_down(player->input->id, JO_KEY_C))
             {
                 pcm_play(g_Assets.nextPcm8, PCM_VOLATILE, 6);
-                assign_team(player->teamOldTeam, player->teamChoice);
+                // assign_team(player->teamOldTeam, player->teamChoice);
                 player->teamOldTeam = player->teamChoice;
                 player->teamSelected = true;
-                teamAvailable[player->teamChoice] = false;
-                g_Game.numTeams++;
+                g_Team.isAvailable[player->teamChoice] = false;
+                g_Team.numTeams++;
                 return;
             }
         }
@@ -617,11 +609,11 @@ void teamSelect_input(void)
                 all_players_ready = false;
                 player->isReady = false;
                 player->teamSelected = false;
-                teamAvailable[player->teamChoice] = true;
-                player->teamChoice = TEAM_1;
-                player->teamOldTeam = TEAM_UNSELECTED;
+                g_Team.isAvailable[player->teamChoice] = true;
+                // player->teamChoice = TEAM_1;
+                // player->teamOldTeam = TEAM_COUNT;
                 player->pressedB = true;
-                g_Game.numTeams--;
+                g_Team.numTeams--;
                 if (g_Game.currentNumPlayers > 0)
                     g_Game.currentNumPlayers--;
                 return;
@@ -643,13 +635,13 @@ void validateCharacters(PLAYER *player) {
     }
 }
 
-void validateTeam(PLAYER *player) {
-    while (player->teamChoice < MAX_TEAMS) {
-        if (!teamAvailable[player->teamChoice]) {
-            player->teamChoice++;
-        }
-        else
-            break;
+void validateTeam(PLAYER *player)
+{
+    while (!g_Team.isAvailable[player->teamChoice])
+    {
+        player->teamChoice++;
+        if (player->teamChoice >= TEAM_COUNT)
+            player->teamChoice = TEAM_1;
     }
 }
 
@@ -677,20 +669,21 @@ void resetReadyState(void) {
     }
 }
 
-// ENSURES THAT AT LEAST 1 PERSON IS ON A DIFFERENT TEAM
-void assign_team(int oldTeam, int newTeam) {
-    if (oldTeam >= TEAM_1 && oldTeam <= TEAM_4) {
-        teamCount[oldTeam - TEAM_1]--;
-    }
-    if (newTeam >= TEAM_1 && newTeam <= TEAM_4) {
-        teamCount[newTeam - TEAM_1]++;
-    }
-}
+// // ENSURES THAT AT LEAST 1 PERSON IS ON A DIFFERENT TEAM
+// // only required if multiple people can be on 1 team
+// void assign_team(int oldTeam, int newTeam) {
+    // if (oldTeam >= TEAM_1 && oldTeam <= TEAM_4) {
+        // teamCount[oldTeam]--;
+    // }
+    // if (newTeam >= TEAM_1 && newTeam <= TEAM_4) {
+        // teamCount[newTeam]++;
+    // }
+// }
 
 // AT LEAST 2 TEAMS ARE REQUIRED
 bool validateTeamCount(void)
 {
-    if(g_Game.numTeams < g_Game.minTeams)
+    if(g_Team.numTeams < g_Team.minTeams)
     {
         return false;
     }
@@ -699,7 +692,7 @@ bool validateTeamCount(void)
     {
         PPLAYER player = &g_Players[i];
 
-        if(player->teamChoice == TEAM_UNSELECTED)
+        if(player->teamChoice == TEAM_COUNT)
         {
             player->numLives = 0;
             player->isPlaying = NOT_PLAYING;

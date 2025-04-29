@@ -14,8 +14,6 @@ PLAYER g_Players[MAX_PLAYERS] = {0};
 
 bool characterUnlocked[TOTAL_CHARACTERS] = {0};
 bool characterAvailable[TOTAL_CHARACTERS] = {0};
-bool teamAvailable[MAX_TEAMS+1] = {0};
-int teamCount[MAX_TEAMS+1] = {0};
 
 const CHARACTER_ATTRIBUTES characterAttributes[] = {
   // s   a   p    // speed, acceleration, power - scale 0-100
@@ -68,10 +66,6 @@ void resetPlayerAttacks(void)
         player->_sprite->pos.r = PLAYER_RADIUS;
         sprite_frame_reset(&shield[i]);
         player->isExploded = false;
-        // set_spr_scale(player->_sprite, 2, 2);
-        // set_spr_scale(&shield[i], 2, 2);
-        // player->isBig = false;
-        // player->isSmall = false;
         
         if (player->attack1) {
             if (player->onLeftSide) {
@@ -269,10 +263,10 @@ void initPlayers(void)
         player->power = toFIXED(0);
         
         // TEAM
-        player->teamChoice = TEAM_UNSELECTED;
-        player->teamOldTeam = TEAM_UNSELECTED;
+        player->teamChoice = TEAM_COUNT;
+        player->teamOldTeam = TEAM_COUNT;
         player->teamSelected = false;
-        g_goalPlayerId[player->teamChoice] = 0;
+        // g_goalPlayerId[player->teamChoice] = 0;
         
         player->moveHorizontal = false;
         player->moveVertical = false;
@@ -331,10 +325,10 @@ void initAiPlayers(void)
         }
         
         validateTeam(player);
-        teamAvailable[player->teamChoice] = false;
-        g_Game.numTeams++;
+        g_Team.isAvailable[player->teamChoice] = false;
+        g_Team.numTeams++;
         g_Game.currentNumPlayers++;
-        g_goalPlayerId[player->teamChoice-1] = i;
+        // g_goalPlayerId[player->teamChoice] = i;
         
         player->_bg->spr_id = player->_bg->anim1.asset[i];
         player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
@@ -359,11 +353,10 @@ void initStoryCharacters(void)
     player = &g_Players[1];
     
     player->teamChoice = TEAM_2;
-    teamAvailable[player->teamChoice] = false; 
-    g_goalPlayerId[player->teamChoice-1] = 1;
+    g_Team.isAvailable[player->teamChoice] = false; 
+    // g_goalPlayerId[player->teamChoice] = 1;
     
     player->_bg->spr_id = player->_bg->anim1.asset[1];
-    // player->character.choice = my_random_range(CHARACTER_MACCHI, CHARACTER_GARF);
     player->character.choice = g_Game.countofRounds +1;
     characterAvailable[player->character.choice] = false;
 
@@ -374,7 +367,7 @@ void initStoryCharacters(void)
     player->objectState = OBJECT_STATE_ACTIVE;
     player->subState = PLAYER_STATE_ACTIVE;
     player->isAI = true;
-    g_Game.numTeams = 2; // NEEDS TO BE SET DIFFERENTLY IF 2 PLAYERS ARE SELECTED?
+    g_Team.numTeams = TWO_TEAMS;
 }
 
 void nextStoryCharacter(void)
@@ -405,7 +398,7 @@ void initVsModePlayers(void)
         player->_sprite->isColliding = false;
         
         // assign goal to player for scoring
-        g_goalPlayerId[player->teamChoice-1] = i;
+        // g_goalPlayerId[player->teamChoice] = i;
         assignCharacterStats(player);
         
         // PLAYER SPECIFIC ATTRIBUTES
@@ -413,7 +406,7 @@ void initVsModePlayers(void)
             case TEAM_1: {
                 player->_sprite->flip = sprNoflip;
                 player->onLeftSide = true;
-                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams == 2) {
+                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Team.numTeams == TWO_TEAMS) {
                     g_Assets.drawSingleGoal[0] = true;
                     player->goalCenterThresholdMax = LARGE_GOAL_THRESHOLD_MAX;
                     player->goalCenterThresholdMin = LARGE_GOAL_THRESHOLD_MIN;
@@ -432,7 +425,7 @@ void initVsModePlayers(void)
             case TEAM_2: {
                 player->_sprite->flip = sprHflip;
                 player->onLeftSide = false;
-                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Game.numTeams < 4) {
+                if (g_Game.gameMode == GAME_MODE_CLASSIC || g_Game.gameMode == GAME_MODE_STORY || g_Team.numTeams < FOUR_TEAMS) {
                     g_Assets.drawSingleGoal[1] = true;
                     player->goalCenterThresholdMax = LARGE_GOAL_THRESHOLD_MAX;
                     player->goalCenterThresholdMin = LARGE_GOAL_THRESHOLD_MIN;
@@ -481,7 +474,7 @@ void initDemoPlayers(void)
     PPLAYER player = NULL;
         
     g_Game.numPlayers = my_random_range(ONE_PLAYER, FOUR_PLAYER);
-    g_Game.numTeams = 0;
+    g_Team.numTeams = -1;
     g_Game.gameMode = GAME_MODE_BATTLE;
     initPlayers();
     
@@ -504,7 +497,7 @@ void initDemoPlayers(void)
             }
             player->character.choice = i;
             player->shield_pos = SHIELD_OFFSET;
-            g_Game.numTeams++;
+            g_Team.numTeams++;
             g_Game.currentNumPlayers++;
         }
         else if (i == 1) {
@@ -534,7 +527,7 @@ void initDemoPlayers(void)
                 set_spr_position(player->_sprite, PLAYER_X, -1*PLAYER_Y, PLAYER_DEPTH);
             }
             player->shield_pos = -SHIELD_OFFSET;
-            g_Game.numTeams++;
+            g_Team.numTeams++;
             g_Game.currentNumPlayers++;
         }
         else if (i == 2) { // set up player 3 last (we need to know the team count)
@@ -557,7 +550,7 @@ void initDemoPlayers(void)
             set_spr_position(player->_sprite, -1*PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
             g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = SHIELD_OFFSET;
-            g_Game.numTeams++;
+            g_Team.numTeams++;
             g_Game.currentNumPlayers++;
         }
         else if (i == 3) {
@@ -580,13 +573,13 @@ void initDemoPlayers(void)
             set_spr_position(player->_sprite, PLAYER_X, PLAYER_Y, PLAYER_DEPTH);
             g_Assets.drawSingleGoal[i] = true;
             player->shield_pos = -SHIELD_OFFSET;
-            g_Game.numTeams++;
+            g_Team.numTeams++;
             g_Game.currentNumPlayers++;
         }
         
         assignCharacterStats(player);
         
-        g_goalPlayerId[player->teamChoice-1] = i;
+        // g_goalPlayerId[player->teamChoice] = i;
         player->goalCenterThresholdMax = SMALL_GOAL_THRESHOLD_MAX;
         player->goalCenterThresholdMin = SMALL_GOAL_THRESHOLD_MIN;
 
@@ -689,24 +682,6 @@ void assignCharacterStats(PPLAYER player) {
     }
     else {
         player->acceleration = jo_fixed_mult(player->acceleration, PLAYER_MOVEMENT_SPEED);
-    }
-}
-
-void initPlayerGoals(void)
-{
-    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
-    {
-        // set initial player colors (player 0 uses the default)
-        if (i == 1) {
-            hsl_incSprites.h -= 90;
-        }
-        else if (i == 2) {
-            hsl_incSprites.h -= 180;
-        }
-        else if (i == 3) {
-            hsl_incSprites.h -= 270;
-        }
-        update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i]);
     }
 }
 

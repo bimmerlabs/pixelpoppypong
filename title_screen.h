@@ -93,16 +93,16 @@ static inline void selectGameMode(void) {
         g_Game.minPlayers = ONE_PLAYER;
         g_Game.maxPlayers = ONE_PLAYER;
         g_Game.numPlayers = g_Game.minPlayers;
-        g_Game.minTeams = 1;
-        g_Game.maxTeams = 1;
+        g_Team.minTeams = ONE_TEAM;
+        g_Team.maxTeams = ONE_TEAM;
     }
     else if (g_Game.gameMode == GAME_MODE_CLASSIC) {
         g_Game.minPlayers = TWO_PLAYER;
         g_Game.maxPlayers = TWO_PLAYER;
         g_Game.numPlayers = g_Game.minPlayers;
-        g_Game.minTeams = 2;
-        g_Game.maxTeams = 2;
-        g_Game.numTeams = 1; // why is this here?
+        g_Team.minTeams = TWO_TEAMS;
+        g_Team.maxTeams = TWO_TEAMS;
+        // g_Team.numTeams = TEAM_1; // why is this here?
     }
     else {
         g_Game.minPlayers = TWO_PLAYER;
@@ -113,27 +113,27 @@ static inline void selectGameMode(void) {
             g_Game.maxPlayers = TWO_PLAYER;
         }
         g_Game.numPlayers = g_Game.minPlayers;
-        g_Game.minTeams = 2;
-        g_Game.maxTeams = 2;
+        g_Team.minTeams = TWO_TEAMS;
+        g_Team.maxTeams = TWO_TEAMS;
     }
 }
 
 static inline void selectNumPlayers(void) {
     if (g_Game.numPlayers == ONE_PLAYER) {
-        g_Game.minTeams = 1;
-        g_Game.maxTeams = 1;
+        g_Team.minTeams = ONE_TEAM;
+        g_Team.maxTeams = ONE_TEAM;
     }
     else if (g_Game.numPlayers == TWO_PLAYER) {
-        g_Game.minTeams = 2;
-        g_Game.maxTeams = 2;
+        g_Team.minTeams = TWO_TEAMS;
+        g_Team.maxTeams = TWO_TEAMS;
     }
     else if (g_Game.numPlayers == THREE_PLAYER) {
-        g_Game.minTeams = 3;
-        g_Game.maxTeams = 3;
+        g_Team.minTeams = THREE_TEAMS;
+        g_Team.maxTeams = THREE_TEAMS;
     }
     else if (g_Game.numPlayers == FOUR_PLAYER) {
-        g_Game.minTeams = 4;
-        g_Game.maxTeams = 4;
+        g_Team.minTeams = FOUR_TEAMS;
+        g_Team.maxTeams = FOUR_TEAMS;
     }
 }
 

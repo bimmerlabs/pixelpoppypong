@@ -204,16 +204,12 @@ void mosaicRandom(jo_scroll_screen screens) {
 }
 
 bool musicOut(void) {
-    if (volume > MIN_VOLUME) {
-        volume--;
-        if (volume < MIN_VOLUME) {
-            volume = MIN_VOLUME;
+    if (g_Audio.masterVolume > MIN_VOLUME) {
+        g_Audio.masterVolume--;
+        if (g_Audio.masterVolume < MIN_VOLUME) {
+            g_Audio.masterVolume = MIN_VOLUME;
         }
-        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        CDDA_SetVolume(volume >> 4);
-        #else
-        jo_audio_set_volume(volume);
-        #endif
+        CDDA_SetVolume(volume_shift(g_Audio.masterVolume));
         return true;
     }
     else {
@@ -222,16 +218,12 @@ bool musicOut(void) {
 }
 
 bool musicIn(void) {
-    if (volume < MAX_VOLUME) {
-        volume += 4;
-        if (volume > MAX_VOLUME) {
-            volume = MAX_VOLUME;
+    if (g_Audio.masterVolume < MAX_VOLUME) {
+        g_Audio.masterVolume += 4;
+        if (g_Audio.masterVolume > MAX_VOLUME) {
+            g_Audio.masterVolume = MAX_VOLUME;
         }
-        #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        CDDA_SetVolume(volume >> 4);
-        #else
-        jo_audio_set_volume(volume);
-        #endif
+        CDDA_SetVolume(volume_shift(g_Audio.masterVolume));
         return true;
     }
     else {

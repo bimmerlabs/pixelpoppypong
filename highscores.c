@@ -30,7 +30,6 @@ void init_scores(void)
     if (g_Game.lastState == GAME_STATE_NAME_ENTRY) {
         unloadNameEntryAssets();
     }
-    // music_in = true;
     fade_in = true;
     transition_in = true;
     
@@ -44,8 +43,6 @@ void init_scores(void)
         set_spr_position(&pixel_poppy, 0, 0, 100);
         sprite_frame_reset(&pixel_poppy);
     }
-
-    // g_Game.lastState = GAME_STATE_HIGHSCORES;
 
     g_ScoreTimer = 0;
     
@@ -62,9 +59,8 @@ void init_scores(void)
     
     sortHighScores(highScores);
 
-    volume = MAX_VOLUME;
-    reset_audio(volume);
-    // CDDA_SetVolume(volume >> 4);
+    g_Audio.masterVolume = MAX_VOLUME;
+    reset_audio(g_Audio.masterVolume);
     playCDTrack(FINISH_TRACK, false);
 }
 
@@ -164,7 +160,6 @@ void addHighScore(unsigned int newScore, const char *initials) {
     if (newScore <= highScores[SCORE_ENTRIES - 1].score) {
         return;  // Score is too low, ignore
     }
-
     // Insert at the last position
     highScores[SCORE_ENTRIES - 1].score = newScore;
     

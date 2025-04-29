@@ -5,9 +5,8 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.70"
+#define VERSION "0.71"
 #define MAX_PLAYERS 4
-#define MAX_TEAMS 4
 
 // Screen position
 #define SCREEN_RIGHT  toFIXED(352.0)
@@ -74,29 +73,6 @@ typedef enum _GAME_RESOLUTION
     RESOLUTION_WIDE   = TV_704x240,
 } GAME_RESOLUTION;
 
-#define GOAL_X_POS 330
-#define GOAL_X_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
-#define GOAL_CENTER_POS 0
-
-typedef enum _GOAL_SCALE
-{
-    GOAL_SCALE_EASY = 20,
-    GOAL_SCALE_MEDIUM = 20, //16
-    GOAL_SCALE_HARD = 20, //13
-    GOAL_SCALE_VS_MODE = 10,
-} GOAL_SCALE;
-
-typedef enum _GOAL_Y_POS
-{
-    GOAL_Y_POS_EASY = 140,
-    GOAL_Y_POS_MEDIUM = 140, // 120
-    GOAL_Y_POS_HARD = 140, // 100
-    GOAL_Y_POS_MID = 0,
-    GOAL_Y_POS_TOP_VS_MODE = 160,
-    GOAL_Y_POS_MID_VS_MODE = 79,
-    GOAL_Y_POS_BOT_VS_MODE = 2,
-} GOAL_Y_POS;
-
 // represents game state
 typedef struct _GAME
 {
@@ -110,11 +86,6 @@ typedef struct _GAME
     NUMBER_OF_PLAYERS maxPlayers;
     NUMBER_OF_PLAYERS numPlayers;
     Uint8 currentNumPlayers;
-
-    // number of teams
-    Uint8 minTeams; // MIN AND MAX ARE ALWAYS THE SAME - REMOVE ONE
-    Uint8 maxTeams;
-    Uint8 numTeams;
     
     // classic, story, battle
     GAME_MODE gameMode;
@@ -122,11 +93,12 @@ typedef struct _GAME
     // easy, medium, hard
     GAME_DIFFICULTY gameDifficulty;
 
+    // TODO: move to goals.h
     // easy, medium, hard, vs_mode
-    GOAL_SCALE goalScale;
-    GOAL_Y_POS goalYPosTop;
-    GOAL_Y_POS goalYPosBot;
-    Uint8 goalYPosMid;
+    int goalScale;
+    int goalYPosTop;
+    int goalYPosBot;
+    int goalYPosMid;
     
     FIXED maxBallVelocity;
     // debug level

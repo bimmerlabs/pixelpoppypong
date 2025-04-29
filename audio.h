@@ -21,16 +21,6 @@
 
 #define AUDIO_FADE_TIMER (3 * 60)
 
-#ifdef JO_COMPILE_WITH_AUDIO_SUPPORT
-#define INITIAL_STATE_VOLUME 32
-#define MAX_VOLUME 127
-#define LOWER_VOLUME 120
-#define HALF_VOLUME 64
-#define QUARTER_VOLUME 32
-#define MIN_VOLUME 0
-
-#else
-
 #define INITIAL_STATE_VOLUME 32
 #define MAX_VOLUME 127
 #define LOWER_VOLUME 100
@@ -38,9 +28,13 @@
 #define QUARTER_VOLUME 32
 #define MIN_VOLUME 0
 
-#endif
+typedef struct {
+    unsigned int goalScoredTrack;
+    bool cdIsPlaying;
+    int masterVolume;
+} AudioSettings;
 
-extern unsigned int g_GoalScoredTrack;
+extern AudioSettings g_Audio;
 
 typedef enum
 {
@@ -51,11 +45,13 @@ typedef enum
     GOAL_SCORED_TRACK_MAX = MATCH_TRACK+1,
 } GOAL_SCORED_TRACK;
 
-extern bool cd_is_playing;
-extern int volume;
-
 void playCDTrack(int track, bool repeat);
 
 void reset_audio(int new_volume);
 
 void nextGoalScoredTrack(void);
+
+static inline int volume_shift(int vol)
+{
+    return vol >> 4;
+}

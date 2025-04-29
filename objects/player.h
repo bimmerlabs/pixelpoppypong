@@ -2,7 +2,7 @@
 #include "../sprites.h"
 #include "../input.h"
 #include "object.h"
-#include "object.h"
+#include "teams.h"
 
 #define NOT_PLAYING 0
 #define PLAYING 1
@@ -99,21 +99,10 @@ typedef enum _CHARACTER_SELECT
 
 extern bool characterUnlocked[TOTAL_CHARACTERS]; // distinction between selection and what gets saved in backup ram
 extern bool characterAvailable[TOTAL_CHARACTERS];
-extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0 // could be part of a team struct
+// extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0 // could be part of a team struct
 
 // Array to hold attributes for each character
 extern const CHARACTER_ATTRIBUTES characterAttributes[];
-
-typedef enum _TEAM_SELECT
-{
-    TEAM_UNSELECTED = 0,
-    TEAM_1,
-    TEAM_2,
-    TEAM_3,
-    TEAM_4,
-} TEAM_SELECT;
-
-extern int teamCount[MAX_TEAMS+1];
 
 typedef struct _CHARACTER
 {
@@ -149,8 +138,8 @@ typedef struct _PLAYER
     int totalLives;
     
     // Team (replaces team struct values)
-    Uint8 teamChoice;
-    Uint8 teamOldTeam;
+    short teamChoice;
+    short teamOldTeam;
     bool teamSelected;
     
     // Attributes from the selected character
@@ -211,7 +200,6 @@ void initDemoPlayers(void);
 
 void assignCharacterSprite(PPLAYER player);
 void assignCharacterStats(PPLAYER player);
-void initPlayerGoals(void);
 
 int getLives(PPLAYER player);
 int getStars(void);

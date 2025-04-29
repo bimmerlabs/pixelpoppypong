@@ -8,13 +8,10 @@
 bool start_gameplay_timer = false;
 bool round_start = false;
 
-Uint8 g_goalPlayerId[MAX_PLAYERS];
-
 Item g_item = {0};
 
 static bool draw_demo_text = true;
-static bool time_over = false;
-// static bool explode = false;
+static bool time_over = false;
 bool play_continue_track = false;
 // TODO: implement this function
 // static bool isRoundOver(void);
@@ -51,7 +48,10 @@ void gameplay_init() {
     }
     
     resetSpriteColors();
-    initPlayerGoals();
+    initGoalColors();
+    
+    initGoals();
+    setGoalSize();
 
     if (g_GameOptions.mosaic_display) {
         mosaic_in = true;
@@ -68,7 +68,6 @@ void gameplay_init() {
     play_continue_track = false;
 
     resetPlayerScores();
-    setGoalSize();
     getContinues();
     
     explode_ball = false;
@@ -102,9 +101,6 @@ void gameplay_init() {
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
-    // g_item.id = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
-    // setItemPositions();
-    // g_Game.explodeBomb = false;
     explosion_flash = false;    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
@@ -184,53 +180,6 @@ void demo_init(void) {
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         g_item.timer[i] = 0;
-    }
-}
-
-// TODO: eliminate?void setGoalSize(void)
-{
-    switch(g_Game.gameMode)
-    {
-        case GAME_MODE_CLASSIC:
-            g_Game.goalYPosTop = GOAL_Y_POS_EASY;
-            g_Game.goalYPosMid = GOAL_CENTER_POS;
-            g_Game.goalYPosBot = GOAL_Y_POS_EASY;
-            g_Game.goalScale = GOAL_SCALE_EASY;
-            break;
-        case GAME_MODE_STORY: {
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
-                    g_Game.goalYPosTop = GOAL_Y_POS_EASY;
-                    g_Game.goalYPosMid = GOAL_CENTER_POS;
-                    g_Game.goalYPosBot = GOAL_Y_POS_EASY;
-                    g_Game.goalScale = GOAL_SCALE_EASY;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
-                    g_Game.goalYPosTop = GOAL_Y_POS_MEDIUM;
-                    g_Game.goalYPosMid = GOAL_CENTER_POS;
-                    g_Game.goalYPosBot = GOAL_Y_POS_MEDIUM;
-                    g_Game.goalScale = GOAL_SCALE_MEDIUM;
-                    break;
-                case GAME_DIFFICULTY_HARD:
-                    g_Game.goalYPosTop = GOAL_Y_POS_HARD;
-                    g_Game.goalYPosMid = GOAL_CENTER_POS;
-                    g_Game.goalYPosBot = GOAL_Y_POS_HARD;
-                    g_Game.goalScale = GOAL_SCALE_HARD;
-                    break;
-                default:
-                    break;
-            }
-            break;
-        }
-        case GAME_MODE_BATTLE:
-            g_Game.goalYPosTop = GOAL_Y_POS_EASY;
-            g_Game.goalYPosMid = GOAL_CENTER_POS;
-            g_Game.goalYPosBot = GOAL_Y_POS_EASY;
-            g_Game.goalScale = GOAL_SCALE_EASY;
-            break;
-        default:
-            break;
     }
 }
 
@@ -342,6 +291,10 @@ void demo_update(void)
     if(g_Game.gameState != GAME_STATE_GAMEPLAY && g_Game.gameState != GAME_STATE_DEMO_LOOP)
     {
         return;
+    }
+    
+    if (fade_out) { // works for both ball and bomb..
+        fade_out = fadeOut(8, NEUTRAL_FADE);
     }
                    
     if (g_Game.endDelayTimer == 0) {
@@ -651,52 +604,62 @@ void gameplayUI_draw(PPLAYER player) {
     do_update_Pmenu[player->playerID] = true;
 
     player->_bg->spr_id = player->_bg->anim1.asset[player->playerID];
-    set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);            // TODO:  eliminate magic numbers
+    set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);        
+    int heart_x = 0;
+    int heart_y = 0;
+    int star_x = 0;
+    int offset = 0;    // TODO:  eliminate magic numbers
     switch (player->teamChoice)
     {
         case TEAM_1: {
-            int heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
-            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
-            int star_x = -(GAMEPLAY_PORTRAIT_X - 208);
+            heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
+            heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
+            star_x = -(GAMEPLAY_PORTRAIT_X - 208);
+            offset = 16;
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
+            // draw_heart_element(&heart, player, heart_x, heart_y, 16);
+            // draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_2: {
-            int heart_x = GAMEPLAY_PORTRAIT_X - 54;
-            int heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
-            int star_x = GAMEPLAY_PORTRAIT_X - 208;
+            heart_x = GAMEPLAY_PORTRAIT_X - 54;
+            heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
+            star_x = GAMEPLAY_PORTRAIT_X - 208;
+            offset = -16;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            draw_star_element(&star, player->score.stars, star_x, heart_y, -16);
+            // draw_heart_element(&heart, player, heart_x, heart_y, -16);
+            // draw_star_element(&star, player->score.stars, star_x, heart_y, -16);
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_3: {
-            int heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
-            int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
-            int star_x = -(GAMEPLAY_PORTRAIT_X - 208);
+            heart_x = -(GAMEPLAY_PORTRAIT_X - 54);
+            heart_y = GAMEPLAY_PORTRAIT_Y + 12;
+            star_x = -(GAMEPLAY_PORTRAIT_X - 208);
+            offset = 16;
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
+            // draw_heart_element(&heart, player, heart_x, heart_y, 16);
+            // draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         case TEAM_4: {
-            int heart_x = GAMEPLAY_PORTRAIT_X - 54;
-            int heart_y = GAMEPLAY_PORTRAIT_Y + 12;
-            int star_x = GAMEPLAY_PORTRAIT_X - 208;
+            heart_x = GAMEPLAY_PORTRAIT_X - 54;
+            heart_y = GAMEPLAY_PORTRAIT_Y + 12;
+            star_x = GAMEPLAY_PORTRAIT_X - 208;
+            offset = -16;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            draw_star_element(&star, player->score.stars, star_x, heart_y, -16);            
+            // draw_heart_element(&heart, player, heart_x, heart_y, -16);
+            // draw_star_element(&star, player->score.stars, star_x, heart_y, -16);            
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
         default:
             break;
     }
+    draw_heart_element(&heart, player, heart_x, heart_y, offset);
+    draw_star_element(&star, player->score.stars, star_x, heart_y, offset);
     set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);
     my_sprite_draw(player->_bg);
     my_sprite_draw(player->_portrait);
@@ -778,10 +741,6 @@ void gameplay_update(void)
     if(g_Game.gameState != GAME_STATE_GAMEPLAY)
     {
         return;
-    }
-
-    if (fade_out) { // works for both ball and bomb..
-        fade_out = fadeOut(8, NEUTRAL_FADE);
     }
     
     // don't do anything if the game is paused

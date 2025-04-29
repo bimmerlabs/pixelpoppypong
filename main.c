@@ -68,7 +68,7 @@ GameOptions g_GameOptions = {
     .enableMeows = true,
 };
 
-bool releaseCanidate = true;
+bool releaseCanidate = false;
 
 void loading_screen(void)
 {
@@ -297,11 +297,9 @@ void			jo_main(void)
 {
     jo_core_init(JO_COLOR_Black);
     
-    #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-        // pone-sound
-        load_drv(ADX_MASTER_2304);
-        jo_core_add_vblank_callback(sdrv_vblank_rq);
-    #endif
+    // pone-sound
+    load_drv(ADX_MASTER_2304);
+    jo_core_add_vblank_callback(sdrv_vblank_rq);
 
     #ifndef JO_COMPILE_WITH_3D_SUPPORT
         slZdspLevel(3); // if not using jo_3d (JO_COMPILE_WITH_3D_MODULE = 0)
@@ -343,11 +341,10 @@ void			jo_main(void)
     jo_core_add_callback(teamSelect_draw);
     
     jo_core_add_callback(gameplay_draw);
-    jo_core_add_callback(gameplay_update);
+    jo_core_add_callback(gameplay_update);  
+    jo_core_add_callback(demo_update);
     
     jo_core_add_callback(nameEntryUpdate);
-    
-    jo_core_add_callback(demo_update);
     
     jo_core_add_callback(display_credits);
     jo_core_add_callback(display_scores);

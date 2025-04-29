@@ -5,6 +5,8 @@
 #include "physics.h"
 #include "audio.h"
 #include "objects/player.h"
+#include "objects/goal.h"
+#include "objects/teams.h"
 
 #define SCORE_DISPLAY_TIME (16 * 60)
 
@@ -12,15 +14,6 @@
 #define SCORE_ENTRIES 10
 #define UNLOCK_CRAIG_SCORE 2500000
 #define UNLOCK_GARFIELD_SCORE 5000000
-    
-typedef enum _TEAMS_FOR_SCORING
-{
-    ONE_TEAM = 1,
-    TWO_TEAMS = 2,
-    THREE_TEAMS = 3,
-    FOUR_TEAMS = 4,
-} TEAMS_FOR_SCORING;
-    
 
 extern unsigned int g_ScoreTimer;
 
@@ -43,38 +36,6 @@ bool updatePlayerLives(Uint8 scoredOnPlayerID);
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
-static __jo_force_inline void updateLeftPlayerStars(int lastTouchPlayerID)
-{
-    if (lastTouchPlayerID != -1 && g_Players[lastTouchPlayerID].onLeftSide) {
-        g_Players[lastTouchPlayerID].score.stars++;       
-    }
-    else {
-        if (g_Game.numTeams > 2) {
-            g_Players[g_goalPlayerId[TEAM_1-1]].score.stars++; 
-            g_Players[g_goalPlayerId[TEAM_3-1]].score.stars++;
-        }
-        else {
-            g_Players[g_goalPlayerId[TEAM_3-1]].score.stars++;
-        }
-    }
-}
-
-static __jo_force_inline void updateRightPlayerStars(int lastTouchPlayerID)
-{
-    if (lastTouchPlayerID != -1 && !g_Players[lastTouchPlayerID].onLeftSide) {
-        g_Players[lastTouchPlayerID].score.stars++;       
-    }
-    else {
-        if (g_Game.numTeams == 4) {
-            g_Players[g_goalPlayerId[TEAM_2-1]].score.stars++; 
-            g_Players[g_goalPlayerId[TEAM_4-1]].score.stars++;
-        }
-        else {
-            g_Players[g_goalPlayerId[TEAM_2-1]].score.stars++;
-        }
-    }
-}
-
 static __jo_force_inline void calculateScore(Sprite *ball, Uint8 playerID) {
     unsigned int points = (JO_ABS(toINT(ball->vel.x)) * 50) 
                          + (JO_ABS(toINT(ball->vel.y)) * 500) 
@@ -84,168 +45,70 @@ static __jo_force_inline void calculateScore(Sprite *ball, Uint8 playerID) {
     ballTtouchTimer = 0;
 }
 
-// these don't work - need to assign a goal id for the player, instead of trying to calculate it since the player id isn't the same thing as the goal
-static __jo_force_inline void updateScoreLeft(Sprite *ball) {
-    int lastTouchPlayerID = -1;
-    int scoredOnPlayerID = -1;
-    // Find the last player who touched the ball
-    for (int i = 0; i < MAX_PLAYERS; i++) {
-        if (touchedBy[i].hasTouched) {
-            lastTouchPlayerID = i;
-            break; // Exit the loop early since only one player should have hasTouched == true
-        }
-    }
-    // Assign score if a valid player touched it
-    if (lastTouchPlayerID != -1 && g_Players[lastTouchPlayerID].onLeftSide) {
-        calculateScore(ball, lastTouchPlayerID);        
-    }
-    else {
-        // todo: assign score if nobody on other side touched the ball
-        if (g_Game.numTeams > 2) {
-            calculateScore(ball, g_goalPlayerId[TEAM_1-1]);
-            calculateScore(ball, g_goalPlayerId[TEAM_3-1]);
-        }
-        else {
-            calculateScore(ball, g_goalPlayerId[TEAM_1-1]);
-        }
-    }
-    
-    if (g_Game.numTeams == 4 && ball->pos.y > SCREEN_MIDDLE) {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_4-1];
-    }
-    else if (g_Game.numTeams == 4 && ball->pos.y < SCREEN_MIDDLE) {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_2-1];
-    }
-    else {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_2-1];
-    }
-    
-    if (updatePlayerLives(scoredOnPlayerID)) {
-        // scored on player lost all their lives
-        updateLeftPlayerStars(lastTouchPlayerID);
-    }
-    
+static __jo_force_inline void updatePlayerStars(int lastTouchPlayerID)
+{
+    g_Players[lastTouchPlayerID].score.stars++;       
 }
 
-static __jo_force_inline void updateScoreRight(Sprite *ball) {
+// 
+static __jo_force_inline bool updateScore(Sprite *ball, int playerID) {      
+    if (g_Players[playerID].subState == PLAYER_STATE_DEAD) {
+        return false;
+    }
+    
     int lastTouchPlayerID = -1;
-    int scoredOnPlayerID = -1;
     // Find the last player who touched the ball
     for (int i = 0; i < MAX_PLAYERS; i++) {
         if (touchedBy[i].hasTouched) {
             lastTouchPlayerID = i;
-            break; // Exit the loop early since only one player should have hasTouched == true
+            break;
         }
     }
     // Assign score if a valid player touched it
-    if (lastTouchPlayerID != -1 && !g_Players[lastTouchPlayerID].onLeftSide) {
-        calculateScore(ball, lastTouchPlayerID);  
+    if (lastTouchPlayerID != -1) {
+        calculateScore(ball, lastTouchPlayerID);        
     }
-    else {
-        // todo: assign score if nobody on other side touched the ball
-        if (g_Game.numTeams == 4) {
-            calculateScore(ball, g_goalPlayerId[TEAM_2-1]);
-            calculateScore(ball, g_goalPlayerId[TEAM_4-1]);
-        }
-        else {
-            calculateScore(ball, g_goalPlayerId[TEAM_2-1]);
-        }
-    }
-    
-    if (g_Game.numTeams > 2 && ball->pos.y > SCREEN_MIDDLE) {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_3-1];
-    }
-    else if (g_Game.numTeams > 2 && ball->pos.y < SCREEN_MIDDLE) {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_1-1];
-    }
-    else {
-        scoredOnPlayerID = g_goalPlayerId[TEAM_1-1];
-    }
-    
-    if (updatePlayerLives(scoredOnPlayerID)) {
+    if (updatePlayerLives(playerID) && lastTouchPlayerID != -1) {
         // scored on player lost all their lives
-        updateRightPlayerStars(lastTouchPlayerID);
+        updatePlayerStars(lastTouchPlayerID);
     }
+    return true;
 }
 
 static __jo_force_inline void checkRightWallScore(Sprite *ball) {
-    // switch for number of teams
-    // possible cases: 1 player, 3 players
-    switch (g_Game.numTeams) {
-        case ONE_TEAM:
-        case TWO_TEAMS: {
-            if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(g_Game.goalYPosTop) - HARD_BALL_RADIUS) {
-            // if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) && ball->pos.y < toFIXED(g_Game.goalYPosTop)) {
-                updateScoreLeft(ball); // scored on TEAM_1
-                // if (g_Game.gameMode == CONTINUE_TRACK && play_continue_track) {
-                    // playCDTrack(CONTINUE_TRACK, false);
-                // }
-                // else {
-                    playCDTrack(g_GoalScoredTrack, false);
-                    nextGoalScoredTrack();
-                // }
-            }
-            break;
+    // iterate through goals on right side, check bounds
+    PGOAL _goal;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        _goal = &g_Goal[i];
+        if (_goal->objectState == OBJECT_STATE_INACTIVE || _goal->onLeftSide) {
+            continue;
         }
-        case THREE_TEAMS:
-        case FOUR_TEAMS: {
-            // if there are 3 teams, then we need to check the bounds of both the upper & lower goals
-            if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(GOAL_Y_POS_BOT_VS_MODE) - HARD_BALL_RADIUS) {
-            // if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) && ball->pos.y < toFIXED(GOAL_Y_POS_BOT_VS_MODE)) {
-                updateScoreLeft(ball); // scored on TEAM_1
-                playCDTrack(g_GoalScoredTrack, false);
+        if (ball->pos.y > toFIXED(_goal->pos.top) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(_goal->pos.bot) - HARD_BALL_RADIUS) {
+            if (updateScore(ball, _goal->id)) { // scored on TEAM_2 or TEAM_4
+                playCDTrack(g_Audio.goalScoredTrack, false);
                 nextGoalScoredTrack();
+                break;
             }
-            else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) - HARD_BALL_RADIUS && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE) + HARD_BALL_RADIUS) {
-            // else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE)) {
-                updateScoreLeft(ball); // scored on TEAM_3
-                playCDTrack(g_GoalScoredTrack, false);
-                nextGoalScoredTrack();
-            }
-            break;
         }
-        default:
-            break;
     }
 }
 
 static __jo_force_inline void checkLeftWallScore(Sprite *ball) {
-    // switch for number of teams
-    // possible cases: 2 player, 4 players
-    switch (g_Game.numTeams) {
-        case ONE_TEAM:
-        case TWO_TEAMS: {
-            if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(g_Game.goalYPosTop) - HARD_BALL_RADIUS) {
-            // if (ball->pos.y > -toFIXED(g_Game.goalYPosTop) && ball->pos.y < toFIXED(g_Game.goalYPosTop)) {
-                updateScoreRight(ball); // scored on TEAM_2
-                // if (g_Game.gameMode == CONTINUE_TRACK && play_continue_track) {
-                    // playCDTrack(CONTINUE_TRACK, false);
-                // }
-                // else {
-                    playCDTrack(g_GoalScoredTrack, false);
-                    nextGoalScoredTrack();
-                // }
-            }
-            break;
+    // iterate through goals on left side, check bounds
+    PGOAL _goal;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        _goal = &g_Goal[i];
+        if (_goal->objectState == OBJECT_STATE_INACTIVE || !_goal->onLeftSide) {
+            continue;
         }
-        case THREE_TEAMS:
-        case FOUR_TEAMS: {
-            // if there are 4 teams, then we need to check the bounds of both the upper & lower goals
-            if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) + HARD_BALL_RADIUS && ball->pos.y < -toFIXED(GOAL_Y_POS_BOT_VS_MODE) - HARD_BALL_RADIUS) {
-            // if (ball->pos.y > -toFIXED(GOAL_Y_POS_TOP_VS_MODE) && ball->pos.y < -toFIXED(GOAL_Y_POS_BOT_VS_MODE)) {
-                updateScoreRight(ball); // scored on TEAM_2
-                playCDTrack(g_GoalScoredTrack, false);
+        if (ball->pos.y > toFIXED(_goal->pos.top) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(_goal->pos.bot) - HARD_BALL_RADIUS) {
+            if (updateScore(ball, _goal->id)) { // scored on TEAM_1 or TEAM_3
+                playCDTrack(g_Audio.goalScoredTrack, false);
                 nextGoalScoredTrack();
+                break;
             }
-            else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) - HARD_BALL_RADIUS && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE) + HARD_BALL_RADIUS) {
-            // else if (ball->pos.y > toFIXED(GOAL_Y_POS_BOT_VS_MODE) && ball->pos.y < toFIXED(GOAL_Y_POS_TOP_VS_MODE)) {
-                updateScoreRight(ball); // scored on TEAM_4
-                playCDTrack(g_GoalScoredTrack, false);
-                nextGoalScoredTrack();
-            }
-            break;
         }
-        default:
-            break;
     }
 }

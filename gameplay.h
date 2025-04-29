@@ -7,6 +7,7 @@
 #include "physics.h"
 #include "team_select.h"
 #include "objects/player.h"
+#include "objects/goal.h"
 #include "BG_DEF/sprite_colors.h"
 
 #define ROUND_BEGIN_TIME_NORMAL (6 * 60)
@@ -37,16 +38,11 @@
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
-extern Uint8 g_goalPlayerId[MAX_PLAYERS];
-
 extern ANGLE ball_rotation;
 extern bool start_gameplay_timer;
 extern bool round_start;
 extern bool explode_ball;
 extern bool play_continue_track;
-
-// static bool draw_bomb;
-// static bool explode_bomb;
 
 typedef enum _GAME_ITEMS
 {
@@ -65,12 +61,9 @@ typedef struct {
 } Item;
 extern Item g_item;
 
-// static unsigned int currentItem;
-
 void gameplay_init(void);
 void demo_init(void);
 void demo_update(void);
-void setGoalSize(void);
 
 void gameplay_timer(void);
 void gameplay_draw(void);
@@ -102,7 +95,7 @@ static __jo_force_inline void initPixelPoppy(void) {
         x += offset;
     }
 }
-static inline void draw_heart_element(Sprite *sprite, PPLAYER player, int x, int y, int offset) {
+static __jo_force_inline void draw_heart_element(Sprite *sprite, PPLAYER player, int x, int y, int offset) {
     int lives = player->numLives;
     for (int i = 0; i < player->numLives; i++) {
         set_spr_position(sprite, x, y, 90);
@@ -167,102 +160,6 @@ static __jo_force_inline void gameplayScore_draw(PPLAYER player) {
         default:
             break;
     }
-}
-
-static __jo_force_inline void drawGoals(PPLAYER player) {
-    if (player->subState == PLAYER_STATE_DEAD) {
-        return;
-    }    // Set goal asset by team selection
-    Uint8 i = player->teamChoice-1;
-    int x_position = 0;
-    int y_position_top = 0;
-    int y_position_mid = 0;
-    int y_position_bot = 0;
-    int top_flip = sprNoflip;
-    int bot_flip = sprVflip;
-    int top_zmode = _ZmRT;
-    int mid_zmode = _ZmRC;
-    int bot_zmode = _ZmRB;
-    Uint8 goal_scale = 0;
-    switch (player->teamChoice) 
-    {
-        case TEAM_1: {
-            top_flip = sprNoflip;
-            bot_flip = sprVflip;
-            top_zmode = _ZmLT;
-            mid_zmode = _ZmLC;
-            bot_zmode = _ZmLB;
-            if (g_Assets.drawSingleGoal[i]) {
-                x_position = -GOAL_X_POS;
-                y_position_top = -g_Game.goalYPosTop;
-                y_position_mid = g_Game.goalYPosMid;
-                y_position_bot = g_Game.goalYPosBot;
-                goal_scale = g_Game.goalScale;
-            }
-            else {
-                x_position = -GOAL_X_POS;
-                y_position_top = -GOAL_Y_POS_TOP_VS_MODE;
-                y_position_mid = -GOAL_Y_POS_MID_VS_MODE;
-                y_position_bot = -GOAL_Y_POS_BOT_VS_MODE;
-                goal_scale = GOAL_SCALE_VS_MODE;                
-            }
-            break;
-        }
-        case TEAM_2: {
-            top_flip = sprHflip;
-            bot_flip = sprHVflip;
-            top_zmode = _ZmRT;
-            mid_zmode = _ZmRC;
-            bot_zmode = _ZmRB;
-            if (g_Assets.drawSingleGoal[i]) {
-                x_position = GOAL_X_POS;
-                y_position_top = -g_Game.goalYPosTop;
-                y_position_mid = g_Game.goalYPosMid;
-                y_position_bot = g_Game.goalYPosBot;
-                goal_scale = g_Game.goalScale;
-            }
-            else {
-                x_position = GOAL_X_POS;
-                y_position_top = -GOAL_Y_POS_TOP_VS_MODE;
-                y_position_mid = -GOAL_Y_POS_MID_VS_MODE;
-                y_position_bot = -GOAL_Y_POS_BOT_VS_MODE;
-                goal_scale = GOAL_SCALE_VS_MODE;            
-            }
-            break;
-        }
-        case TEAM_3: {
-            top_flip = sprNoflip;
-            bot_flip = sprVflip;
-            top_zmode = _ZmLT;
-            mid_zmode = _ZmLC;
-            bot_zmode = _ZmLB;
-            x_position = -GOAL_X_POS;
-            y_position_top = GOAL_Y_POS_BOT_VS_MODE;
-            y_position_mid = GOAL_Y_POS_MID_VS_MODE;
-            y_position_bot = GOAL_Y_POS_TOP_VS_MODE;
-            goal_scale = GOAL_SCALE_VS_MODE;
-            break;
-        }
-        case TEAM_4: {
-            top_flip = sprHflip;
-            bot_flip = sprHVflip;
-            top_zmode = _ZmRT;
-            mid_zmode = _ZmRC;
-            bot_zmode = _ZmRB;
-            x_position = GOAL_X_POS;
-            y_position_top = GOAL_Y_POS_BOT_VS_MODE;
-            y_position_mid = GOAL_Y_POS_MID_VS_MODE;
-            y_position_bot = GOAL_Y_POS_TOP_VS_MODE;
-            goal_scale = GOAL_SCALE_VS_MODE;  
-            break;
-        }
-        default:
-            break;
-    }
-    
-    drawGoalSprites(&goal[i], 0, 2, top_zmode, top_flip, x_position, y_position_top, 2);
-    drawGoalSprites(&goal[i], 1, 3, mid_zmode, top_flip, x_position, y_position_mid, goal_scale);
-    drawGoalSprites(&goal[i], 0, 2, bot_zmode, bot_flip, x_position, y_position_bot, 2);
 }
 
 static float item_scale = 0.1;
@@ -552,8 +449,9 @@ static __jo_force_inline void drawGameUI(void) {
         looped_animation_pow(player->_sprite, 4); // TODO: change animations based on player input
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         gameplayUI_draw(player);
-        drawGoals(player);
+        // drawGoals(player);
     }
+    drawGoals();
 }
 
 static __jo_force_inline bool startGameplay(void) {

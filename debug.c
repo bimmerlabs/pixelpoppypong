@@ -25,7 +25,7 @@ void debux_text(void)
         jo_nbg0_printf(20, 2, "LAST:%2d", g_Game.lastState);
         jo_nbg0_printf(29, 2, "NEXT:%2d", g_Game.nextState);
         jo_nbg0_printf(2, 3, "FRAME:%i", frame);
-        jo_nbg0_printf(2, 4, "VOLUME:%i,%i", volume, g_StartGameFrames);
+        jo_nbg0_printf(2, 4, "VOLUME:%i,%i", g_Audio.masterVolume, g_StartGameFrames);
         // jo_nbg0_printf(2, 5, "TESTCOLLISION:%i", g_GameOptions.testCollision);
         // jo_nbg0_printf(20, 24, "DO_UPDATE_ALL:%i", do_update_All);
         // jo_nbg0_printf(20, 25, "UPDATE_PALETTE_ALL:%i", update_palette_All);
@@ -33,7 +33,7 @@ void debux_text(void)
         // jo_nbg0_printf(20, 25, "MEMORY_ACCESS:%i", memory_access);
         jo_nbg0_printf(20, 3, "GAME MODE:%i", g_Game.gameMode);
         jo_nbg0_printf(20, 4, "DIFFICULTY:%i", g_Game.gameDifficulty);
-        jo_nbg0_printf(20, 5, "LOADING:%i", g_Game.isLoading);
+        // jo_nbg0_printf(20, 5, "LOADING:%i", g_Game.isLoading);
         // jo_nbg0_printf(20, 6, "SPRITES:%d", jo_sprite_count());
         jo_nbg0_printf(2, 26, "DATE:%02d.%02d.%d", now.day, now.month, now.year);
         jo_nbg0_printf(2, 27, "TIME:%02d:%02d:%02d", now.hour, now.minute, now.second);
@@ -45,10 +45,10 @@ void debux_text(void)
         // if (g_GameOptions.mosaic_display) {
         // jo_nbg0_printf(20, 2, "MOSAIC_X/Y:%i,%i", mosaic_x, mosaic_y);
         // }
-        // jo_nbg0_printf(2, 25, "PLAYING CD:%i", cd_is_playing);
-        // jo_nbg0_printf(2, 27, "VOLUME:%i", volume);
+        // jo_nbg0_printf(2, 25, "PLAYING CD:%i", g_Audio.cdIsPlaying);
+        // jo_nbg0_printf(2, 27, "VOLUME:%i", g_Audio.masterVolume);
         jo_nbg0_printf(20, 6, "TRANS_IN/OUT:%i, %i", transition_in, transition_out);
-        // jo_nbg0_printf(20, 5, "FADE_IN/OUT:%i, %i", fade_in, fade_out);
+        jo_nbg0_printf(20, 5, "FADE_IN/OUT:%i, %i", fade_in, fade_out);
         jo_nbg0_printf(20, 7, "MOSAIC_IN/OUT:%i, %i", mosaic_in, mosaic_out);
         
         switch (g_Game.gameState) {
@@ -81,9 +81,9 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 18, "NUM.PLAYERS:%i", g_Game.numPlayers);
                 // jo_nbg0_printf(2, 19, "MIN.PLAYERS:%i", g_Game.minPlayers);
                 // jo_nbg0_printf(2, 20, "MAX.PLAYERS:%i", g_Game.maxPlayers);
-                // jo_nbg0_printf(20, 18, "NUM.TEAMS:%i", g_Game.numTeams);
-                // jo_nbg0_printf(20, 19, "MIN.TEAMS:%i", g_Game.minTeams);
-                // jo_nbg0_printf(20, 20, "MAX.TEAMS:%i", g_Game.maxTeams);
+                // jo_nbg0_printf(20, 18, "NUM.TEAMS:%i", g_Team.numTeams);
+                // jo_nbg0_printf(20, 19, "MIN.TEAMS:%i", g_Team.minTeams);
+                // jo_nbg0_printf(20, 20, "MAX.TEAMS:%i", g_Team.maxTeams);
                 break;
                 
             case GAME_STATE_TITLE_OPTIONS: // menu
@@ -95,7 +95,7 @@ void debux_text(void)
                 jo_nbg0_printf(2, 5, "GAMEMODE:%i", g_Game.gameMode);
                 
                 jo_nbg0_printf(20, 14, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
-                jo_nbg0_printf(20, 15, "NUMTEAMS:%i", g_Game.numTeams);
+                jo_nbg0_printf(20, 15, "NUMTEAMS:%i", g_Team.numTeams);
                 
                 // for (int i = 0; i < TOTAL_CHARACTERS; i++) {
                     // jo_nbg0_printf(2, (8+i), "UNLOCKED:%i", characterUnlocked[i]);
@@ -108,10 +108,10 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 8, "P2_INPUT:%i", g_Players[1].input->id);
                 // jo_nbg0_printf(20, 8, "IS SELECTED:%i", g_Players[1].input->isSelected);
                 
-                // jo_nbg0_printf(2, 10, "TEAM 1 AVAILABLE:%i", teamAvailable[1]);
-                // jo_nbg0_printf(2, 11, "TEAM 2 AVAILABLE:%i", teamAvailable[2]);
-                // jo_nbg0_printf(2, 12, "TEAM 3 AVAILABLE:%i", teamAvailable[3]);
-                // jo_nbg0_printf(2, 13, "TEAM 4 AVAILABLE:%i", teamAvailable[4]);
+                jo_nbg0_printf(2, 10, "TEAM 1 AVAILABLE:%i", g_Team.isAvailable[TEAM_1]);
+                jo_nbg0_printf(2, 11, "TEAM 2 AVAILABLE:%i", g_Team.isAvailable[TEAM_2]);
+                jo_nbg0_printf(2, 12, "TEAM 3 AVAILABLE:%i", g_Team.isAvailable[TEAM_3]);
+                jo_nbg0_printf(2, 13, "TEAM 4 AVAILABLE:%i", g_Team.isAvailable[TEAM_4]);
                 
                 // jo_nbg0_printf(2, 7, "TOTAL_CHARACTERS:%i",  TOTAL_CHARACTERS);
                 // jo_nbg0_printf(2, 8, "P1 CHAR CHOICE:%i", g_Players[0].character.choice);
@@ -141,9 +141,9 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 17, "P4 READY:%i", g_Players[3].isReady);
                 
                 
-                // jo_nbg0_printf(2, 18, "NUM.TEAMS %i:", g_Game.numTeams);
-                // jo_nbg0_printf(2, 19, "MIN.TEAMS %i:", g_Game.minTeams);
-                // jo_nbg0_printf(2, 20, "MAX.TEAMS %i:", g_Game.maxTeams);
+                jo_nbg0_printf(2, 18, "NUM.TEAMS %i:", g_Team.numTeams);
+                jo_nbg0_printf(2, 19, "MIN.TEAMS %i:", g_Team.minTeams);
+                jo_nbg0_printf(2, 20, "MAX.TEAMS %i:", g_Team.maxTeams);
                 // jo_nbg0_printf(2, 19, "ALL READY:%i", all_players_ready);
                 // jo_nbg0_printf(2, 20, "PRESSEDSTART:%i",  g_TeamSelectPressedStart);
                 
@@ -177,12 +177,7 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 13, "TOUCHEDBY 2:%i", touchedBy[1].hasTouched);
                 // jo_nbg0_printf(2, 14, "TOUCHEDBY 3:%i", touchedBy[2].hasTouched);
                 // jo_nbg0_printf(2, 15, "TOUCHEDBY 4:%i", touchedBy[3].hasTouched);
-                                             
-                    // jo_nbg0_printf(2, 16, "TEAM_1 PID:%i", g_goalPlayerId[TEAM_1-1]);
-                    // jo_nbg0_printf(2, 17, "TEAM_2 PID:%i", g_goalPlayerId[TEAM_2-1]);
-                    // jo_nbg0_printf(2, 18, "TEAM_3 PID:%i", g_goalPlayerId[TEAM_3-1]);
-                    // jo_nbg0_printf(2, 19, "TEAM_4 PID:%i", g_goalPlayerId[TEAM_4-1]);
-                    
+                                                                 
                 // if (g_Game.numPlayers == ONE_PLAYER)
                     // jo_nbg0_printf(2, 21, "ONE_PLAYER");
                 // else if (g_Game.numPlayers == TWO_PLAYER)
@@ -191,7 +186,7 @@ void debux_text(void)
                     // jo_nbg0_printf(2, 21, "THREE_PLAYER");
                 // else
                     // jo_nbg0_printf(2, 21, "FOUR_PLAYER");
-                // jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Game.numTeams);
+                // jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Team.numTeams);
                 break;
                 
             case GAME_STATE_GAMEPLAY:
@@ -207,7 +202,7 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
                 // jo_nbg0_printf(20, 12, "WINNER:%i", g_Game.winner);
                 // jo_nbg0_printf(20, 13, "DELAYTIMER:%i", g_Game.endDelayTimer);
-                // jo_nbg0_printf(20, 14, "NUMTEAMS:%i", g_Game.numTeams);
+                jo_nbg0_printf(20, 14, "NUMTEAMS:%i", g_Team.numTeams+1);
                 
                 // jo_nbg0_printf(22, 10, "POPPY.VEL.X:%i", JO_FIXED_TO_INT(pixel_poppy.vel.x));
                 // jo_nbg0_printf(22, 11, "POPPY.VEL.Y:%i", JO_FIXED_TO_INT(pixel_poppy.vel.y));
@@ -221,21 +216,16 @@ void debux_text(void)
                 // jo_nbg0_printf(22, 17, "P2.LEFTSIDE:%i", g_Players[1].onLeftSide);
                 
                 
-                jo_nbg0_printf(2,  16, "P1.COLLIDING:%i", g_Players[0]._sprite->isColliding);
-                jo_nbg0_printf(2,  17, "ITEM.COLLIDE:%i", g_item._sprite->isColliding);
-                jo_nbg0_printf(2,  18, "ITEM.ID:%i", g_item.id);
-                jo_nbg0_printf(2,  19, "ITEM.TIMER:%i", g_item.timer[0]);
+                // jo_nbg0_printf(2,  16, "P1.COLLIDING:%i", g_Players[0]._sprite->isColliding);
+                // jo_nbg0_printf(2,  17, "ITEM.COLLIDE:%i", g_item._sprite->isColliding);
+                // jo_nbg0_printf(2,  18, "ITEM.ID:%i", g_item.id);
+                // jo_nbg0_printf(2,  19, "ITEM.TIMER:%i", g_item.timer[0]);
                 
-                jo_nbg0_printf(22, 16, "EXPLODE_BOMB:%i", g_Game.explodeBomb);
-                jo_nbg0_printf(22, 17, "SHROOM_ANGLE:%i", hslSprites.color[p_rangeShroom.lower].h);
-                jo_nbg0_printf(22, 18, "VISIBLE:%i", g_item._sprite->visible);
-                jo_nbg0_printf(22, 19, "TOTALLIVES:%i", (g_Players[0].totalLives * 2));
-                jo_nbg0_printf(22, 20, "NUMLIVES:%i", g_Players[0].numLives);
-                
-                    // jo_nbg0_printf(2, 17, "TEAM_1 PID:%i", g_goalPlayerId[TEAM_1-1]);
-                    // jo_nbg0_printf(2, 18, "TEAM_2 PID:%i", g_goalPlayerId[TEAM_2-1]);
-                    // jo_nbg0_printf(2, 19, "TEAM_3 PID:%i", g_goalPlayerId[TEAM_3-1]);
-                    // jo_nbg0_printf(2, 20, "TEAM_4 PID:%i", g_goalPlayerId[TEAM_4-1]);
+                // jo_nbg0_printf(22, 16, "EXPLODE_BOMB:%i", g_Game.explodeBomb);
+                // jo_nbg0_printf(22, 17, "SHROOM_ANGLE:%i", hslSprites.color[p_rangeShroom.lower].h);
+                // jo_nbg0_printf(22, 18, "VISIBLE:%i", g_item._sprite->visible);
+                // jo_nbg0_printf(22, 19, "TOTALLIVES:%i", (g_Players[0].totalLives * 2));
+                // jo_nbg0_printf(22, 20, "NUMLIVES:%i", g_Players[0].numLives);
                          
                 // if (g_Players[0].isPlaying && g_GameOptions.testCollision) {
                     // jo_nbg0_printf(2, 11, "ISCOLLIDING:%i", g_Players[0]._sprite->isColliding);
@@ -284,13 +274,13 @@ void debux_text(void)
                     // jo_nbg0_printf(2, 21, "NUMPLAYERS:%i", 3);
                 // else
                 // jo_nbg0_printf(2, 21, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
-                // jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Game.numTeams);
+                // jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Team.numTeams);
                 // jo_nbg0_printf(2, 23, "PLAYERID:%i", g_Players[0].playerID);
                                 
-                // jo_nbg0_printf(20, 10, "TEAM 1 AVAILABLE:%i", teamAvailable[1]);
-                // jo_nbg0_printf(20, 11, "TEAM 2 AVAILABLE:%i", teamAvailable[2]);
-                // jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", teamAvailable[3]);
-                // jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", teamAvailable[4]);   
+                jo_nbg0_printf(20, 10, "TEAM 1 AVAILABLE:%i", g_Team.isAvailable[TEAM_1]);
+                jo_nbg0_printf(20, 11, "TEAM 2 AVAILABLE:%i", g_Team.isAvailable[TEAM_2]);
+                jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", g_Team.isAvailable[TEAM_3]);
+                jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", g_Team.isAvailable[TEAM_4]);   
                 
                 // jo_nbg0_printf(20, 10, "GAMEISACTIVE:%i", g_Game.isActive);
                 // jo_nbg0_printf(20, 11, "BEGINTIMER:%i", g_Game.BeginTimer);
@@ -299,10 +289,10 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 14, "ISBALLACTIVE:%i", g_Game.isBallActive);
                 // jo_nbg0_printf(20, 15, "ROUND_START:%i", round_start);
                 
-                // jo_nbg0_printf(2, 12, "TEAM1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_1-1]);
-                // jo_nbg0_printf(2, 13, "TEAM2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_2-1]);
-                // jo_nbg0_printf(2, 14, "TEAM3 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_3-1]);
-                // jo_nbg0_printf(2, 15, "TEAM4 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_4-1]);
+                // jo_nbg0_printf(2, 12, "TEAM1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_1]);
+                // jo_nbg0_printf(2, 13, "TEAM2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_2]);
+                // jo_nbg0_printf(2, 14, "TEAM3 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_3]);
+                // jo_nbg0_printf(2, 15, "TEAM4 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_4]);
                 
                 
                 // jo_nbg0_printf(2, 12, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.r));

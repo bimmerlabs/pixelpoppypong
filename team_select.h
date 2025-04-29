@@ -39,11 +39,10 @@ extern bool all_players_ready; // for debugging
 void resetTeams(void);
 void initUnlockedCharacters(void);
 void initAvailableCharacters(void);
-void initTeams(void);
 void drawCharacterSelectGrid(void);  // re-organize these to be in order
 void characterSelect_input(void);
 void teamSelect_init(void);
-void assign_team(int oldTeam, int newTeam);
+// void assign_team(int oldTeam, int newTeam);
 void teamSelect_input(void);
 void validateCharacters(PLAYER *player);
 void validateTeam(PLAYER *player);

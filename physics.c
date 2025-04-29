@@ -113,10 +113,10 @@ void update_ball(Sprite *ball) {
     }
     
     // Check for collisions with goals
-    if (ball->pos.x >= GOAL_X_BOUNDS) {
+    if (ball->pos.x >= GOAL_RIGHT_BOUNDS) {
         checkRightWallScore(ball);
     }
-    else if (ball->pos.x <= -GOAL_X_BOUNDS) {
+    else if (ball->pos.x <= GOAL_LEFT_BOUNDS) {
         checkLeftWallScore(ball);
     }
     
@@ -211,6 +211,10 @@ void update_ball(Sprite *ball) {
 }
 
 bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
+    if (player->subState == PLAYER_STATE_DEAD) {
+        return false;
+    }
+    
     // don't check collision behind player
     if (player->onLeftSide && player->_sprite->pos.x > ball->pos.x) {
         player->_sprite->isColliding = false;
@@ -220,6 +224,15 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
         player->_sprite->isColliding = false;
         return false;
     }
+    // maybe this would work if the player was wedge shaped
+    // if (player->onLeftSide && (player->_sprite->pos.x - player->_sprite->pos.r) > ball->pos.x) {
+        // player->_sprite->isColliding = false;
+        // return false;
+    // }
+    // if (!player->onLeftSide && (player->_sprite->pos.x + player->_sprite->pos.r) < ball->pos.x) {
+        // player->_sprite->isColliding = false;
+        // return false;
+    // }
     
     // Relative position vector
     FIXED dx = ball->pos.x - player->_sprite->pos.x;
@@ -236,10 +249,14 @@ bool detect_player_ball_collision(Sprite *ball, PPLAYER player) {
         // Rectangle extends to the **left** of the semicircle
         player_left   = player->_sprite->pos.x - player_radius;
         player_right  = player->_sprite->pos.x;
+        pcm_parameter_change(g_Assets.meowID, 1, PCM_PAN_RIGHT);
+        pcm_parameter_change(g_Assets.meowID, 7, PCM_PAN_LEFT);
     } else {
         // Rectangle extends to the **right** of the semicircle
         player_left   = player->_sprite->pos.x;
         player_right  = player->_sprite->pos.x + player_radius;
+        pcm_parameter_change(g_Assets.meowID, 7, PCM_PAN_RIGHT);
+        pcm_parameter_change(g_Assets.meowID, 1, PCM_PAN_LEFT);
     }
     player_top    = player->_sprite->pos.y - player_radius;
     player_bottom = player->_sprite->pos.y + player_radius;

@@ -26,12 +26,8 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_PPP_LOGO:
         {        
             pppLogo_init();
-            volume = MAX_VOLUME;
-            #ifndef JO_COMPILE_WITH_AUDIO_SUPPORT
-            CDDA_SetVolume(volume);
-            #else
-            jo_audio_set_volume(volume);
-            #endif
+            g_Audio.masterVolume = MAX_VOLUME;
+            CDDA_SetVolume(volume_shift(g_Audio.masterVolume));
             playCDTrack(LOGO_TRACK, false);
             g_Game.gameState = GAME_STATE_PPP_LOGO;
             jo_core_tv_on();
@@ -145,7 +141,6 @@ void changeState(GAME_STATE newState)
             slColorCalcOn(OFF);
             slColRateNbg0 ( TRANSPARENCY_MIN );
             slScrPosNbg0(toFIXED(0), toFIXED(0));
-            // g_Game.lastState = GAME_STATE_UNINITIALIZED;
             g_Game.nextState = GAME_STATE_PPP_LOGO;
             changeState(g_Game.nextState);
             break;

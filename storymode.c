@@ -75,8 +75,8 @@ void initStoryMode(void)
     player->input->isSelected = true;
     player->teamChoice = TEAM_1;
     player->teamSelected = true;
-    teamAvailable[player->teamChoice] = false;
-    g_Game.numTeams++;
+    g_Team.isAvailable[player->teamChoice] = false;
+    g_Team.numTeams = ONE_TEAM;
     // TODO: move to character select
     player->_sprite = &macchi;
     player->character.selected = true;

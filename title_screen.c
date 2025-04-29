@@ -100,9 +100,9 @@ void titleScreen_init(void)
     g_Game.currentNumPlayers = 0;
     g_Game.numPlayers = ONE_PLAYER;
     
-    g_Game.minTeams = 0;
-    g_Game.maxTeams = 0;
-    g_Game.numTeams = 0;
+    g_Team.minTeams = -1;
+    g_Team.maxTeams = -1;
+    g_Team.numTeams = -1;
     
     g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
     
