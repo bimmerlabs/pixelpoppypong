@@ -5,7 +5,7 @@
 #include "util.h"
 #include "audio.h"
 
-#define VERSION "0.71"
+#define VERSION "0.78"
 #define MAX_PLAYERS 4
 
 // Screen position
@@ -28,9 +28,18 @@ typedef struct {
     bool mesh_display;
     bool mosaic_display;
     bool use_rtc;
+    bool unlockBigHeadMode;
     bool bigHeadMode;
     bool enableItems;
     bool enableMeows;
+    bool reservedBool;
+    unsigned int bombTouchCounter;
+    unsigned int fishTouchCounter;
+    unsigned int redShroomTouchCounter;
+    unsigned int blueShroomTouchCounter;
+    unsigned int craigTouchCounter;
+    unsigned int garfTouchCounter;
+    unsigned int reservedInt;
 } GameOptions, *PGameOptions;
 
 extern GameOptions g_GameOptions;
@@ -116,6 +125,8 @@ typedef struct _GAME
     Uint16 DemoTimer;
     Uint16 roundBeginTimer;
     Uint16 dropBallTimer;
+    // Uint16 transitionOutTimer;
+    bool time_over;
 
     bool selectStoryCharacter;
 

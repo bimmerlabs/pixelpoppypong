@@ -14,6 +14,7 @@
 #define SCORE_ENTRIES 10
 #define UNLOCK_CRAIG_SCORE 2500000
 #define UNLOCK_GARFIELD_SCORE 5000000
+#define GOAL_MARGIN toFIXED(20)
 
 extern unsigned int g_ScoreTimer;
 
@@ -75,17 +76,25 @@ static __jo_force_inline bool updateScore(Sprite *ball, int playerID) {
     return true;
 }
 
+// TODO: move to goals.c (change name to "checkgoalcollision" or something)
 static __jo_force_inline void checkRightWallScore(Sprite *ball) {
     // iterate through goals on right side, check bounds
     PGOAL _goal;
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         _goal = &g_Goal[i];
-        if (_goal->objectState == OBJECT_STATE_INACTIVE || _goal->onLeftSide) {
+        if (_goal->player->objectState == OBJECT_STATE_INACTIVE || _goal->player->subState == PLAYER_STATE_DEAD || _goal->onLeftSide) {
             continue;
         }
-        if (ball->pos.y > toFIXED(_goal->pos.top) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(_goal->pos.bot) - HARD_BALL_RADIUS) {
-            if (updateScore(ball, _goal->id)) { // scored on TEAM_2 or TEAM_4
+        if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            if (g_Game.gameMode == GAME_MODE_STORY) {
+                calculateScore(ball, 0);
+                updatePlayerLives(1);
+                playCDTrack(g_Audio.goalScoredTrack, false);
+                nextGoalScoredTrack();
+                break;
+            }
+            else if (updateScore(ball, _goal->id)) { // scored on TEAM_2 or TEAM_4
                 playCDTrack(g_Audio.goalScoredTrack, false);
                 nextGoalScoredTrack();
                 break;
@@ -100,11 +109,19 @@ static __jo_force_inline void checkLeftWallScore(Sprite *ball) {
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         _goal = &g_Goal[i];
-        if (_goal->objectState == OBJECT_STATE_INACTIVE || !_goal->onLeftSide) {
+        if (_goal->player->objectState == OBJECT_STATE_INACTIVE || _goal->player->subState == PLAYER_STATE_DEAD || !_goal->onLeftSide) {
             continue;
         }
-        if (ball->pos.y > toFIXED(_goal->pos.top) + HARD_BALL_RADIUS && ball->pos.y < toFIXED(_goal->pos.bot) - HARD_BALL_RADIUS) {
-            if (updateScore(ball, _goal->id)) { // scored on TEAM_1 or TEAM_3
+        if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            if (g_Game.gameMode == GAME_MODE_STORY) {
+                g_Game.isGoalScored = true;
+                ballTtouchTimer = 0;
+                updatePlayerLives(0);
+                playCDTrack(g_Audio.goalScoredTrack, false);
+                nextGoalScoredTrack();
+                break;
+            }
+            else if (updateScore(ball, _goal->id)) { // scored on TEAM_2 or TEAM_4
                 playCDTrack(g_Audio.goalScoredTrack, false);
                 nextGoalScoredTrack();
                 break;

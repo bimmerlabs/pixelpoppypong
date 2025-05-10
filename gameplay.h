@@ -11,21 +11,25 @@
 #include "BG_DEF/sprite_colors.h"
 
 #define ROUND_BEGIN_TIME_NORMAL (6 * 60)
-#define DROP_BALL_TIME_NORMAL (4 * 60) // MAYBE THIS VARIES BASED ON SCORE OR EXPLODING?
+#define DROP_BALL_TIME_NORMAL (4 * 60)
 #define ROUND_BEGIN_TIME_FAST (3.5 * 60)
-#define DROP_BALL_TIME_FAST (1.5 * 60) // MAYBE THIS VARIES BASED ON SCORE OR EXPLODING?
+#define DROP_BALL_TIME_FAST (1.5 * 60)
 #define DEMO_TIME (30 * 60)
-#define BOMB_TIMER (15 * 60)
+#define BOMB_TIMER (10 * 60)
 #define TIMEOUT_BATTLE 999 // seconds
 #define TIMEOUT_CLASSIC 199
-#define TIMEOUT_STORY_EASY 599
-#define TIMEOUT_STORY_MEDIUM 399
-#define TIMEOUT_STORY_HARD 349
+#define TIMEOUT_STORY_EASY 399
+#define TIMEOUT_STORY_MEDIUM 249
+#define TIMEOUT_STORY_HARD 199
 
 #define SHROOM_TIMER (15 * 60)
 
 #define BALL_TOUCH_TIMEOUT (5 * 60)
+// #define TRANSITION_DELAY_TIMEOUT (8 * 60)
 #define GAME_END_DELAY_TIMEOUT (5 * 60)
+#define LIFE_COUNT_DELAY_TIMEOUT (2 * 60)
+#define NEXT_BATTLE_DELAY_TIMEOUT (1 * 60)
+#define WIN_GAME_DELAY_TIMEOUT (1.5 * 60)
 
 #define MAX_ROUNDS 8
 
@@ -57,6 +61,7 @@ typedef enum _GAME_ITEMS
 typedef struct {
     unsigned int id;
     unsigned int timer[MAX_PLAYERS];
+    bool isActive;
     Sprite *_sprite;
 } Item;
 extern Item g_item;
@@ -135,6 +140,9 @@ static __jo_force_inline void storymodeScore_draw(PPLAYER player) {
 }
 
 static __jo_force_inline void gameplayScore_draw(PPLAYER player) {
+    if (player->subState == PLAYER_STATE_DEAD) {
+        return;
+    }
     switch (player->teamChoice) 
     {
         case TEAM_1: {
@@ -176,27 +184,76 @@ static __jo_force_inline void setItemPositions(void) {
     }
     else {
         // TODO: implement weighted average random selection
-        g_item.id = my_random_range(GAME_ITEM_BOMB, GAME_ITEM_MAX);
-        if (g_item.id >= GAME_ITEM_MAX) {
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
+        int item = jo_random(1000000);
+        switch(g_Game.gameDifficulty)
+        {
+            case GAME_DIFFICULTY_EASY:
+                if (item >= 0 && item < 450000) { 
                     g_item.id = GAME_ITEM_FISH;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
+                }
+                else if (item >= 450000 && item < 500000) { 
+                    g_item.id = GAME_ITEM_BOMB;
+                }
+                else if (item >= 500000 && item < 700000) { 
                     g_item.id = GAME_ITEM_SHROOM;
-                    break;
-                case GAME_DIFFICULTY_HARD:
+                }
+                else if (item >= 700000 && item < 850000) { 
+                    g_item.id = GAME_ITEM_GARF;
+                }
+                else if (item >= 850000 && item < 1000000) { 
+                    g_item.id = GAME_ITEM_CRAIG;
+                }
+                else {
+                    g_item.id = GAME_ITEM_MAX;
+                }
+                break;
+            case GAME_DIFFICULTY_MEDIUM:
+                if (item >= 0 && item < 200000) { 
                     g_item.id = GAME_ITEM_BOMB;
-                    break;
-                default:
+                }
+                else if (item >= 200000 && item < 400000) { 
+                    g_item.id = GAME_ITEM_FISH;
+                }
+                else if (item >= 400000 && item < 600000) { 
+                    g_item.id = GAME_ITEM_SHROOM;
+                }
+                else if (item >= 600000 && item < 800000) { 
+                    g_item.id = GAME_ITEM_GARF;
+                }
+                else if (item >= 800000 && item < 1000000) { 
+                    g_item.id = GAME_ITEM_CRAIG;
+                }
+                else {
+                    g_item.id = GAME_ITEM_MAX;
+                }
+                break;
+            case GAME_DIFFICULTY_HARD:
+                if (item >= 0 && item < 500000) { 
                     g_item.id = GAME_ITEM_BOMB;
-                    break;
-            }
+                }
+                else if (item >= 500000 && item < 650000) { 
+                    g_item.id = GAME_ITEM_FISH;
+                }
+                else if (item >= 650000 && item < 800000) { 
+                    g_item.id = GAME_ITEM_SHROOM;
+                }
+                else if (item >= 800000 && item < 900000) { 
+                    g_item.id = GAME_ITEM_GARF;
+                }
+                else if (item >= 900000 && item < 1000000) { 
+                    g_item.id = GAME_ITEM_CRAIG;
+                }
+                else {
+                    g_item.id = GAME_ITEM_MAX;
+                }
+                break;
+            default:
+                g_item.id = GAME_ITEM_MAX;
+                break;
         }
     }
-    item_scale = 0.1;
-    item_velocity = 0.0;
+    item_scale = 0.0;
+    item_velocity = 0.1;
     switch (g_item.id) {
         case GAME_ITEM_BOMB:
             g_Game.explodeBomb = false;
@@ -237,17 +294,18 @@ static __jo_force_inline void setItemPositions(void) {
             break;
     }
     g_item._sprite->isColliding = false;
+    g_item.isActive = false;
 }
 
 static __jo_force_inline void drawGameItems(void) {
     switch (g_item.id) {
         case GAME_ITEM_BOMB:
             if (item_scale < 2.0) {
-                if (item_velocity < 0.5) {
-                    item_velocity += 0.01;
-                }
                 item_scale += item_velocity;
                 set_spr_scale(&bomb_item, item_scale, item_scale);
+                if (item_scale >= 2.0) {
+                    g_item.isActive = true;
+                }
             }
             if (g_Game.explodeBomb) {
                 if (explosion_flash) {
@@ -256,6 +314,7 @@ static __jo_force_inline void drawGameItems(void) {
                 g_Game.explodeBomb = explode_animation(&bomb_item);
                 if (g_Game.explodeBomb == false) {
                     bomb_item.visible = false;
+                    g_item.isActive = false;
                 }
             }
             else {
@@ -264,21 +323,21 @@ static __jo_force_inline void drawGameItems(void) {
             break;
         case GAME_ITEM_FISH:
             if (item_scale < 2.0) {
-                if (item_velocity < 0.5) {
-                    item_velocity += 0.01;
-                }
                 item_scale += item_velocity;
                 set_spr_scale(&fishtank_item, item_scale, item_scale);
+                if (item_scale >= 2.0) {
+                    g_item.isActive = true;
+                }
             }
             looped_animation_pow(&fishtank_item, 8);
             break;
         case GAME_ITEM_SHROOM:
             if (item_scale < 2.0) {
-                if (item_velocity < 0.5) {
-                    item_velocity += 0.01;
-                }
                 item_scale += item_velocity;
                 set_spr_scale(&shroom_item, item_scale, item_scale);
+                if (item_scale >= 2.0) {
+                    g_item.isActive = true;
+                }
             }
             looped_animation_pow(&shroom_item, 4);
             hsl_incSprites.h += 2; // TODO: replace with one just for the mushroom?
@@ -286,24 +345,25 @@ static __jo_force_inline void drawGameItems(void) {
             break;
         case GAME_ITEM_GARF:
             if (item_scale < 1.0) {
-                if (item_velocity < 0.5) {
-                    item_velocity += 0.01;
-                }
                 item_scale += item_velocity;
                 set_spr_scale(&garfield_item, item_scale, item_scale);
+                if (item_scale >= 1.0) {
+                    g_item.isActive = true;
+                }
             }
             break;
         case GAME_ITEM_CRAIG:
             if (item_scale < 1.6) {
-                if (item_velocity < 0.5) {
-                    item_velocity += 0.01;
-                }
                 item_scale += item_velocity;
                 set_spr_scale(&craig_item, item_scale, item_scale);
+                if (item_scale >= 1.6) {
+                    g_item.isActive = true;
+                }
             }
             break;
         default:
             g_item._sprite->visible = false;
+            g_item.isActive = false;
             break;    }
     if (g_item._sprite->visible) {
         my_sprite_draw(g_item._sprite);
@@ -311,6 +371,7 @@ static __jo_force_inline void drawGameItems(void) {
 }
 
 static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
+    g_item.isActive = false;
     switch (g_item.id) {
         case GAME_ITEM_BOMB:
             g_Game.explodeBomb = true;
@@ -318,19 +379,23 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
             if (!player->isExploded) {
                 player->isExploded = explodePLayer(player);
             }
+            g_GameOptions.bombTouchCounter++;
             break;
         case GAME_ITEM_FISH:
             pcm_play(g_Assets.bloopPcm8, PCM_PROTECTED, 7);
-            if (player->numLives < player->totalLives) {
-                player->numLives = player->totalLives;
+            // int missing = player->totalLives - player->numLives;
+            if ((player->totalLives - player->numLives) > 1) {
+                player->numLives += (player->totalLives - player->numLives) / 2;
             }
-            else if (player->numLives < (player->totalLives * 2)) {
-                player->numLives = player->numLives + 1;
+            else if (player->numLives < player->totalLives * 2) {
+                player->numLives += 1;
             }
-            if (player->numLives > (player->totalLives * 2)) {
-                player->numLives = (player->totalLives * 2);
+            if (player->numLives > player->totalLives * 2) {
+                player->numLives = player->totalLives * 2;
             }
             fishtank_item.visible = false;
+            player->score.points += 10000;
+            g_GameOptions.fishTouchCounter++;
             break;
         case GAME_ITEM_SHROOM:
             shroom_item.visible = false;
@@ -342,18 +407,20 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
                 player->_sprite->pos.r = PLAYER_RADIUS_LARGE;
                 player->isBig = true;
                 player->isSmall = false;
+                g_GameOptions.redShroomTouchCounter++;
             }
             if (shroom_angle > 90 && shroom_angle <= 270) {
                 pcm_play(g_Assets.shrinkPcm8, PCM_PROTECTED, 7);
                 player->_sprite->pos.r = PLAYER_RADIUS_SMALL;
                 player->isBig = false;
                 player->isSmall = true;
+                g_GameOptions.blueShroomTouchCounter++;
             }
+            player->score.points += 50000;
             break;
         case GAME_ITEM_GARF:
             garfield_item.visible = false;
             // "i hate mondays" etc
-            pcm_play(g_Assets.chain5Pcm8, PCM_PROTECTED, 7);
             if (touchedBy[player->playerID].touchCount == 0) {
                 touchedBy[player->playerID].touchCount = 20;
             }
@@ -362,13 +429,29 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
                 if (touchedBy[player->playerID].touchCount > 99) {
                     touchedBy[player->playerID].touchCount = 99;
                 }
+                else {
+                    player->score.points += 250000;
+                }
+            }
+            g_GameOptions.garfTouchCounter++;
+            if (g_GameOptions.craigTouchCounter == 200) {
+                pcm_play(g_Assets.stadlerPcm8, PCM_PROTECTED, 7);
+            }
+            else {
+                pcm_play(g_Assets.chain5Pcm8, PCM_PROTECTED, 7);
             }
             break;
         case GAME_ITEM_CRAIG:
             craig_item.visible = false;
             // "nice shot"
-            pcm_play(g_Assets.stadlerPcm8, PCM_PROTECTED, 7);
             player->score.points += 100000;
+            g_GameOptions.craigTouchCounter++;
+            if (g_GameOptions.craigTouchCounter == 100) {
+                pcm_play(g_Assets.chain5Pcm8, PCM_PROTECTED, 7);
+            }
+            else {
+                pcm_play(g_Assets.stadlerPcm8, PCM_PROTECTED, 7);
+            }
             break;
         default:
             g_item._sprite->visible = false;
@@ -438,7 +521,7 @@ static __jo_force_inline void drawGameUI(void) {
     for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
-        if (player->objectState == OBJECT_STATE_INACTIVE) {
+        if (player->objectState == OBJECT_STATE_INACTIVE || player->subState == PLAYER_STATE_DEAD) {
             continue;
         }
         if (player->shield.activate) {

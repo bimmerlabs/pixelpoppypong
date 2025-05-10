@@ -64,6 +64,7 @@ void init_scores(void)
     playCDTrack(FINISH_TRACK, false);
 }
 
+// TODO: merge with explodePLayer
 bool updatePlayerLives(Uint8 scoredOnPlayerID)
 {
     if (g_Players[scoredOnPlayerID].numLives > 0) {
@@ -81,7 +82,12 @@ bool updatePlayerLives(Uint8 scoredOnPlayerID)
                 }
             }
             g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
+            // g_Players[scoredOnPlayerID].objectState = OBJECT_STATE_INACTIVE;
+            g_Team.objectState[g_Players[scoredOnPlayerID].teamChoice] = OBJECT_STATE_INACTIVE;
             g_Game.currentNumPlayers--;
+            if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
+                setGoalSize(); // not in story mode
+            }
             return true;
         }
     }
@@ -136,7 +142,11 @@ void update_bg_position(void) {
 }
 
 void    score_input(void)	{
-    if (jo_is_pad1_key_down(JO_KEY_START) && g_Game.lastState != GAME_STATE_NAME_ENTRY) {
+    if (jo_is_pad1_key_down(JO_KEY_START) && g_Game.lastState == GAME_STATE_NAME_ENTRY) {
+        g_Game.lastState = GAME_STATE_HIGHSCORES;
+        transitionState(GAME_STATE_CREDITS);
+    }
+    else if (jo_is_pad1_key_down(JO_KEY_START) && g_Game.lastState != GAME_STATE_NAME_ENTRY) {
         g_Game.lastState = GAME_STATE_HIGHSCORES;
         transitionState(GAME_STATE_UNINITIALIZED);
     }

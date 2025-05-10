@@ -99,18 +99,85 @@ void initStoryMode(void)
     initVsModePlayers();
 }
 
+void initContinue(void) {
+    setGameTimer();
+    g_Players[0].numLives = getLives(&g_Players[0]);
+    g_Players[1].numLives = getLives(&g_Players[1]);
+    g_Players[0].subState = PLAYER_STATE_ACTIVE;
+    g_Players[1].subState = PLAYER_STATE_ACTIVE;
+    g_Players[0].score.points = 0;
+    g_Players[1].score.points = 0;
+    g_Players[0].score.stars = 0;
+    g_Players[1].score.stars = 0;
+    g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
+    g_Game.currentNumPlayers = 2;
+    initVsModePlayers();
+    resetTeamState();
+
+    initPixelPoppy();
+    start_gameplay_timer = false;
+    g_Game.isBallActive = false;
+    g_Game.isActive = false;
+    g_Game.BeginTimer = 0;
+    g_Game.winner = -2;
+    initTouchCounter(1);
+
+    boundPlayer(&g_Players[0]);
+    boundPlayer(&g_Players[1]);
+    g_StartStoryFrames = CHARACTER_SELECT_TIMER;
+    g_Game.selectStoryCharacter = true;
+    resetSpriteColors(); // doesn't do anything yet
+    initGoalColors();
+    g_Game.time_over = false;
+    play_continue_track = false;
+    g_Game.isRoundOver = false;
+    slScrPosNbg0(toFIXED(0), toFIXED(4));
+    playCDTrack(BEGIN_GAME_TRACK, false);
+}
+
+void initNextRound(void) {
+    setGameTimer();
+    // g_Players[0].numLives = getLives(&g_Players[0]);
+    g_Players[1].numLives = getLives(&g_Players[1]);
+    g_Players[0].score.points = 0;
+    g_Players[1].score.points = 0;
+    g_Players[0].score.stars = 0;
+    g_Players[1].score.stars = 0;
+    g_Players[1].score.deaths = 0;
+    g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
+    g_Game.currentNumPlayers = 2;
+    nextStoryCharacter();
+    sprite_frame_reset(&pixel_poppy);
+    g_StartStoryFrames = CHARACTER_SELECT_TIMER;
+    g_Game.selectStoryCharacter = true;
+    resetSpriteColors(); // doesn't do anything yet
+    initGoalColors();
+    g_Game.time_over = false;
+    play_continue_track = false;
+    g_Game.isRoundOver = false;
+    g_Game.winner = -2;
+    slScrPosNbg0(toFIXED(0), toFIXED(4));
+    playCDTrack(BEGIN_GAME_TRACK, false);
+}
+
 // main logic loop
 void storySelectUpdate(void)
 {
     character_offset = ((g_Game.countofRounds) * CHARACTER_POS_OFFSET);
-    jo_nbg0_printf(2, 14, "%s", fullCharacterNames[0]);
+    jo_nbg0_printf(2, 11, "%s", fullCharacterNames[0]);
     jo_nbg0_printf(26, 14, "%s", fullCharacterNames[g_Game.countofRounds+1]);
+    
+        character_portrait.spr_id = character_portrait.anim1.asset[0];
+        set_spr_position(&character_portrait, -200, 0, PORTRAIT_DEPTH);
+        set_spr_scale(&character_portrait, 2.0, 2.0);
+        my_sprite_draw(&character_portrait);
+        
     // scroll up list of characters
     if (character_pos_selected < character_offset) {
         character_pos_selected++;
     }
     else {
-        jo_nbg0_printf(2, 16, "%s", characterQuotes[0]);
+        jo_nbg0_printf(2, 19, "%s", characterQuotes[0]);
         jo_nbg0_printf(21, 19, "VS.");
         jo_nbg0_printf(26, 16, "%s", characterQuotes[g_Game.countofRounds+1]);
     }
@@ -147,6 +214,7 @@ void storySelectUpdate(void)
     slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);    
 }
 
+// TODO: remove from storymode..
 void resetSpriteColors(void) {
     reset_sprites();
     do_update_All = true;

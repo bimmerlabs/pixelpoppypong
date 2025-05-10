@@ -18,7 +18,8 @@
 #define PLAYER_WIDTH toFIXED(40)
 #define PLAYER_BOUNDARY_RIGHT  toFIXED(328.0)
 #define PLAYER_BOUNDARY_LEFT  toFIXED(-328.0)
-#define PLAYER_BOUNDARY_MIDDLE  toFIXED(72.0)
+#define PLAYER_BOUNDARY_MIDDLE  toFIXED(8)
+#define PLAYER_BOUNDARY_MIDDLE_INACTIVE  toFIXED(120)
 
 #define PLAYER_MOVEMENT_SPEED toFIXED(0.0015)
 
@@ -29,7 +30,10 @@
 #define SHIELD_RADIUS toFIXED(60)
 #define SHIELD_OFFSET toFIXED(32)
 #define SHIELD_POWER 26
-#define SHIELD_REGEN 8 // POWER OF 2!!
+#define SHIELD_REGEN_FAST 8 // POWER OF 2!!
+#define SHIELD_REGEN_SLOW 16 // POWER OF 2!!
+#define BOUNDARY_SHIELD_REGEN_FAST  toFIXED(280.0)
+#define BOUNDARY_SHIELD_REGEN_SLOW  toFIXED(180.0)
 
 #define PLAYER_RADIUS_SMALL toFIXED(10)
 #define PLAYER_RADIUS_LARGE toFIXED(60)
@@ -63,6 +67,7 @@ typedef struct _SCORE
     Uint8 deaths; // used as a proxy for continues
     unsigned int total;  // total score (story mode)
     unsigned int points; // round score
+    unsigned int lastMillion;
 
 } SCORE, *PSCORE;
 
@@ -192,6 +197,7 @@ void getPlayersInput(void);
 void updatePlayers(void);
 
 void initPlayers(void);
+void switchPlayerPosition(PPLAYER player);
 void initAiPlayers(void);
 void initStoryCharacters(void);
 void nextStoryCharacter(void);

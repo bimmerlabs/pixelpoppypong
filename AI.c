@@ -10,7 +10,7 @@ void playerAI(Sprite *ball) {
     for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
     {
         PPLAYER player = &g_Players[i];
-        if(player->objectState != OBJECT_STATE_ACTIVE || player->isAI == false  || player->subState == PLAYER_STATE_DEAD)
+        if(player->objectState == OBJECT_STATE_INACTIVE || player->isAI == false  || player->subState == PLAYER_STATE_DEAD)
         {
             continue;
         }
@@ -76,26 +76,31 @@ void playerAI(Sprite *ball) {
 void centerAiPlayer(PPLAYER player)
 {
     FIXED middle;
+    PGOAL _goal = &g_Goal[player->playerID];
     // account for game modes (1-4 players)
     switch(player->teamChoice)
     {
         case TEAM_1: {
             middle = -AI_GOAL_CENTER;
-            if (g_Team.numTeams < THREE_TEAMS) {
+            if (_goal->drawSingleGoal) {
                 middle = SCREEN_MIDDLE;
             }
             break;
         }
         case TEAM_2: {
             middle = -AI_GOAL_CENTER;
-            if (g_Team.numTeams <= THREE_TEAMS) {
+            if (_goal->drawSingleGoal) {
                 middle = SCREEN_MIDDLE;
             }
             break;
         }
-        default:
+        default: {
             middle = AI_GOAL_CENTER;
+            if (_goal->drawSingleGoal) {
+                middle = SCREEN_MIDDLE;
+            }
             break;
+        }
     }
     FIXED center_diff = middle - player->_sprite->pos.y;
     if (center_diff > player->goalCenterThresholdMax || center_diff < -player->goalCenterThresholdMax) {
@@ -138,12 +143,13 @@ void boundAiPlayer(PPLAYER player)
     // account for game modes (1-4 players)
     FIXED bottom = SCREEN_BOTTOM;
     FIXED top = SCREEN_MIDDLE;
+    PGOAL _goal = &g_Goal[player->playerID];
     switch(player->teamChoice)
     {
         case TEAM_1: {
             bottom = SCREEN_MIDDLE;
             top = SCREEN_TOP;
-            if (g_Team.numTeams < THREE_TEAMS) {
+            if (_goal->drawSingleGoal) {
                 bottom = SCREEN_BOTTOM;
             }
             break;
@@ -151,13 +157,18 @@ void boundAiPlayer(PPLAYER player)
         case TEAM_2: {
             bottom = SCREEN_MIDDLE;
             top = SCREEN_TOP;
-            if (g_Team.numTeams <= THREE_TEAMS) {
+            if (_goal->drawSingleGoal) {
                 bottom = SCREEN_BOTTOM;
             }
             break;
         }
-        default:
+        default: {
+            if (_goal->drawSingleGoal) {
+                top = SCREEN_TOP;
+                bottom = SCREEN_BOTTOM;
+            }
             break;
+        }
     }
     if(player->_sprite->pos.y > bottom)
     {

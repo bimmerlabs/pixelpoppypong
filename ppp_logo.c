@@ -30,8 +30,7 @@ void pppLogo_init(void)
      || g_Game.lastState == GAME_STATE_CREDITS) {
         unloadGameAssets();
     }
-    // loadPPPLogoAssets();
-    
+        
     // this way only until I implement palette adjustments
     if (!g_GameOptions.use_rtc) {
         current_background++;
@@ -116,13 +115,14 @@ void pppLogo_init(void)
 // update callback routine for PPP logo
 void pppLogo_input(void)
 {
+    // if (!g_GameOptions.debug_mode) {
+        // return;
+    // }
     //
     // skip the logo if player 1 hits start
     //
     if(jo_is_pad1_key_down(JO_KEY_START))
     {
-        // // I kind of like it better this way?
-        // g_LogoTimer = PPP_MOSAIC_TIMER-10;
         // set everything back to defaults
         nbg1_rate = NEUTRAL_FADE;
         slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
@@ -131,7 +131,6 @@ void pppLogo_input(void)
         mosaic_y = MOSAIC_MIN;
 	slScrMosSize(mosaic_x, mosaic_y);
         fade_in_rate = 8;
-        // unloadPPPLogoAssets();
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }
@@ -224,9 +223,7 @@ void pppLogo_update(void)
             fade_out = fadeOut(1, NEUTRAL_FADE);
         }
         pppLogo_draw();
-        // if (!a_pressed && !b_pressed && !c_pressed) {
-            update_light_position();
-        // }
+        update_light_position();
     }
     else if (g_GameOptions.mosaic_display) {
         mosaicRandom(NBG1ON);
@@ -249,7 +246,6 @@ void pppLogo_update(void)
     {
         jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
         fade_in_rate = 8;
-        // unloadPPPLogoAssets();
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }

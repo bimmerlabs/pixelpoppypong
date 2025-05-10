@@ -1,14 +1,5 @@
 #include "sprites.h"
 #include "assets.h"
-// #include "gameplay.h"
-
-// int ball_velocity = 0;
-// bool ball_falling = false;
-// bool ball_bounce = false;
-
-// sprite structs - used with my_sprite_draw
-
-// Sprite *g_gameItem = {0};
     
 Sprite font = {
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
@@ -606,7 +597,6 @@ void ball_animation_reset(Sprite *ball) {
     }
     ball->anim2.frame = 0;
 }
-
 
 void drawGoalSprites(Sprite *sprite, int sprite_id, int shadow_id, int zmode, int flip, int x, int y, int scale_y)
 {

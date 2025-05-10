@@ -10,8 +10,7 @@ bool round_start = false;
 
 Item g_item = {0};
 
-static bool draw_demo_text = true;
-static bool time_over = false;
+static bool draw_demo_text = true;
 bool play_continue_track = false;
 // TODO: implement this function
 // static bool isRoundOver(void);
@@ -46,6 +45,8 @@ void gameplay_init() {
                 break;
         }
     }
+    
+    resetTeamState(); // only needed if restarting the game
     
     resetSpriteColors();
     initGoalColors();
@@ -111,6 +112,7 @@ void demo_init(void) {
     unloadTitleScreenAssets();
     loadCharacterAssets();
     loadGameAssets();
+    initTeams();
     initDemoPlayers();
     g_Game.selectStoryCharacter = false;
     g_Game.DemoTimer = 0;
@@ -150,25 +152,34 @@ void demo_init(void) {
         }
     }
     else if (g_Game.gameMode == GAME_MODE_STORY) {
+        Uint16 addedTime = 0;
         switch(g_Game.gameDifficulty)
         {
             case GAME_DIFFICULTY_EASY:
-                g_Game.GameTimer += TIMEOUT_STORY_EASY/10 + 1;
+                addedTime = 30;
                 break;
             case GAME_DIFFICULTY_MEDIUM:
-                g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
+                addedTime = 20;
                 break;
             case GAME_DIFFICULTY_HARD:
-                g_Game.GameTimer += TIMEOUT_STORY_HARD/10 + 1;
+                addedTime = 10;
                 break;
             default:
-                g_Game.GameTimer += TIMEOUT_STORY_MEDIUM/10 + 1;
                 break;
+        }
+        if (touchedBy[0].touchCount > addedTime) {
+            g_Game.GameTimer += touchedBy[0].touchCount;
+        }
+        else {
+            g_Game.GameTimer += addedTime;
+        }
+        if (g_Game.GameTimer > 999) {
+            g_Game.GameTimer = 999;
         }
     }
     g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL;
     g_Game.dropBallTimer = DROP_BALL_TIME_NORMAL;
-    time_over = false;
+    g_Game.time_over = false;
     start_gameplay_timer = false;
     round_start = false;
     g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
@@ -177,9 +188,11 @@ void demo_init(void) {
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
-    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++) // this is resetting the mushroom between rounds
     {
-        g_item.timer[i] = 0;
+        if (!g_Players[i].isBig || !g_Players[i].isSmall) {
+            g_item.timer[i] = 0;
+        }
     }
 }
 
@@ -241,7 +254,7 @@ void demo_update(void)
             pcm_play(g_Assets.countdownPcm8, PCM_PROTECTED, 7);
     }
     else if (g_Game.GameTimer == 0) {
-        time_over = true;
+        g_Game.time_over = true;
     }
     
     for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
@@ -258,6 +271,9 @@ void demo_update(void)
         stopBallMovement(&pixel_poppy);
         explode_ball = true;
         explosion_flash = true;
+        pixel_poppy.pos.r = EASY_BALL_RADIUS;
+        pixel_poppy.scl.x = toFIXED(2.0);
+        pixel_poppy.scl.y = toFIXED(2.0);
     }
     
     if (explode_ball) {
@@ -305,60 +321,11 @@ void demo_update(void)
         }
         // you ran out of time or died
         else if (g_Game.nextState == GAME_STATE_GAMEPLAY &&  g_Game.winner == -1) {
-            setGameTimer();
-            g_Players[0].numLives = getLives(&g_Players[0]);
-            g_Players[1].numLives = getLives(&g_Players[1]);
-            g_Players[0].subState = PLAYER_STATE_ACTIVE;
-            g_Players[1].subState = PLAYER_STATE_ACTIVE;
-            g_Players[0].score.points = 0;
-            g_Players[1].score.points = 0;
-            g_Players[0].score.stars = 0;
-            g_Players[1].score.stars = 0;
-            g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
-            g_Game.currentNumPlayers = 2;
-            initVsModePlayers();
-            
-            initPixelPoppy();
-            start_gameplay_timer = false;
-            g_Game.isBallActive = false;
-            g_Game.isActive = false;
-            g_Game.BeginTimer = 0;
-            g_Game.winner = -2;
-            initTouchCounter(1);
-            
-            boundPlayer(&g_Players[0]);
-            boundPlayer(&g_Players[1]);
-            g_StartStoryFrames = CHARACTER_SELECT_TIMER;
-            g_Game.selectStoryCharacter = true;
-            resetSpriteColors();
-            time_over = false;
-            play_continue_track = false;
-            g_Game.isRoundOver = false;
-            slScrPosNbg0(toFIXED(0), toFIXED(4));
-            playCDTrack(BEGIN_GAME_TRACK, false);
+            initContinue();
         }
+        // you finished off your opponent..
         else if (g_Game.nextState == GAME_STATE_GAMEPLAY &&  g_Game.winner == 0) {
-            setGameTimer();
-            g_Players[0].numLives = getLives(&g_Players[0]);
-            g_Players[1].numLives = getLives(&g_Players[1]);
-            g_Players[0].score.points = 0;
-            g_Players[1].score.points = 0;
-            g_Players[0].score.stars = 0;
-            g_Players[1].score.stars = 0;
-            g_Players[1].score.deaths = 0;
-            g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
-            g_Game.currentNumPlayers = 2;
-            nextStoryCharacter();
-            sprite_frame_reset(&pixel_poppy);
-            g_StartStoryFrames = CHARACTER_SELECT_TIMER;
-            g_Game.selectStoryCharacter = true;
-            resetSpriteColors();
-            time_over = false;
-            play_continue_track = false;
-            g_Game.isRoundOver = false;
-            g_Game.winner = -2;
-            slScrPosNbg0(toFIXED(0), toFIXED(4));
-            playCDTrack(BEGIN_GAME_TRACK, false);
+            initNextRound();
         }
         else {
             if (g_Game.isRoundOver) {
@@ -368,23 +335,34 @@ void demo_update(void)
             if (frame == 240) { // this is a hack
                 if (g_Game.gameMode == GAME_MODE_STORY &&  g_Players[0].subState == PLAYER_STATE_ACTIVE) {
                     g_Players[0].score.points = g_Players[0].score.total;
-                    // unlock stadler
-                    if (!characterUnlocked[CHARACTER_WALRUS] && 
-                         g_Game.gameDifficulty == GAME_DIFFICULTY_MEDIUM && 
-                         g_Players[0].score.points >= UNLOCK_CRAIG_SCORE)
-                        {
-                            characterUnlocked[CHARACTER_WALRUS] = true;
-                            save_game_backup();
-                        }
-                    // unlock garfield
-                    if (!characterUnlocked[CHARACTER_GARF] && 
-                        (g_Game.gameDifficulty == GAME_DIFFICULTY_HARD || 
-                         g_Players[0].score.points >= UNLOCK_GARFIELD_SCORE))
-                        {
-                            characterUnlocked[CHARACTER_GARF] = true;
-                            save_game_backup();
-                        }
-                }
+                    if (g_Game.nextState == GAME_STATE_NAME_ENTRY) {
+                        // Unlock Stadler
+                        if (!characterUnlocked[CHARACTER_WALRUS] &&
+                            (g_GameOptions.craigTouchCounter >= 100 ||
+                             g_Game.gameDifficulty == GAME_DIFFICULTY_MEDIUM ||
+                              g_Players[0].score.points >= UNLOCK_CRAIG_SCORE))
+                                {
+                                    characterUnlocked[CHARACTER_WALRUS] = true;
+                                }
+
+                        // Unlock Garfield
+                        if (!characterUnlocked[CHARACTER_GARF] &&
+                            (g_GameOptions.garfTouchCounter >= 200 ||
+                             g_Game.gameDifficulty == GAME_DIFFICULTY_HARD ||
+                              g_Players[0].score.points >= UNLOCK_GARFIELD_SCORE))
+                                {
+                                    characterUnlocked[CHARACTER_GARF] = true;
+                                }
+                        // Unlock BIG HEAD MODE
+                        if (!g_GameOptions.unlockBigHeadMode && 
+                            (g_Game.gameDifficulty == GAME_DIFFICULTY_MEDIUM ||
+                            g_Game.gameDifficulty == GAME_DIFFICULTY_HARD))
+                                {
+                                    g_GameOptions.unlockBigHeadMode = true;
+                                }
+                        save_game_backup();
+                    }
+                }                
                 transitionState(g_Game.nextState);
             }
         }
@@ -430,18 +408,18 @@ void demo_update(void)
                         // this has to be more complex to move on to the next round
                         jo_nbg0_printf(17, 10, "GAME OVER!");
                         tallyScore();                        
-                        if (g_Players[0].score.points == 0)
+                        if (g_Game.endDelayTimer < WIN_GAME_DELAY_TIMEOUT)
                             jo_nbg0_printf(17, 18, "YOU WIN!!!");
                         g_Game.nextState = GAME_STATE_NAME_ENTRY;
                     }
                     else if (g_Game.winner == -1) {
                         g_Game.endDelayTimer--;
                         // check for continues
-                        if (g_Players[0].score.deaths < (g_Game.numContinues+1)) {
+                        if (g_Players[0].score.deaths < (g_Game.numContinues + 1)) {
                             g_Game.nextState = GAME_STATE_GAMEPLAY;
                             play_continue_track = true;
                             jo_nbg0_printf(17, 14, "TRY AGAIN!");
-                            jo_nbg0_printf(16, 16, "CONTINUES: %i", g_Game.numContinues + 1 - g_Players[0].score.deaths);
+                            jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Game.numContinues - g_Players[0].score.deaths);
                             
                         }
                         else {
@@ -452,8 +430,8 @@ void demo_update(void)
                     }
                     else {
                         tallyScore();                        
-                        if (g_Players[0].score.points == 0)
-                            jo_nbg0_printf(15, 16, "NEXT BATTLE..");
+                        if (g_Game.endDelayTimer < NEXT_BATTLE_DELAY_TIMEOUT)
+                            jo_nbg0_printf(15, 20, "NEXT BATTLE..");
                         g_Game.nextState = GAME_STATE_GAMEPLAY;
                     }
                     break;
@@ -462,7 +440,7 @@ void demo_update(void)
                     break;
             }
     }
-    else if (time_over) {
+    else if (g_Game.time_over) {
         if (!g_Game.isRoundOver) {
             stopBallMovement(&pixel_poppy);
             g_Game.isRoundOver = true;
@@ -471,6 +449,7 @@ void demo_update(void)
             story_fade_out = true;
         }       
         jo_nbg0_printf(16, 14, "OUTTA TIME!");
+        g_Game.GameTimer = 60;
         g_Game.endDelayTimer--;
             switch(g_Game.gameMode)
             {
@@ -489,10 +468,10 @@ void demo_update(void)
                         g_Players[0].score.deaths++;
                         g_Players[0].subState = PLAYER_STATE_DEAD;
                     }
-                    if (g_Players[0].score.deaths < (g_Game.numContinues+1)) {
+                    if (g_Players[0].score.deaths < (g_Game.numContinues + 1)) {
                         g_Game.nextState = GAME_STATE_GAMEPLAY;
                         play_continue_track = true;
-                        jo_nbg0_printf(16, 16, "CONTINUES: %i", g_Game.numContinues + 1 - g_Players[0].score.deaths);
+                        jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Game.numContinues - g_Players[0].score.deaths);
                     }
                     else {
                         jo_nbg0_printf(17, 16, "YOU LOSE..");
@@ -535,13 +514,16 @@ void demo_update(void)
     }
 }
 
+// TODO: move to scores?
 void tallyScore(void) {
-    unsigned int thresholds[] = {250000, 10000, 1000, 100, 50, 1};
-    if (g_Players[0].score.points > 0) {
-        jo_nbg0_printf(10, 12, "ROUND SCORE:%09d", g_Players[0].score.points);
-    }
+    unsigned int thresholds[] = {100000, 10000, 1000, 50, 1};
+    jo_nbg0_printf(10, 12, "ROUND SCORE:%09d", g_Players[0].score.points);
     jo_nbg0_printf(10, 14, "TOTAL SCORE:%09d", g_Players[0].score.total);
-    for (Uint8 i = 0; i < 6; i++) {
+    if (g_Game.countofRounds < MAX_ROUNDS) {
+        draw_heart_element(&heart, &g_Players[0], -64, 24, 16);
+    }
+    
+    for (Uint8 i = 0; i < 5; i++) {
         unsigned int threshold = thresholds[i];
         if (g_Players[0].score.points > threshold) {
             pcm_play(g_Assets.scoreAddPcm8, PCM_PROTECTED, 7);
@@ -550,6 +532,45 @@ void tallyScore(void) {
             return;
         }
     }
+    // additional lives        if (g_Game.endDelayTimer < LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
+        unsigned int millions = g_Players[0].score.total / 1000000;
+        if (millions > g_Players[0].score.lastMillion) {
+            unsigned int livesToAdd = millions - g_Players[0].score.lastMillion;
+            for (unsigned int i = 0; i < livesToAdd; i++) {
+                if (g_Players[0].numLives < g_Players[0].totalLives * 2) {
+                    g_Players[0].numLives += 1;
+                }
+            }
+            g_Players[0].score.lastMillion = millions;      
+        }
+    }
+    // additional time;    if (g_Game.endDelayTimer < LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
+        Uint16 addedTime = 0;
+        switch(g_Game.gameDifficulty)
+        {
+            case GAME_DIFFICULTY_EASY:
+                addedTime = 30;
+                break;
+            case GAME_DIFFICULTY_MEDIUM:
+                addedTime = 20;
+                break;
+            case GAME_DIFFICULTY_HARD:
+                addedTime = 10;
+                break;
+            default:
+                break;
+        }
+        if (touchedBy[0].touchCount > addedTime) {
+            addedTime = touchedBy[0].touchCount;     
+        }
+        jo_nbg0_printf(14, 18, "EXTRA TIME:%i", addedTime);
+    }
+    if (g_Game.endDelayTimer == LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
+        pcm_play(g_Assets.startPcm8, PCM_PROTECTED, 7);
+    }  
+    else if (g_Game.endDelayTimer == WIN_GAME_DELAY_TIMEOUT && g_Game.countofRounds == MAX_ROUNDS) {
+        pcm_play(g_Assets.winPcm8, PCM_PROTECTED, 7);
+    }  
 
     if (g_Players[0].score.points > 0) {
         pcm_play(g_Assets.scoreTotalPcm8, PCM_PROTECTED, 7);
@@ -578,7 +599,7 @@ void gameScore_draw(void) {
     {
         return;
     }
-    if (!g_Game.isPaused && !time_over && !g_Game.selectStoryCharacter && g_Game.currentNumPlayers > 1) {
+    if (!g_Game.isPaused && !g_Game.time_over && !g_Game.selectStoryCharacter && g_Game.currentNumPlayers > 1) {
         for(unsigned int i = 0; i <= (g_Game.numPlayers); i++)
         {
             PPLAYER player = &g_Players[i];
@@ -617,8 +638,6 @@ void gameplayUI_draw(PPLAYER player) {
             star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             offset = 16;
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            // draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            // draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
@@ -628,8 +647,6 @@ void gameplayUI_draw(PPLAYER player) {
             star_x = GAMEPLAY_PORTRAIT_X - 208;
             offset = -16;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
-            // draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            // draw_star_element(&star, player->score.stars, star_x, heart_y, -16);
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
@@ -639,8 +656,6 @@ void gameplayUI_draw(PPLAYER player) {
             star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             offset = 16;
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            // draw_heart_element(&heart, player, heart_x, heart_y, 16);
-            // draw_star_element(&star, player->score.stars, star_x, heart_y, 16);            
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
@@ -650,8 +665,6 @@ void gameplayUI_draw(PPLAYER player) {
             star_x = GAMEPLAY_PORTRAIT_X - 208;
             offset = -16;
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
-            // draw_heart_element(&heart, player, heart_x, heart_y, -16);
-            // draw_star_element(&star, player->score.stars, star_x, heart_y, -16);            
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
         }
@@ -676,7 +689,7 @@ void reset_ball_movement(Sprite *ball) {
     ball->vel.z = 0;
     
     // big head option (only with 2 players)    
-    if(g_GameOptions.bigHeadMode && g_Game.numPlayers < 3)
+    if(g_GameOptions.unlockBigHeadMode && g_GameOptions.bigHeadMode && g_Game.numPlayers < 3)
     {
         ball->pos.r = EASY_BALL_RADIUS;
         ball->scl.x = toFIXED(2.0);
@@ -692,9 +705,12 @@ void reset_ball_movement(Sprite *ball) {
                 ball->scl.y = toFIXED(1.1);
             }
             else {
-                ball->pos.r = EASY_BALL_RADIUS;
-                ball->scl.x = toFIXED(2.0);
-                ball->scl.y = toFIXED(2.0);
+                // ball->pos.r = EASY_BALL_RADIUS;
+                // ball->scl.x = toFIXED(2.0);
+                // ball->scl.y = toFIXED(2.0);
+                ball->pos.r = NORMAL_BALL_RADIUS;
+                ball->scl.x = toFIXED(1.0);
+                ball->scl.y = toFIXED(1.1);
             }
             break;
         default:

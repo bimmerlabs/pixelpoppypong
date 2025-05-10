@@ -6,7 +6,7 @@
 #define MIN_VELOCITY_X toFIXED(7)
 #define MIN_VELOCITY_Y toFIXED(3)
 #define MAX_VELOCITY_Z 70
-#define EASY_MAX_VELOCITY toFIXED(9) // 8 = easy, 10 = medium, 13 = hard?
+#define EASY_MAX_VELOCITY toFIXED(8) // 8 = easy, 10 = medium, 13 = hard?
 #define MEDIUM_MAX_VELOCITY toFIXED(10.5) // 8 = easy, 10 = medium, 13 = hard?
 #define HARD_MAX_VELOCITY toFIXED(13) // 8 = easy, 10 = medium, 13 = hard?
 #define BALL_FRICTION_Y toFIXED(1.75)

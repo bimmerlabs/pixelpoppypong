@@ -17,10 +17,10 @@ extern PLAYER g_Players[MAX_PLAYERS];
 typedef enum _PAUSE_OPTIONS
 {
     PAUSE_OPTIONS_RESUME = 0,
-    PAUSE_OPTIONS_RESTART = 1,
-    PAUSE_OPTIONS_QUIT = 2,
-    PAUSE_OPTIONS_DEBUG = 3,
-    PAUSE_OPTIONS_ANALOG = 4,
+    PAUSE_OPTIONS_RESTART,
+    PAUSE_OPTIONS_QUIT,
+    // PAUSE_OPTIONS_DEBUG = 3,
+    PAUSE_OPTIONS_ANALOG,
     PAUSE_OPTION_MAX,
 } PAUSE_OPTIONS;
 
@@ -74,9 +74,21 @@ void pause_draw(void)
 
     if(g_Game.isPaused == true)
     {
+        // TODO: draw story mode stats
         int options_y = 6;
-        jo_nbg0_printf(19, options_y, "PAWSED");
-        options_y += 6;
+        if (g_Game.gameMode == GAME_MODE_STORY) {
+            jo_nbg0_printf(19, options_y, "PAWSED");
+            options_y += 2;
+            jo_nbg0_printf(15, options_y, "SCORE:%09d", g_Players[0].score.points + g_Players[0].score.total);
+            options_y += 2;
+            jo_nbg0_printf(15, options_y, "CONTINUES: %i", g_Game.numContinues - g_Players[0].score.deaths);
+            options_y += 2;
+        }
+        else {
+            options_y = 10; 
+            jo_nbg0_printf(19, options_y, "PAWSED");
+            options_y += 2;
+        }            
         drawPauseMenu(options_y);
         drawPauseMenuCursor();
     }
@@ -145,10 +157,10 @@ static void checkForPauseMenu(void)
     {
         switch(g_PauseChoice)
         {
-            case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-                g_GameOptions.debug_display = !g_GameOptions.debug_display;
-                break;
+            // case PAUSE_OPTIONS_DEBUG:
+                // pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
+                // g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                // break;
             default:
                 break;
         }
@@ -157,10 +169,10 @@ static void checkForPauseMenu(void)
     {
         switch(g_PauseChoice)
         {
-            case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-                g_GameOptions.debug_display = !g_GameOptions.debug_display;
-                break;
+            // case PAUSE_OPTIONS_DEBUG:
+                // pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
+                // g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                // break;
             default:
                 break;
         }
@@ -201,16 +213,16 @@ static void checkForPauseMenu(void)
                 transitionState(GAME_STATE_UNINITIALIZED);
                 break;
 
-            case PAUSE_OPTIONS_DEBUG:
-                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
-                // simply unpause
-                mosaic_in_rate = MOSAIC_FAST_RATE;
-                if (g_GameOptions.mosaic_display) {
-                    mosaic_in = true;
-                }
-                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
-                g_Game.isPaused = false;
-                break;
+            // case PAUSE_OPTIONS_DEBUG:
+                // pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
+                // // simply unpause
+                // mosaic_in_rate = MOSAIC_FAST_RATE;
+                // if (g_GameOptions.mosaic_display) {
+                    // mosaic_in = true;
+                // }
+                // slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
+                // g_Game.isPaused = false;
+                // break;
             case PAUSE_OPTIONS_ANALOG:
                 pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
@@ -249,8 +261,8 @@ static void drawPauseMenu(int options_y)
     jo_nbg0_printf(options_x, options_y, "RESTART");
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "QUIT");
-    options_y += 2;
-    jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "DEBUG:ON" : "DEBUG:OFF");
+    // options_y += 2;
+    // jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "DEBUG:ON" : "DEBUG:OFF");
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "ANALOG ADJUSTMENT:");
     options_y += 1;

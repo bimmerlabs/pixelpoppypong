@@ -575,6 +575,7 @@ void teamSelect_input(void)
                 player->teamOldTeam = player->teamChoice;
                 player->teamSelected = true;
                 g_Team.isAvailable[player->teamChoice] = false;
+                g_Team.objectState[player->teamChoice] = OBJECT_STATE_ACTIVE;
                 g_Team.numTeams++;
                 return;
             }
@@ -610,6 +611,7 @@ void teamSelect_input(void)
                 player->isReady = false;
                 player->teamSelected = false;
                 g_Team.isAvailable[player->teamChoice] = true;
+                g_Team.objectState[player->teamChoice] = OBJECT_STATE_INACTIVE;
                 // player->teamChoice = TEAM_1;
                 // player->teamOldTeam = TEAM_COUNT;
                 player->pressedB = true;

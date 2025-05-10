@@ -16,7 +16,7 @@
 extern PLAYER g_Players[MAX_PLAYERS];
 
 void debux_text(void)
-{    
+{
     if (!g_GameOptions.debug_display) {
         return;
     }
@@ -58,6 +58,7 @@ void debux_text(void)
                 
             case GAME_STATE_TITLE_SCREEN: // title
                 jo_nbg0_printf(2, 5, "TITLETIMER:%i", g_TitleTimer/60);
+                
                 // jo_nbg0_printf(2, 7, "LOGO1_POS:%i", logo1_pos);
                 // jo_nbg0_printf(20, 7, "LOGO1:%i", logo1.pos.y);
                 // jo_nbg0_printf(2, 8, "LOGO2_POS:%i", logo2_pos);
@@ -168,10 +169,10 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 14, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[2]._sprite->pos.r));
                 // jo_nbg0_printf(2, 15, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[3]._sprite->pos.r));       
                 
-                // jo_nbg0_printf(2, 12, "TEAM1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[0]);
-                // jo_nbg0_printf(2, 13, "TEAM2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[1]);
-                // jo_nbg0_printf(2, 14, "TEAM3 SINGLE GOAL:%i", g_Assets.drawSingleGoal[2]);
-                // jo_nbg0_printf(2, 15, "TEAM4 SINGLE GOAL:%i", g_Assets.drawSingleGoal[3]);
+                jo_nbg0_printf(20, 10, "TEAM 1 ACTIVE:%i", g_Team.objectState[TEAM_1]);
+                jo_nbg0_printf(20, 11, "TEAM 2 ACTIVE:%i", g_Team.objectState[TEAM_2]);
+                jo_nbg0_printf(20, 12, "TEAM 3 ACTIVE:%i", g_Team.objectState[TEAM_3]);
+                jo_nbg0_printf(20, 13, "TEAM 4 ACTIVE:%i", g_Team.objectState[TEAM_4]);   
                 
                 // jo_nbg0_printf(2, 12, "TOUCHEDBY 1:%i", touchedBy[0].hasTouched);
                 // jo_nbg0_printf(2, 13, "TOUCHEDBY 2:%i", touchedBy[1].hasTouched);
@@ -241,31 +242,31 @@ void debux_text(void)
                     // jo_nbg0_printf(20, 16, "POWER:%i, %d", JO_FIXED_TO_INT(g_Players[1].power), g_Players[1].power);
                 // }  
                       
-                // if (g_Players[0].isPlaying) {
-                    // jo_nbg0_printf(2, 17, "P1 ISAI:%i", g_Players[0].isAI);
-                // }
-                // if (g_Players[1].isPlaying) {
-                    // jo_nbg0_printf(2, 18, "P2 ISAI:%i", g_Players[1].isAI);
-                // }
-                // if (g_Players[2].isPlaying) {
-                    // jo_nbg0_printf(2, 19, "P3 ISAI:%i", g_Players[2].isAI);
-                // }
-                // if (g_Players[3].isPlaying) {
-                    // jo_nbg0_printf(2, 20, "P4 ISAI:%i", g_Players[3].isAI);
-                // }
+                if (g_Players[0].isPlaying) {
+                    jo_nbg0_printf(2, 12, "P1 SUBSTATE:%i", g_Players[0].subState);
+                }
+                if (g_Players[1].isPlaying) {
+                    jo_nbg0_printf(2, 13, "P2 SUBSTATE:%i", g_Players[1].subState);
+                }
+                if (g_Players[2].isPlaying) {
+                    jo_nbg0_printf(2, 14, "P3 SUBSTATE:%i", g_Players[2].subState);
+                }
+                if (g_Players[3].isPlaying) {
+                    jo_nbg0_printf(2, 15, "P4 SUBSTATE:%i", g_Players[3].subState);
+                }
                 
-                // if (g_Players[0].isPlaying) {
-                    // jo_nbg0_printf(2, 17, "P1 TEAM:%i", g_Players[0].teamChoice);
-                // }
-                // if (g_Players[1].isPlaying) {
-                    // jo_nbg0_printf(2, 18, "P2 TEAM:%i", g_Players[1].teamChoice);
-                // }
-                // if (g_Players[2].isPlaying) {
-                    // jo_nbg0_printf(2, 19, "P3 TEAM:%i", g_Players[2].teamChoice);
-                // }
-                // if (g_Players[3].isPlaying) {
-                    // jo_nbg0_printf(2, 20, "P4 TEAM:%i", g_Players[3].teamChoice);
-                // }
+                if (g_Players[0].isPlaying) {
+                    jo_nbg0_printf(2, 17, "P1 OBJECTSTATE:%i", g_Players[0].objectState);
+                }
+                if (g_Players[1].isPlaying) {
+                    jo_nbg0_printf(2, 18, "P2 OBJECTSTATE:%i", g_Players[1].objectState);
+                }
+                if (g_Players[2].isPlaying) {
+                    jo_nbg0_printf(2, 19, "P3 OBJECTSTATE:%i", g_Players[2].objectState);
+                }
+                if (g_Players[3].isPlaying) {
+                    jo_nbg0_printf(2, 20, "P4 OBJECTSTATE:%i", g_Players[3].objectState);
+                }
                 // if (g_Game.numPlayers == ONE_PLAYER)
                     // jo_nbg0_printf(2, 21, "NUMPLAYERS:%i", 1);
                 // else if (g_Game.numPlayers == TWO_PLAYER)
@@ -277,10 +278,15 @@ void debux_text(void)
                 // jo_nbg0_printf(2, 22, "NUMTEAMS:%i", g_Team.numTeams);
                 // jo_nbg0_printf(2, 23, "PLAYERID:%i", g_Players[0].playerID);
                                 
-                jo_nbg0_printf(20, 10, "TEAM 1 AVAILABLE:%i", g_Team.isAvailable[TEAM_1]);
-                jo_nbg0_printf(20, 11, "TEAM 2 AVAILABLE:%i", g_Team.isAvailable[TEAM_2]);
-                jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", g_Team.isAvailable[TEAM_3]);
-                jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", g_Team.isAvailable[TEAM_4]);   
+                // jo_nbg0_printf(20, 10, "TEAM 1 AVAILABLE:%i", g_Team.isAvailable[TEAM_1]);
+                // jo_nbg0_printf(20, 11, "TEAM 2 AVAILABLE:%i", g_Team.isAvailable[TEAM_2]);
+                // jo_nbg0_printf(20, 12, "TEAM 3 AVAILABLE:%i", g_Team.isAvailable[TEAM_3]);
+                // jo_nbg0_printf(20, 13, "TEAM 4 AVAILABLE:%i", g_Team.isAvailable[TEAM_4]);   
+                
+                jo_nbg0_printf(20, 10, "TEAM 1 ACTIVE:%i", g_Team.objectState[TEAM_1]);
+                jo_nbg0_printf(20, 11, "TEAM 2 ACTIVE:%i", g_Team.objectState[TEAM_2]);
+                jo_nbg0_printf(20, 12, "TEAM 3 ACTIVE:%i", g_Team.objectState[TEAM_3]);
+                jo_nbg0_printf(20, 13, "TEAM 4 ACTIVE:%i", g_Team.objectState[TEAM_4]);   
                 
                 // jo_nbg0_printf(20, 10, "GAMEISACTIVE:%i", g_Game.isActive);
                 // jo_nbg0_printf(20, 11, "BEGINTIMER:%i", g_Game.BeginTimer);
@@ -288,12 +294,6 @@ void debux_text(void)
                 // jo_nbg0_printf(20, 13, "STARTTIMER:%i", start_gameplay_timer);
                 // jo_nbg0_printf(20, 14, "ISBALLACTIVE:%i", g_Game.isBallActive);
                 // jo_nbg0_printf(20, 15, "ROUND_START:%i", round_start);
-                
-                // jo_nbg0_printf(2, 12, "TEAM1 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_1]);
-                // jo_nbg0_printf(2, 13, "TEAM2 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_2]);
-                // jo_nbg0_printf(2, 14, "TEAM3 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_3]);
-                // jo_nbg0_printf(2, 15, "TEAM4 SINGLE GOAL:%i", g_Assets.drawSingleGoal[TEAM_4]);
-                
                 
                 // jo_nbg0_printf(2, 12, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[0]._sprite->pos.r));
                 // jo_nbg0_printf(2, 13, "PLAYER1 RAD:%i", JO_FIXED_TO_INT(g_Players[1]._sprite->pos.r));

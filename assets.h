@@ -80,7 +80,6 @@ typedef struct _assets
     int goal2[NUM_GOAL_SPRITES];
     int goal3[NUM_GOAL_SPRITES];
     int goal4[NUM_GOAL_SPRITES];
-    bool drawSingleGoal[MAX_PLAYERS];
     
     // items
     int bomb[NUM_BOMB_SPRITES];
@@ -113,7 +112,9 @@ typedef struct _assets
     short dropPcm8;
     short bouncePcm8;
     short shieldPcm8;
+    // short rechargePcm8;
     short countdownPcm8;
+    short winPcm8;
     short bumpPcm16;
     bool GameplaySoundsLoaded;
     

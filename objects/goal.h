@@ -1,5 +1,4 @@
 #pragma once
-#include "object.h"
 #include "player.h"
 #include "../assets.h"
 // #include "../sprites.h"
@@ -9,8 +8,6 @@
 #define GOAL_LEFT_BOUNDS -toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_RIGHT_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_CENTER_POS 0
-
-// extern Uint8 g_goalPlayerId[TEAM_COUNT+1]; // TODO: remove
 
 typedef enum _GOAL_SCALE
 {
@@ -47,7 +44,6 @@ typedef struct _GOAL_POSITION
 
 typedef struct _GOAL_OBJECT
 {
-    OBJECT_STATE objectState;
     bool isColliding;
     bool onLeftSide; // is this needed?
     int scale;
@@ -55,6 +51,7 @@ typedef struct _GOAL_OBJECT
     Uint8 id;
     Sprite *sprite;
     PPLAYER player;
+    bool drawSingleGoal;
 } GOAL, *PGOAL;
 
 extern GOAL g_Goal[MAX_PLAYERS];

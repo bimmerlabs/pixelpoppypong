@@ -28,9 +28,9 @@ typedef struct _TEAM_OBJECT
     short numTeams;
     bool isAvailable[MAX_TEAMS];
     OBJECT_STATE objectState[MAX_TEAMS];
-
 } TEAM_OBJECT, *PTEAM_OBJECT;
 
 extern TEAM_OBJECT g_Team;
 
 void initTeams(void);
+void resetTeamState(void);

@@ -63,12 +63,21 @@ GameOptions g_GameOptions = {
     .mesh_display = true,
     .mosaic_display = true,
     .use_rtc = false,
+    .unlockBigHeadMode = false,
     .bigHeadMode = false,
     .enableItems = true,
     .enableMeows = true,
+    .reservedBool = false,
+    .bombTouchCounter = 0,
+    .fishTouchCounter = 0,
+    .redShroomTouchCounter = 0,
+    .blueShroomTouchCounter = 0,
+    .craigTouchCounter = 0,
+    .garfTouchCounter = 0,
+    .reservedInt = 0,
 };
 
-bool releaseCanidate = false;
+bool releaseCanidate = true;
 
 void loading_screen(void)
 {
@@ -86,6 +95,9 @@ void loading_screen(void)
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(15, 14, "SOUNDFX: %i", numberPCMs);
             }
+            else {
+                jo_nbg0_printf(17, 14, "SOUNDFX..");
+            }
             // Generate dot string
             char dots[50];
             for (int i = 0; i < numberPCMs; i++) {
@@ -98,6 +110,9 @@ void loading_screen(void)
         else {
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
+            }
+            else {
+                jo_nbg0_printf(17, 14, "SPRITES..");
             }
             // loading bar      
             int sprite_count = jo_sprite_count()/3;

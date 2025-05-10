@@ -9,7 +9,6 @@
 #define FRAMERATE3 8 // for animation speed (power of 2)
 #define EASY_BALL_RADIUS toFIXED(56)
 #define NORMAL_BALL_RADIUS toFIXED(36)
-#define HARD_BALL_RADIUS toFIXED(32)
 
 typedef struct {
     FIXED x, y, z;
@@ -64,10 +63,6 @@ typedef struct {
     Animation anim1;
     Animation anim2;
 } Sprite;
-
-
-// item reference
-// extern Sprite *g_gameItem;
 
 extern Sprite font; // VDP1 font
 extern Sprite ppplogo;

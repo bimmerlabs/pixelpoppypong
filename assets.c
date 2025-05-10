@@ -106,9 +106,11 @@ bool loadGameplaySoundAssets(void)
     g_Assets.dropPcm8 = load_8bit_pcm((Sint8 *)"DROP.PCM", 15360);
     g_Assets.bouncePcm8 = load_8bit_pcm((Sint8 *)"BOUNCE.PCM", 15360);
     g_Assets.shieldPcm8 = load_8bit_pcm((Sint8 *)"SHIELD.PCM", 15360);
+    // g_Assets.rechargePcm8 = load_8bit_pcm((Sint8 *)"RECHARGE.PCM", 15360);
     g_Assets.countdownPcm8 = load_8bit_pcm((Sint8 *)"C_DOWN.PCM", 15360);
     g_Assets.bumpPcm16 = load_16bit_pcm((Sint8 *)"BUMP.PCM", 15360);
     g_Assets.gameOverPcm8 = load_8bit_pcm((Sint8 *)"GMOVR8.PCM", 15360);
+    g_Assets.winPcm8 = load_8bit_pcm((Sint8 *)"WIN.PCM", 15360);
     
     // CAT SOUNDS
     g_Assets.meowPcm8[0] = load_8bit_pcm((Sint8 *)"MEOW1.PCM", 15360);
@@ -173,12 +175,12 @@ void unloadPPPLogoAssets(void)
 
 void loadNameEntryAssets(void)
 {
+    loadSprite(&font, g_Assets.font, "FONT2.TGA", font_char_tileset, NUM_FONT_CHARS, 24, 24, true);
     if (!g_Assets.NameEntrySoundsLoaded) {
             g_Game.isSoundLoading = true;
             g_Assets.NameEntrySoundsLoaded = loadNameEntrySoundAssets();
             g_Game.isSoundLoading = false;            
     }
-    loadSprite(&font, g_Assets.font, "FONT2.TGA", font_char_tileset, NUM_FONT_CHARS, 24, 24, true);
     g_Game.isLoading = false;
 }
 
@@ -238,11 +240,6 @@ void loadCharacterAssets(void)
 void loadGameAssets(void)
 {
     g_Game.isLoading = true;
-    if (!g_Assets.GameplaySoundsLoaded) {
-            g_Game.isSoundLoading = true;
-            g_Assets.GameplaySoundsLoaded = loadGameplaySoundAssets();
-            g_Game.isSoundLoading = false;            
-    }
     // UI elements
     loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, NUM_TIMER_SPRITES, 16, 16, true);
     timer_num10.anim1.asset = g_Assets.timer;
@@ -281,6 +278,11 @@ void loadGameAssets(void)
     craig_item.spr_id = jo_sprite_add_tga(NULL, "CRAIG.TGA", palette_transparent_index);
     garfield_item.spr_id = jo_sprite_add_tga(NULL, "GARFIELD.TGA", palette_transparent_index);
     
+    if (!g_Assets.GameplaySoundsLoaded) {
+            g_Game.isSoundLoading = true;
+            g_Assets.GameplaySoundsLoaded = loadGameplaySoundAssets();
+            g_Game.isSoundLoading = false;            
+    }
     g_Game.isLoading = false;
 }
 

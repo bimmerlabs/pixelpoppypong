@@ -19,6 +19,8 @@ extern int g_StartStoryFrames;
 extern const char *fullCharacterNames[];
 extern const char *characterQuotes[];
 void initStoryMode(void);
+void initContinue(void);
+void initNextRound(void);
 void storySelectUpdate(void);
 
 static __jo_force_inline void drawCharacterList(void) {
