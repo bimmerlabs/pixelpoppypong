@@ -19,13 +19,12 @@ Uint32 ApproximateIntegerSqrt(Uint32 value)
 }
 
 int my_random_range(int min, int max) {
-    int number = jo_random(99999);
+    int number = jo_random(9999999);
     return min + (number % ABS(max - min) + 1); // modulus
 }
 
 // Precomputed sine values
-// probably has too many entries?
-static const FIXED sineTable[99] = {
+static const FIXED sineTable[91] = {
     0, 1143, 2287, 3429, 4571, 5711, 6850, 7986, 9120,
     10252, 11380, 12504, 13625, 14742, 15854, 16961, 18064, 19160,
     20251, 21336, 22414, 23486, 24550, 25606, 26655, 27696, 28729,
@@ -36,7 +35,7 @@ static const FIXED sineTable[99] = {
     58393, 58903, 59395, 59870, 60326, 60763, 61183, 61583, 61965,
     62328, 62672, 62997, 63302, 63589, 63856, 64103, 64331, 64540,
     64729, 64898, 65047, 65176, 65286, 65376, 65446, 65496, 65526,
-    65536, 65526, 65496, 65446, 65376, 65286, 65176, 65047, 64898,
+    65536,
 };
 
 // Function to get sine from the precomputed table

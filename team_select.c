@@ -47,6 +47,7 @@ void initUnlockedCharacters(void) {
 }
 
 void initAvailableCharacters(void) {
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_mode) {
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
             characterAvailable[i] = true;
@@ -54,10 +55,13 @@ void initAvailableCharacters(void) {
     }
     // Copy values from characterUnlocked to characterAvailable
     else {
+    #endif
         for (int i = 0; i < TOTAL_CHARACTERS; i++) {
             characterAvailable[i] = characterUnlocked[i];
         }
+    #if ENABLE_DEBUG_MODE == 1
     }
+    #endif
 }
 
 void teamSelect_init(void)
@@ -96,10 +100,10 @@ void teamSelect_init(void)
     set_spr_position(&menu_bg2, -120, 240, MENU_BG2_DEPTH);
     set_spr_scale(&menu_bg2, 54, 352);
     
-    mosaic_in = true;
-    music_in = true;
-    fade_in = true;
-    transition_in = true;
+    g_Transition.mosaic_in = true;
+    g_Transition.music_in = true;
+    g_Transition.fade_in = true;
+    g_Transition.all_in = true;
 }
 
 // main logic loop
@@ -144,10 +148,10 @@ void teamSelect_draw(void)
         return;
     }
         
-    if (attrNbg1.x_scroll > toFIXED(0)) {
+    if (attrNbg1.x_scroll > FIXED_0) {
         attrNbg1.x_pos += attrNbg1.x_scroll;
         if (attrNbg1.x_pos > toFIXED(512.0))
-            attrNbg1.x_pos = toFIXED(0);
+            attrNbg1.x_pos = FIXED_0;
     }
     slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
@@ -175,10 +179,10 @@ void drawCharacterSelectGrid(void)
         text_y = 5;
     }
     
-    if (frame % 3 == 0) { // modulus
+    if (g_Game.frame % 3 == 0) { // modulus
         draw_cursor = !draw_cursor;
     }
-    if (frame % 20 == 0) { // modulus
+    if (g_Game.frame % 20 == 0) { // modulus
         draw_portrait = !draw_portrait;
     }
     
@@ -273,12 +277,16 @@ void drawCharacterSelectGrid(void)
         // CHARACTER METER
         if (player->startSelection) {
             // SPEED
+            #if ENABLE_DEBUG_MODE == 1
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED:%i", player->maxSpeed);
             }
             else {
+            #endif
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y,   "SPEED");
+            #if ENABLE_DEBUG_MODE == 1
             }
+            #endif
             // yellow
             meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, player->maxSpeed, METER_HEIGHT);
@@ -291,12 +299,16 @@ void drawCharacterSelectGrid(void)
             my_sprite_draw(&meter);
             // ACCELERATION
             Uint8 acceleration = JO_FIXED_TO_INT(player->acceleration);
+            #if ENABLE_DEBUG_MODE == 1
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL:%i", acceleration); 
             }
             else {
+            #endif
                 jo_nbg0_printf(text_x+METER_TEXT_X, text_y+METER_TEXT_Y2, "ACCEL."); 
+            #if ENABLE_DEBUG_MODE == 1
             }
+            #endif
             // yellow       
             meter.spr_id = meter.anim1.asset[7];
             set_spr_scale(&meter, acceleration, METER_HEIGHT);

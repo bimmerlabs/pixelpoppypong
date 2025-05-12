@@ -10,157 +10,145 @@
 #include "lighting.h"
 #include "BG_DEF/sprite_colors.h"
 
-unsigned int g_NameEntryTimer = 0;
-unsigned int g_NameEntrySelection = 0;
 const char letters[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.< ";
-static char initials[4];  // 3 letters + null terminator
-static int char_id[3];
 
-bool rotateLeft = false;
-bool rotateRight = false;
+static NAME_ENTRY nameEntry = {0};
 
-#define NAME_X_RADIUS toFIXED(140)
-#define NAME_Y_RADIUS toFIXED(50)
-#define NAME_Y_POS 170
-#define END_RADIUS toFIXED(-1400)
-#define GAP_ANGLE 12
-static FIXED xRadius = NAME_X_RADIUS;
-static FIXED yRadius = NAME_Y_RADIUS;
-static FIXED yPos = NAME_Y_POS;
-static int nameEntryAngle = 360;
-static int gapAngle = 0;
-static bool pressedLeft = false;
-static bool pressedRight = false;
-static bool isAngleSnapped = true;
-static bool isNameEntryFinished = false;
-static bool endNameEntry = false;
+void initNameEntryStruct(void) {
+    nameEntry.timer = NAME_ENTRY_TIMER;
+    nameEntry.selection = FIRST_INITIAL;
+    nameEntry.rotateLeft = false;
+    nameEntry.rotateRight = false;
+    nameEntry.initials[0] = 0;  // 3 letters + null terminator
+    nameEntry.initials[1] = 0;
+    nameEntry.initials[2] = 0;
+    nameEntry.initials[3] = 0;
+    nameEntry.char_id[0] = 10; // letters[] index
+    nameEntry.char_id[1] = 39;
+    nameEntry.char_id[2] = 39;
+    nameEntry.xRadius = NAME_X_RADIUS;
+    nameEntry.yRadius = NAME_Y_RADIUS;
+    nameEntry.yPos = NAME_Y_POS;
+    nameEntry.angle = 360;
+    nameEntry.gapAngle = 0;
+    nameEntry.pressedLeft = false;
+    nameEntry.pressedRight = false;
+    nameEntry.isAngleSnapped = true;
+    nameEntry.finished = false;
+    nameEntry.end = false;
+}
 
 void nameEntryInit(void)
 {
     loadNameEntryAssets();
     initNameEntryColors();
-    
-    g_NameEntrySelection = FIRST_INITIAL;
-    
-    char_id[0] = 10; // A
-    char_id[1] = 39; // blank
-    char_id[2] = 39; // blank
-    xRadius = NAME_X_RADIUS;
-    yRadius = NAME_Y_RADIUS;
-    yPos = NAME_Y_POS;
-    nameEntryAngle = 360;
-    isAngleSnapped = true;
-    pressedLeft = false;
-    pressedRight = false;
-    rotateRight = false;
-    rotateLeft = false;
-    isNameEntryFinished = false;
-    endNameEntry = false;
+    initNameEntryStruct();
+     
     set_spr_scale(&pixel_poppy, 2.0, 2.0);
     pixel_poppy.rot.z = 0;
     set_spr_position(&pixel_poppy, 0, 0, 100);
     // set to "smile"
     pixel_poppy.spr_id = pixel_poppy.anim1.asset[1];
         
-    g_NameEntryTimer = NAME_ENTRY_TIMER;    
-    convertNumberToDigits(g_NameEntryTimer);
+    convertNumberToDigits(nameEntry.timer);
     font.spr_id = font.anim1.asset[tens];
     font.spr_id = font.anim1.asset[ones];
     
     g_Game.lastState = GAME_STATE_NAME_ENTRY;
     
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN); // use the default here    
-    mosaic_in = true;
-    music_in = true;
-    fade_in = true;
-    transition_in = true;
+    g_Transition.mosaic_in = true;
+    g_Transition.music_in = true;
+    g_Transition.fade_in = true;
+    g_Transition.all_in = true;
     playCDTrack(NAME_ENTRY_TRACK, true);
 }
 
 void nameEntryInput(void)
 {
-     if (endNameEntry) {
+    if (nameEntry.end) {
+        return;
+    }
+    PPLAYER player = &g_Players[g_Game.winner];
+    if(jo_is_input_key_pressed(player->input->id, JO_KEY_UP))
+    {
+        if (nameEntry.yRadius < FIXED_0) {
+            nameEntry.xRadius -= FIXED_HALF;
+            nameEntry.yRadius += FIXED_2;
+        }
+        else if (nameEntry.yRadius < FIXED_100) {
+            nameEntry.xRadius += FIXED_HALF;
+            nameEntry.yRadius += FIXED_2;
+        }
+    }
+    if(jo_is_input_key_pressed(player->input->id, JO_KEY_DOWN))
+    {
+        if (nameEntry.yRadius > FIXED_0) {
+            nameEntry.xRadius -= FIXED_HALF;
+            nameEntry.yRadius -= FIXED_2;
+        }
+        else if (nameEntry.yRadius > -FIXED_100) {
+            nameEntry.xRadius += FIXED_HALF;
+            nameEntry.yRadius -= FIXED_2;
+        }
+    }
+    if (!nameEntry.isAngleSnapped) {
          return;
-     }
-    if(jo_is_pad1_key_pressed(JO_KEY_UP))
-    {
-        if (yRadius < toFIXED(0)) {
-            xRadius -= toFIXED(0.5);
-            yRadius += toFIXED(2);
-        }
-        else if (yRadius < toFIXED(100)) {
-            xRadius += toFIXED(0.5);
-            yRadius += toFIXED(2);
-        }
     }
-    if(jo_is_pad1_key_pressed(JO_KEY_DOWN))
+    if(jo_is_input_key_pressed(player->input->id, JO_KEY_LEFT) && !nameEntry.finished)
     {
-        if (yRadius > toFIXED(0)) {
-            xRadius -= toFIXED(0.5);
-            yRadius -= toFIXED(2);
-        }
-        else if (yRadius > toFIXED(-100)) {
-            xRadius += toFIXED(0.5);
-            yRadius -= toFIXED(2);
-        }
+        nameEntry.pressedLeft = true;
+        nameEntry.pressedRight = false;
+        nameEntry.isAngleSnapped = false;
+        nameEntry.angle += 1;
+        if (nameEntry.angle > 360)
+            nameEntry.angle -= 360;
     }
-    if (!isAngleSnapped) {
-         return;
-    }
-    if(jo_is_pad1_key_pressed(JO_KEY_LEFT) && !isNameEntryFinished)
+    else if(jo_is_input_key_pressed(player->input->id, JO_KEY_RIGHT) && !nameEntry.finished)
     {
-        pressedLeft = true;
-        pressedRight = false;
-        isAngleSnapped = false;
-        nameEntryAngle += 1;
-        if (nameEntryAngle > 360)
-            nameEntryAngle -= 360;
+        nameEntry.pressedLeft = false;
+        nameEntry.pressedRight = true;
+        nameEntry.isAngleSnapped = false;
+        nameEntry.angle -= 1;
+        if (nameEntry.angle < 0)
+            nameEntry.angle += 360;
     }
-    else if(jo_is_pad1_key_pressed(JO_KEY_RIGHT) && !isNameEntryFinished)
+    else if(jo_is_input_key_down(player->input->id, JO_KEY_A) || jo_is_input_key_down(player->input->id, JO_KEY_C))
     {
-        pressedLeft = false;
-        pressedRight = true;
-        isAngleSnapped = false;
-        nameEntryAngle -= 1;
-        if (nameEntryAngle < 0)
-            nameEntryAngle += 360;
-    }
-    else if(jo_is_pad1_key_down(JO_KEY_A) || jo_is_pad1_key_down(JO_KEY_C))
-    {
-        if (isNameEntryFinished && nameEntryAngle == 12) {
+        if (nameEntry.finished && nameEntry.angle == 12) {
             pcm_play(g_Assets.name_brkPcm8, PCM_VOLATILE, 6);
-            endNameEntry = true;
+            nameEntry.end = true;
             return;
         }
-        if (!isNameEntryFinished && nameEntryAngle != 12) {
+        if (!nameEntry.finished && nameEntry.angle != 12) {
             pcm_play(g_Assets.name_ketPcm8, PCM_PROTECTED, 7);
-            g_NameEntrySelection++;
+            nameEntry.selection++;
         }
-        if (g_NameEntrySelection == MAX_INITIAL) {
+        if (nameEntry.selection == MAX_INITIAL) {
             pcm_play(g_Assets.name_brkPcm8, PCM_VOLATILE, 6);
-            isNameEntryFinished = true;
-            isAngleSnapped = false;
+            nameEntry.finished = true;
+            nameEntry.isAngleSnapped = false;
         }
     }
-    else if(jo_is_pad1_key_down(JO_KEY_B))
+    else if(jo_is_input_key_down(player->input->id, JO_KEY_B))
     {
         pcm_play(g_Assets.name_canPcm8, PCM_PROTECTED, 7);
-        if (g_NameEntrySelection == MAX_INITIAL) {
-            nameEntryAngle = 360;
-            g_NameEntrySelection--;
-            char_id[g_NameEntrySelection] = 39;
+        if (nameEntry.selection == MAX_INITIAL) {
+            nameEntry.angle = 360;
+            nameEntry.selection--;
+            nameEntry.char_id[nameEntry.selection] = 39;
             initNameEntryColors();
-            isNameEntryFinished = false;
-            isAngleSnapped = true;
-            rotateRight = false;
-            rotateLeft = false;
+            nameEntry.finished = false;
+            nameEntry.isAngleSnapped = true;
+            nameEntry.rotateRight = false;
+            nameEntry.rotateLeft = false;
             pixel_poppy.spr_id = pixel_poppy.anim1.asset[2];
         }
-        else if (g_NameEntrySelection > FIRST_INITIAL) {
-            g_NameEntrySelection--;
+        else if (nameEntry.selection > FIRST_INITIAL) {
+            nameEntry.selection--;
         }
     }
-    if (isAngleSnapped == false) {
+    if (nameEntry.isAngleSnapped == false) {
         pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
     }
     else {
@@ -175,15 +163,15 @@ void nameEntryUpdate(void)
     {
         return;
     }
-    if (g_NameEntryTimer > 0 && frame % 60 == 0) { // modulus
-        g_NameEntryTimer--;
+    if (nameEntry.timer > 0 && g_Game.frame % 60 == 0) { // modulus
+        nameEntry.timer--;
     }
     
     jo_nbg0_printf(17, 2, "NAME ENTRY");
     
-    if (g_NameEntryTimer > 0 && !endNameEntry) {
+    if (nameEntry.timer > 0 && !nameEntry.end) {
         // make an inline sub for this
-        convertNumberToDigits(g_NameEntryTimer);
+        convertNumberToDigits(nameEntry.timer);
         set_spr_position(&font, 0, -170, 50);
         set_spr_scale(&font, 1.1, 1.1);
         font.spr_id = font.anim1.asset[tens];
@@ -195,50 +183,50 @@ void nameEntryUpdate(void)
     }
     
     // make an inline sub for this
-    if (char_id[FIRST_INITIAL] != 39) {
-        set_spr_position(&font, -24, yPos, 50);
+    if (nameEntry.char_id[FIRST_INITIAL] != 39) {
+        set_spr_position(&font, -24, nameEntry.yPos, 50);
         set_spr_scale(&font, 2, 2);
-        font.spr_id = font.anim1.asset[char_id[FIRST_INITIAL]];
+        font.spr_id = font.anim1.asset[nameEntry.char_id[FIRST_INITIAL]];
         font.zmode = _ZmRC;
         my_sprite_draw(&font);
     }
-    if (g_NameEntrySelection >= 1 && char_id[SECOND_INITIAL] != 39) {
-        set_spr_position(&font, 0, yPos, 50);
+    if (nameEntry.selection >= 1 && nameEntry.char_id[SECOND_INITIAL] != 39) {
+        set_spr_position(&font, 0, nameEntry.yPos, 50);
         set_spr_scale(&font, 2, 2);
-        font.spr_id = font.anim1.asset[char_id[SECOND_INITIAL]];
+        font.spr_id = font.anim1.asset[nameEntry.char_id[SECOND_INITIAL]];
         font.zmode = _ZmCC;
         my_sprite_draw(&font);
     }
-    if (g_NameEntrySelection >= 2 && char_id[THIRD_INITIAL] != 39) {
-        set_spr_position(&font, 24, yPos, 50);
+    if (nameEntry.selection >= 2 && nameEntry.char_id[THIRD_INITIAL] != 39) {
+        set_spr_position(&font, 24, nameEntry.yPos, 50);
         set_spr_scale(&font, 2, 2);
-        font.spr_id = font.anim1.asset[char_id[THIRD_INITIAL]];
+        font.spr_id = font.anim1.asset[nameEntry.char_id[THIRD_INITIAL]];
         font.zmode = _ZmLC;
         my_sprite_draw(&font);
     }
-    if (endNameEntry && xRadius > END_RADIUS) {
+    if (nameEntry.end && nameEntry.xRadius > END_RADIUS) {
         pixel_poppy.spr_id = pixel_poppy.anim1.asset[3];
-        xRadius -= toFIXED(6);
-        yRadius -= toFIXED(4);
-        nameEntryAngle += 3;
-        if (nameEntryAngle > 360)
-            nameEntryAngle -= 360;
-        if (yPos > 0)
-            yPos -= 2;
+        nameEntry.xRadius -= toFIXED(6);
+        nameEntry.yRadius -= toFIXED(4);
+        nameEntry.angle += 3;
+        if (nameEntry.angle > 360)
+            nameEntry.angle -= 360;
+        if (nameEntry.yPos > 0)
+            nameEntry.yPos -= 2;
     }
     
     font.zmode = _ZmCC;
     nameEntryDraw();
     
     
-    initials[0] = letters[char_id[FIRST_INITIAL]];
-    initials[1] = letters[char_id[SECOND_INITIAL]];
-    initials[2] = letters[char_id[THIRD_INITIAL]];
-    initials[3] = '\0';
+    nameEntry.initials[0] = letters[nameEntry.char_id[FIRST_INITIAL]];
+    nameEntry.initials[1] = letters[nameEntry.char_id[SECOND_INITIAL]];
+    nameEntry.initials[2] = letters[nameEntry.char_id[THIRD_INITIAL]];
+    nameEntry.initials[3] = '\0';
     
-    if(g_NameEntryTimer == 0 || xRadius <= END_RADIUS)
+    if(nameEntry.timer == 0 || nameEntry.xRadius <= END_RADIUS)
     {
-        addHighScore(g_Players[g_Game.winner].score.points, initials);
+        addHighScore(g_Players[g_Game.winner].score.points, nameEntry.initials);
         save_game_backup();
         g_Game.lastState = GAME_STATE_NAME_ENTRY;
         transitionState(GAME_STATE_HIGHSCORES);
@@ -249,38 +237,35 @@ void nameEntryUpdate(void)
 
 void nameEntryDraw(void)
 {
-    if (!isNameEntryFinished) {
-        nameEntryAngle = snap_to_nearest_12(nameEntryAngle);
+    if (!nameEntry.finished) {
+        nameEntry.angle = snap_to_nearest_12(nameEntry.angle);
     }
-    if (isNameEntryFinished) {
-        nameEntryAngle = snap_to_end(nameEntryAngle);
+    if (nameEntry.finished) {
+        nameEntry.angle = snap_to_end(nameEntry.angle);
     }
-    for (gapAngle = 0; gapAngle <= 360; gapAngle += GAP_ANGLE) {
-            nameEntryPositionUpdate((nameEntryAngle+ 6 + gapAngle), (gapAngle + 102));
+    for (nameEntry.gapAngle = 0; nameEntry.gapAngle <= 360; nameEntry.gapAngle += GAP_ANGLE) {
+            nameEntryPositionUpdate((nameEntry.angle+ 6 + nameEntry.gapAngle), (nameEntry.gapAngle + 102));
     }
     do_update_font2All = calculate_sprites_color(&p_rangeFont2All);
     
     set_spr_scale(&pixel_poppy, 6.0, 6.0);
-    int poppyAngle = nameEntryAngle;
+    int poppyAngle = nameEntry.angle;
     if (poppyAngle > 360)
         poppyAngle -= 360;
     pixel_poppy.rot.z = -1*poppyAngle;
     set_spr_position(&pixel_poppy, 0, 0, 100);
     my_sprite_draw(&pixel_poppy);
     
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_display) {
-        jo_nbg0_printf(2, 24, "RAD:X=%3d,Y=%3d", JO_FIXED_TO_INT(xRadius), JO_FIXED_TO_INT(yRadius));
+        jo_nbg0_printf(2, 24, "RAD:X=%3d,Y=%3d", JO_FIXED_TO_INT(nameEntry.xRadius), JO_FIXED_TO_INT(nameEntry.yRadius));
         jo_nbg0_printf(2, 25, "POS:X=%3d,Y=%3d", JO_FIXED_TO_INT(light.x), JO_FIXED_TO_INT(light.y));
-        jo_nbg0_printf(2, 26, "ANGLE:%3d", nameEntryAngle);
-        jo_nbg0_printf(2, 27, "ENDNAMEENTRY:%i", endNameEntry);
-        jo_nbg0_printf(20, 24, "ISANGLESNAPPED:%i", isAngleSnapped);
-        jo_nbg0_printf(20, 25, "ISNAMEENTRYFINISHED:%i", isNameEntryFinished);
-        // jo_nbg0_printf(2, 14, "DO_UPDATE_FONT2ALL:%i", do_update_font2All);
-        // jo_nbg0_printf(2, 15, "HUE:%d", hslSprites.color[74].h);
-        // jo_nbg0_printf(2, 16, "SAT:%d", hslSprites.color[74].s);
-        // jo_nbg0_printf(2, 17, "LUM:%d", hslSprites.color[74].l);
-        // jo_nbg0_printf(20, 15, "RGB:%d", bufferSprites.color[74]);
+        jo_nbg0_printf(2, 26, "ANGLE:%3d", nameEntry.angle);
+        jo_nbg0_printf(2, 27, "ENDNAMEENTRY:%i", nameEntry.end);
+        jo_nbg0_printf(20, 24, "ISANGLESNAPPED:%i", nameEntry.isAngleSnapped);
+        jo_nbg0_printf(20, 25, "ISNAMEENTRYFINISHED:%i", nameEntry.finished);
     }
+    #endif
 }
 
 void nameEntryPositionUpdate(int angle, int sprAngle) {
@@ -295,19 +280,19 @@ void nameEntryPositionUpdate(int angle, int sprAngle) {
     if (scaleAngle > 360)
         scaleAngle -= 360;
     
-    light.x = jo_fixed_mult(jo_cos(angle), xRadius);
-    light.y = jo_fixed_mult(my_fixed_sine(angle), yRadius);
+    light.x = jo_fixed_mult(jo_cos(angle), nameEntry.xRadius);
+    light.y = jo_fixed_mult(my_fixed_sine(angle), nameEntry.yRadius);
     font.pos.x = 2*(light.x);
     font.pos.y = -2*(light.y);
     
     if (angle > 262 && angle < 278) {
-        if (!isNameEntryFinished) {
-            char_id[g_NameEntrySelection] = spr_id;
+        if (!nameEntry.finished) {
+            nameEntry.char_id[nameEntry.selection] = spr_id;
         }
         font.scl.x = toFIXED(2.7);
     }
     else {
-        font.scl.x = toFIXED(1) + (FIXED_127 + jo_fixed_mult(jo_cos(scaleAngle), NAME_X_RADIUS))/200;
+        font.scl.x = FIXED_1 + (FIXED_127 + jo_fixed_mult(jo_cos(scaleAngle), NAME_X_RADIUS))/200;
     }
     font.scl.y = font.scl.x;
     font.rot.z = 0;
@@ -326,13 +311,13 @@ void nameEntryPositionUpdate(int angle, int sprAngle) {
     font.pos.z = toFIXED(zPos+50);
     
     int colorid = spr_id + 54; // + 64 degrees -10 (start of "A")
-    if (!isNameEntryFinished) {
+    if (!nameEntry.finished) {
         hslSprites.color[colorid].s = 255 - zPos;
         hslSprites.color[colorid].l = 255 - zPos;
     }
     else {
-        jo_getdate(&now);
-        int hue = now.minute*6;
+        jo_getdate(&g_Game.now);
+        int hue = g_Game.now.minute*6;
         hslSprites.color[colorid].h = hue;
         hslSprites.color[colorid].s = 240;
         hslSprites.color[colorid].l = 240;
@@ -344,16 +329,16 @@ void nameEntryPositionUpdate(int angle, int sprAngle) {
 
 int snap_to_nearest_12(int angle) {
     // If already snapped, do nothing
-    if (isAngleSnapped) {
+    if (nameEntry.isAngleSnapped) {
         return angle;
     }
 
     // Adjust angle only when a button is pressed
-    if (pressedRight) {
+    if (nameEntry.pressedRight) {
         angle--;  // Move counterclockwise
         if (angle < 0)
             angle += 360;
-    } else if (pressedLeft) {
+    } else if (nameEntry.pressedLeft) {
         angle++;  // Move clockwise
         if (angle > 360)
             angle -= 360;
@@ -362,7 +347,7 @@ int snap_to_nearest_12(int angle) {
     // If angle is now a multiple of 12, stop adjusting
     if (angle % 12 == 0) {
         pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
-        isAngleSnapped = true;  // Mark snapping complete
+        nameEntry.isAngleSnapped = true;  // Mark snapping complete
     }
 
     return angle;
@@ -370,27 +355,27 @@ int snap_to_nearest_12(int angle) {
 
 int snap_to_end(int angle) {
     // If already snapped, do nothing
-    if (isAngleSnapped) {
+    if (nameEntry.isAngleSnapped) {
         return angle;
     }
     if (angle == 0)
         angle = 360;
-    if (!rotateLeft && !rotateRight) {
+    if (!nameEntry.rotateLeft && !nameEntry.rotateRight) {
         if (angle - 180 < 0) {
-            rotateRight = true;
+            nameEntry.rotateRight = true;
         }
         else {
-            rotateLeft = true;
+            nameEntry.rotateLeft = true;
         }
     }
     // Adjust angle only when a button is pressed
-    if (rotateRight) { // need to compare to original angle value and set a boolean?
+    if (nameEntry.rotateRight) { // need to compare to original angle value and set a boolean?
         angle -= 6;  // Move counterclockwise
         pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
         if (angle < 0)
             angle += 360;
     }
-    if (rotateLeft) {
+    if (nameEntry.rotateLeft) {
         angle += 6;  // Move clockwise
         pcm_play(g_Assets.name_curPcm8, PCM_VOLATILE, 7);
         if (angle > 360)
@@ -398,41 +383,8 @@ int snap_to_end(int angle) {
     }
     // If angle is now a multiple of 12, stop adjusting
     if (angle == 12) {
-        isAngleSnapped = true;  // Mark snapping complete
+        nameEntry.isAngleSnapped = true;  // Mark snapping complete
     }
 
     return angle;
 }
-
-// original (secret mode?)
-// void nameEntryPositionUpdate(int angle) {
-    // if (angle > 360)
-        // angle -= 360;
-    
-    // light.x = jo_fixed_mult(jo_cos(angle), xRadius);
-    // light.y = jo_fixed_mult(my_fixed_sine(angle), yRadius);
-    // pixel_poppy.pos.x = 2*(light.x);
-    // pixel_poppy.pos.y = -2*(light.y);
-    
-    // int scaleAngle = angle + 90;
-    // if (scaleAngle > 360)
-        // scaleAngle -= 360;
-    // pixel_poppy.scl.x = toFIXED(1) + (FIXED_127 + jo_fixed_mult(jo_cos(scaleAngle), NAME_X_RADIUS))/300;
-    // pixel_poppy.scl.y = pixel_poppy.scl.x;
-    // pixel_poppy.rot.z = 0;
-    
-    // int zAngle = angle + 91;
-    // int zPos = 0;
-    // if (zAngle > 360)
-        // zAngle -= 360;
-    // if (zAngle > 258 && zAngle < 282) {
-        // zPos = 90;  // Keep zPos fixed at 90 within the hysteresis range
-    // }
-    // else {
-        // zPos = 180 - ABS(zAngle - 180);
-    // }
-    // pixel_poppy.pos.z = toFIXED(zPos+50);
-
-    // pixel_poppy.spr_id = pixel_poppy.anim1.asset[0];
-    // my_sprite_draw(&pixel_poppy);
-// }

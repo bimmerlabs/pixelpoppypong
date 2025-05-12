@@ -120,27 +120,19 @@ void changeState(GAME_STATE newState)
         case GAME_STATE_UNINITIALIZED:
         {
             jo_core_tv_off();
+            initGame();
             reset_sprites();
             do_update_All = true;
             updateAllColors();
             updateAllPalette();
             g_Game.isLoading = true;
             loadCommonAssets();
-            frame = 1;
             reset_audio(MAX_VOLUME);
-            mosaic_in_rate = MOSAIC_SLOW_RATE;
-            mosaic_in = false;
-            fade_in = false;
-            transition_in = false;
-            mosaic_out = false;
-            fade_out = false;
-            transition_out = false;
-            music_out = false;
-            music_in = false;
+            initTransitionStruct();
             reset_inputs();
             slColorCalcOn(OFF);
             slColRateNbg0 ( TRANSPARENCY_MIN );
-            slScrPosNbg0(toFIXED(0), toFIXED(0));
+            slScrPosNbg0(FIXED_0, FIXED_0);
             g_Game.nextState = GAME_STATE_PPP_LOGO;
             changeState(g_Game.nextState);
             break;
@@ -157,20 +149,20 @@ void transitionState(GAME_STATE newState)
     
     g_Game.gameState = GAME_STATE_TRANSITION;
     g_Game.nextState = newState;
-    g_TransitionTimer = 0;
+    g_Transition.timer = 0;
 
     // transition in has to be false
-    mosaic_in = false;
-    music_in = false;
-    fade_in = false;
-    transition_in = false;
+    g_Transition.mosaic_in = false;
+    g_Transition.music_in = false;
+    g_Transition.fade_in = false;
+    g_Transition.all_in = false;
     
     if (g_GameOptions.mosaic_display) {
-        mosaic_out = true;
+        g_Transition.mosaic_out = true;
     }
-    music_out = true;
-    fade_out = true;
-    transition_out = true;
+    g_Transition.music_out = true;
+    g_Transition.fade_out = true;
+    g_Transition.all_out = true;
     
     screenTransition_init(0, 0, 0);
     
@@ -196,7 +188,7 @@ void game_state_update(void)
         return;
     }
     
-    if (!transition_out) {
+    if (!g_Transition.all_out) {
         changeState(g_Game.nextState);
     }
 }

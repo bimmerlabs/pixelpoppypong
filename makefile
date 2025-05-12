@@ -15,7 +15,7 @@ JO_COMPILE_USING_SGL=1
 CCFLAGS += -DMY_CRAM_MODE=1
 CCFLAGS += -DMY_CRAM_OFFSET=0
 CCFLAGS += -DMY_TV_704x240=1
-CCFLAGS += -DNORMAL_MAP_MODE=10
+CCFLAGS += -DENABLE_DEBUG_MODE=1
 SRCS=main.c backup.c state.c screen_transition.c assets.c audio.c pcmsys.c ppp_logo.c title_screen.c team_select.c gameplay.c storymode.c AI.c objects/player.c objects/goal.c objects/teams.c input.c pause.c debug.c util.c physics.c math.c font.c ColorHelpers.c palettetools.c sprites.c bg_def/sprite_colors.c bg_def/nbg1.c credits.c highscores.c lighting.c name_entry.c
 JO_ENGINE_SRC_DIR=../../jo_engine
 COMPILER_DIR=../../Compiler

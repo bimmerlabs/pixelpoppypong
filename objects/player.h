@@ -64,7 +64,7 @@ typedef enum _PLAYER_STATE
 typedef struct _SCORE
 {
     Uint8 stars;
-    Uint8 deaths; // used as a proxy for continues
+    Sint8 continues;
     unsigned int total;  // total score (story mode)
     unsigned int points; // round score
     unsigned int lastMillion;
@@ -104,7 +104,6 @@ typedef enum _CHARACTER_SELECT
 
 extern bool characterUnlocked[TOTAL_CHARACTERS]; // distinction between selection and what gets saved in backup ram
 extern bool characterAvailable[TOTAL_CHARACTERS];
-// extern bool teamAvailable[MAX_TEAMS+1]; // because unselected is team 0 // could be part of a team struct
 
 // Array to hold attributes for each character
 extern const CHARACTER_ATTRIBUTES characterAttributes[];
@@ -166,10 +165,8 @@ typedef struct _PLAYER
     // SHIELD
     SHIELD shield;
     
-    // timers (in frames)
-    int invulnerabilityFrames; // how long player in invulerable
-    int respawnFrames; // how long before respawning player after death
-    int shroomFrames; // how long the mushroom effect lasts
+    // how long the mushroom effect lasts
+    int shroomFrames; 
 
     // used for movement acceleration
     bool moveHorizontal;
@@ -214,6 +211,8 @@ void resetPlayerScores(void);
 void resetPlayerAttacks(void);
 void spawnPlayers(void);
 bool explodePLayer(PPLAYER player);
+void killPlayer(Sint8 playerID);
+void updatePlayerLives(Uint8 scoredOnPlayerID);
 
 void cacheInputDirectionPlayer(PPLAYER player, bool* up, bool* down, bool* left, bool *right);
 

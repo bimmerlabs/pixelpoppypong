@@ -96,7 +96,7 @@ void check_inputs(void) {
             continue;
         }
         if (jo_get_input_type(i) == JoNightsPad) {
-            jo_nbg0_printf(input_x, input_y, "INPUT %i: - %2i +", i+1, toINT(jo_fixed_mult(input->sensitivity, toFIXED(100))));
+            jo_nbg0_printf(input_x, input_y, "INPUT %i: - %2i +", i+1, toINT(jo_fixed_mult(input->sensitivity, FIXED_100)));
         }
         else {
             jo_nbg0_printf(input_x, input_y, "INPUT %i: DIGITAL", i+1);

@@ -1,5 +1,6 @@
 #include "sprites.h"
 #include "assets.h"
+#include "BG_DEF/sprite_colors.h"
     
 Sprite font = {
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
@@ -610,4 +611,11 @@ void drawGoalSprites(Sprite *sprite, int sprite_id, int shadow_id, int zmode, in
     sprite->spr_id = sprite->anim1.asset[shadow_id];
     set_spr_position(sprite, x + 2, y + 2, 125);
     my_sprite_draw(sprite);
+}
+
+void resetSpriteColors(void) {
+    reset_sprites();
+    do_update_All = true;
+    updateAllColors();
+    updateAllPalette();
 }

@@ -9,27 +9,24 @@
 #include "screen_transition.h"
 #include "objects/player.h"
 
-int g_PauseChoice = 0;
-int g_PauseCursor = 0;
-
-extern PLAYER g_Players[MAX_PLAYERS];
+static int pauseChoice = 0;
 
 typedef enum _PAUSE_OPTIONS
 {
     PAUSE_OPTIONS_RESUME = 0,
     PAUSE_OPTIONS_RESTART,
     PAUSE_OPTIONS_QUIT,
-    // PAUSE_OPTIONS_DEBUG = 3,
+    #if ENABLE_DEBUG_MODE == 1
+    PAUSE_OPTIONS_DEBUG,
+    #endif
     PAUSE_OPTIONS_ANALOG,
     PAUSE_OPTION_MAX,
 } PAUSE_OPTIONS;
 
 static void drawPauseMenuCursor(void);
 static void drawPauseMenu(int options_y);
-
 static void checkForPausePress(void);
 static void checkForPauseMenu(void);
-
 
 //
 // Pause callbacks
@@ -38,30 +35,28 @@ static void checkForPauseMenu(void);
 // input for handling pause
 void pause_input(void)
 {
-    if(g_Game.gameState != GAME_STATE_GAMEPLAY || g_Game.isRoundOver)
+    if(g_Game.gameState != GAME_STATE_GAMEPLAY || g_Game.isRoundOver || g_Gameplay.isGameOver)
     {
         return;
     }
-
-    if(!g_Game.isPaused)
-    {
+    if (g_Transition.mosaic_out) {
+        g_Transition.mosaic_out = mosaicOut(NBG1ON);
+        return;
+    }
+    if (g_Transition.mosaic_in) {
+        g_Transition.mosaic_in = mosaicIn(NBG1ON);
+        return;
+    }
+    if(!g_Game.isPaused) {
         // only check for pause press if the game is unpaused
         checkForPausePress();
     }
-    // don't allow unpause unless mosaic is done
-    else if (!mosaic_out)
-    {
+    else {
         // only check for pause menu presses if the game is paused
         checkForPauseMenu();
-        if (g_PauseChoice == PAUSE_OPTIONS_ANALOG) {
+        if (pauseChoice == PAUSE_OPTIONS_ANALOG) {
             analogAdjustmentScreen_input();
         }
-    }
-    if (mosaic_out) {
-        mosaic_out = mosaicOut(NBG1ON);
-    }
-    if (mosaic_in) {
-        mosaic_in = mosaicIn(NBG1ON);
     }
 }
 
@@ -74,14 +69,13 @@ void pause_draw(void)
 
     if(g_Game.isPaused == true)
     {
-        // TODO: draw story mode stats
         int options_y = 6;
         if (g_Game.gameMode == GAME_MODE_STORY) {
             jo_nbg0_printf(19, options_y, "PAWSED");
             options_y += 2;
             jo_nbg0_printf(15, options_y, "SCORE:%09d", g_Players[0].score.points + g_Players[0].score.total);
             options_y += 2;
-            jo_nbg0_printf(15, options_y, "CONTINUES: %i", g_Game.numContinues - g_Players[0].score.deaths);
+            jo_nbg0_printf(15, options_y, "CONTINUES:%i", g_Players[0].score.continues);
             options_y += 2;
         }
         else {
@@ -94,42 +88,32 @@ void pause_draw(void)
     }
 }
 
+//
+// Pause private functions
+//
+
 // pause the game
 void pauseGame(void)
 {
-    g_PauseChoice = 0;
+    pauseChoice = 0;
     slColOffsetOn(NBG1ON);
     slColOffsetAUse(OFF);
     slColOffsetBUse(NBG1ON);
     nbg1_rate = PAUSE_FADE;
     slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     if (g_GameOptions.mosaic_display) {
-        mosaic_out = true;
+        g_Transition.mosaic_out = true;
     }
     g_Game.isPaused = true;
-    mosaic_in_rate = MOSAIC_FAST_RATE;
+    g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
     pcm_play(g_Assets.startPcm8, PCM_PROTECTED, 6);
 }
-
-//
-// Pause private functions
-//
 
 // check if player 1 paused the game
 static void checkForPausePress(void)
 {
-    if (!g_Game.isActive || g_Game.selectStoryCharacter)
+    if (g_Game.selectStoryCharacter)
     {
-        if(g_Game.isPaused) // prevent getting locked in a pause state
-        {
-            // simply unpause
-            mosaic_in_rate = MOSAIC_FAST_RATE;
-            if (g_GameOptions.mosaic_display) {
-                mosaic_in = true;
-            }
-            slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
-            g_Game.isPaused = false;
-        }
         return;
     }
     if (jo_is_pad1_key_down(JO_KEY_START))
@@ -144,54 +128,58 @@ static void checkForPauseMenu(void)
     if (jo_is_pad1_key_down(JO_KEY_UP))
     {
         pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-        g_PauseChoice--;
+        pauseChoice--;
     }
 
     if (jo_is_pad1_key_down(JO_KEY_DOWN))
     {
         pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-        g_PauseChoice++;
+        pauseChoice++;
     } 
      
     if (jo_is_pad1_key_down(JO_KEY_LEFT))
     {
-        switch(g_PauseChoice)
+        switch(pauseChoice)
         {
-            // case PAUSE_OPTIONS_DEBUG:
-                // pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-                // g_GameOptions.debug_display = !g_GameOptions.debug_display;
-                // break;
+            #if ENABLE_DEBUG_MODE == 1
+            case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
+                g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                break;
+            #endif
             default:
                 break;
         }
     }
     else if (jo_is_pad1_key_down(JO_KEY_RIGHT))
     {
-        switch(g_PauseChoice)
+        switch(pauseChoice)
         {
-            // case PAUSE_OPTIONS_DEBUG:
-                // pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
-                // g_GameOptions.debug_display = !g_GameOptions.debug_display;
-                // break;
+            #if ENABLE_DEBUG_MODE == 1
+            case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.cursorPcm8, PCM_PROTECTED, 6);
+                g_GameOptions.debug_display = !g_GameOptions.debug_display;
+                break;
+            #endif
             default:
                 break;
         }
     }
     
     // keep pause screen choice in range
-    sanitizeValue(&g_PauseChoice, 0, PAUSE_OPTION_MAX);
+    sanitizeValue(&pauseChoice, 0, PAUSE_OPTION_MAX);
 
     if (jo_is_pad1_key_down(JO_KEY_START) || jo_is_pad1_key_down(JO_KEY_A) || jo_is_pad1_key_down(JO_KEY_C))
     {
         save_game_backup();
-        switch(g_PauseChoice)
+        switch(pauseChoice)
         {
             case PAUSE_OPTIONS_RESUME:
                 pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
-                mosaic_in_rate = MOSAIC_FAST_RATE;
+                g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
-                    mosaic_in = true;
+                    g_Transition.mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
@@ -200,9 +188,9 @@ static void checkForPauseMenu(void)
             case PAUSE_OPTIONS_RESTART:
                 pcm_play(g_Assets.nextPcm8, PCM_PROTECTED, 6);
                 // start a new game without going to title or team select
-                mosaic_in_rate = MOSAIC_FAST_RATE;
+                g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
-                    mosaic_in = true;
+                    g_Transition.mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 changeState(GAME_STATE_GAMEPLAY);
@@ -212,23 +200,24 @@ static void checkForPauseMenu(void)
                 pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 transitionState(GAME_STATE_UNINITIALIZED);
                 break;
-
-            // case PAUSE_OPTIONS_DEBUG:
-                // pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
-                // // simply unpause
-                // mosaic_in_rate = MOSAIC_FAST_RATE;
-                // if (g_GameOptions.mosaic_display) {
-                    // mosaic_in = true;
-                // }
-                // slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
-                // g_Game.isPaused = false;
-                // break;
+            #if ENABLE_DEBUG_MODE == 1
+            case PAUSE_OPTIONS_DEBUG:
+                pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
+                // simply unpause
+                g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
+                if (g_GameOptions.mosaic_display) {
+                    g_Transition.mosaic_in = true;
+                }
+                slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
+                g_Game.isPaused = false;
+                break;
+            #endif
             case PAUSE_OPTIONS_ANALOG:
                 pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
                 // simply unpause
-                mosaic_in_rate = MOSAIC_FAST_RATE;
+                g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
                 if (g_GameOptions.mosaic_display) {
-                    mosaic_in = true;
+                    g_Transition.mosaic_in = true;
                 }
                 slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
                 g_Game.isPaused = false;
@@ -243,9 +232,9 @@ static void checkForPauseMenu(void)
         save_game_backup();
         pcm_play(g_Assets.cancelPcm8, PCM_PROTECTED, 6);
         // simply unpause
-        mosaic_in_rate = MOSAIC_FAST_RATE;
+        g_Transition.mosaic_in_rate = MOSAIC_FAST_RATE;
         if (g_GameOptions.mosaic_display) {
-        mosaic_in = true;
+        g_Transition.mosaic_in = true;
         }
         slColOffsetB(NEUTRAL_FADE, NEUTRAL_FADE, NEUTRAL_FADE);
         g_Game.isPaused = false;
@@ -261,8 +250,10 @@ static void drawPauseMenu(int options_y)
     jo_nbg0_printf(options_x, options_y, "RESTART");
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "QUIT");
-    // options_y += 2;
-    // jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "DEBUG:ON" : "DEBUG:OFF");
+    #if ENABLE_DEBUG_MODE == 1
+    options_y += 2;
+    jo_nbg0_printf(options_x, options_y, g_GameOptions.debug_display ? "DEBUG:ON" : "DEBUG:OFF");
+    #endif
     options_y += 2;
     jo_nbg0_printf(options_x, options_y, "ANALOG ADJUSTMENT:");
     options_y += 1;
@@ -271,12 +262,12 @@ static void drawPauseMenu(int options_y)
 
 static void drawPauseMenuCursor(void)
 {
-    FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(cursor_angle))), toFIXED(8));
+    FIXED offset = jo_fixed_mult(jo_fixed_sin(jo_fixed_deg2rad(toFIXED(g_Game.cursor_angle))), toFIXED(8));
     cursor.pos.x = toFIXED(-124) + offset;
-    cursor.pos.y = toFIXED(-32 + (g_PauseChoice * 32)); // vertical position varies based on selection
+    cursor.pos.y = toFIXED(-32 + (pauseChoice * 32));
     my_sprite_draw(&cursor);
-    cursor_angle += 8;
-    if (cursor_angle > 360) {
-        cursor_angle = 0;
+    g_Game.cursor_angle += 8;
+    if (g_Game.cursor_angle > 360) {
+        g_Game.cursor_angle = 0;
     }
 }

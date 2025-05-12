@@ -159,7 +159,7 @@ static __jo_force_inline void	my_sprite_draw(Sprite *sprite) { // note: switched
 
 // increments 1 frame
 static __jo_force_inline bool static_animation(Sprite *sprite) {
-    if (JO_MOD_POW2(frame, FRAMERATE1) == 0) { // modulus
+    if (JO_MOD_POW2(g_Game.frame, FRAMERATE1) == 0) { // modulus
         sprite->anim1.frame++;
         sprite->spr_id = sprite->anim1.asset[sprite->anim1.frame];
     }
@@ -174,7 +174,7 @@ static __jo_force_inline bool static_animation(Sprite *sprite) {
 // loops through all frames based on powers of 2
 static __jo_force_inline void looped_animation_pow(Sprite *sprite, unsigned int framerate) {
         // move to an animation module
-        if (JO_MOD_POW2(frame, framerate) == 0) { // modulus
+        if (JO_MOD_POW2(g_Game.frame, framerate) == 0) { // modulus
             sprite->anim1.frame++;
             if (sprite->anim1.frame > sprite->anim1.max) {
                 sprite->anim1.frame = 0;
@@ -186,7 +186,7 @@ static __jo_force_inline void looped_animation_pow(Sprite *sprite, unsigned int 
 // loops through second animation based on modulus
 static __jo_force_inline void looped_animation_mod(Sprite *sprite, unsigned int framerate) {
         // move to an animation module
-        if (frame % framerate == 0) { // modulus
+        if (g_Game.frame % framerate == 0) { // modulus
             sprite->anim2.frame++;
             if (sprite->anim2.frame > sprite->anim2.max) {
                 sprite->anim2.frame = 0;
@@ -196,7 +196,7 @@ static __jo_force_inline void looped_animation_mod(Sprite *sprite, unsigned int 
 }
 
 static __jo_force_inline bool explode_animation(Sprite *sprite) {
-    if (frame % 6 == 0) { // modulus
+    if (g_Game.frame % 6 == 0) { // modulus
         sprite->anim2.frame++;
     }
     if (sprite->anim2.frame > sprite->anim2.max) {
@@ -218,6 +218,8 @@ static __jo_force_inline void sprite_frame_reset(Sprite *sprite) {
 void ball_animation_reset(Sprite *ball);
 
 void drawGoalSprites(Sprite *sprite, int sprite_id, int shadow_id, int zmode, int flip, int x, int y, int scale_y);
+
+void resetSpriteColors(void);
 
 // SPR_ATTRIBUTE
 // Format

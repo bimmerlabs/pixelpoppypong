@@ -1,6 +1,30 @@
 #include "nbg1.h"
 #include "../main.h"
 
+// palette for normal map calculations
+RgbPalette rgbBg0 = {
+    { {255, 203, 87}, {255, 113, 81}, {255, 165, 115}, {251, 31, 71}, {163, 191, 239}, {211, 217, 219}, {255, 237, 204}, {255, 255, 241}, 
+      {33, 77, 65}, {61, 95, 71}, {237, 205, 159}, {199, 177, 115}, {135, 137, 73}, {91, 121, 65}, {153, 151, 99}, {255, 255, 241} }
+};
+
+// buffer palette for writing to CRAM (populated at runtime)
+RgbBuff bufferBg0 = {
+    { 0, 0, 0, 0, 0, 0, 0, 0, 
+      0, 0, 0, 0, 0, 0, 0, 0 }
+};
+
+// palette for calculating color and lighting - hue, saturation, luminance (populated at runtime)
+HslPalette hslBg0 = {
+    { {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, 
+      {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0} }
+};
+
+// palette ranges - used with the palette group collection.
+PaletteRange p_rangeBg0  = { 0, 15 }; // for running the demo
+
+// tracks the accumulation of changes for the HSL color model
+GlobalHSL hsl_incBg0 = {0, 0, 0};
+
 // 15 bit palettes (FIXED)
 // dawn
 static RgbBuff rgbBg01 = {
@@ -47,6 +71,8 @@ void init_nbg1_img(void) {
     
     slZoomNbg1(toFIXED(0.50), toFIXED(1.00));
 }
+
+// TODO: need hsl inits and color functions from bg0.h
 
 void update_nbg1_palette(void) {
     switch (current_background) {

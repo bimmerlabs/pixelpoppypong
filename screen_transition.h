@@ -15,31 +15,39 @@
 #define MOSAIC_SLOW_RATE  4
 #define MOSAIC_FAST_RATE  2
 
-extern unsigned int g_TransitionTimer;
-extern bool transition_out;
-extern bool transition_in;
+extern Sint16 nbg0_rate;
 extern Sint16 nbg1_rate;
-extern Sint16 nbg1_rate;
-extern Sint8 fadeDirection;
-extern Sint8 fade_in_rate;
-extern Sint8 fade_out_rate;
-extern Uint8 mosaic_in_rate;
-extern unsigned int g_FadeTimer;
-extern bool fade_out;
-extern bool story_fade_out;
-extern bool fade_in;
-extern bool story_fade_in;
-extern bool slow_fade_in;
-extern bool explosion_flash;
+extern Sint16 spr_rate;
 
-extern unsigned short mosaic_x;
-extern unsigned short mosaic_y;
-extern bool mosaic_out;
-extern bool mosaic_in;
+typedef struct _TRANSITION
+{
+	unsigned int timer;
+	
+	bool all_out;
+	bool all_in;
+	
+	Sint8 fade_in_rate;
+	Sint8 fade_out_rate;
+	bool fade_out;
+	bool fade_in;
+	bool story_fade_out;
+	bool story_fade_in;
+	bool slow_fade_in;
+	bool explosion_flash;
 
-extern bool music_out;
-extern bool music_in;
+	Uint8 mosaic_in_rate;
+	unsigned short mosaic_x;
+	unsigned short mosaic_y;
+	bool mosaic_out;
+	bool mosaic_in;
 
+	bool music_out;
+	bool music_in;
+} TRANSITION;
+
+extern TRANSITION g_Transition;
+
+void initTransitionStruct(void);
 void screenTransition_init(Sint16 nbg0, Sint16 nbg1, Sint16 spr);
 void screenTransition_update(void);
 bool transitionOut(void);

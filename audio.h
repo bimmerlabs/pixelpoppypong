@@ -14,10 +14,6 @@
 #define MATCH_TRACK              10
 #define NAME_ENTRY_TRACK         11
 #define CONTINUE_TRACK           12
-// #define GAME_TRACK                5
-// #define PAUSE_TRACK               6
-// #define VICTORY_TRACK             7
-// #define DEATH_TRACK               8
 
 #define AUDIO_FADE_TIMER (3 * 60)
 

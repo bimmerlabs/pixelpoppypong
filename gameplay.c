@@ -5,18 +5,22 @@
 #include "storymode.h"
 #include "backup.h"
 #include "AI.h"
-bool start_gameplay_timer = false;
-bool round_start = false;
-
-Item g_item = {0};
-
-static bool draw_demo_text = true;
-bool play_continue_track = false;
+Item g_item = {0};
 // TODO: implement this function
 // static bool isRoundOver(void);
 
-bool explode_ball = false;
-
+GAMEPLAY g_Gameplay = {0};void initGameplayStruct(void) {
+    g_Gameplay.GameTimer = 0;
+    g_Gameplay.BombTimer = 0;
+    // g_Gameplay.RoundOverTimer = 0; // NOT USED
+    g_Gameplay.DemoTimer = 0;
+    g_Gameplay.isGameOver = false; // NOT USED
+    g_Gameplay.explodeBomb = false;
+    
+    g_Gameplay.draw_demo_text = false;
+    g_Gameplay.start_gameplay_timer = false;
+    g_Gameplay.round_start = false;
+}
 void gameplay_init() {
     if (g_Game.nextState != GAME_STATE_DEMO_LOOP && g_Game.lastState != GAME_STATE_GAMEPLAY) {
         if (g_Game.gameMode == GAME_MODE_STORY) {
@@ -31,21 +35,21 @@ void gameplay_init() {
         {
             case GAME_MODE_BATTLE:
                 initVsModePlayers();
-                fade_in = true;
+                g_Transition.fade_in = true;
                 break;
             case GAME_MODE_CLASSIC:
                 initVsModePlayers();
-                fade_in = true;
+                g_Transition.fade_in = true;
                 break;
             case GAME_MODE_STORY:
                 initStoryMode();
-                story_fade_in = true;
+                g_Transition.story_fade_in = true;
                 break;
             default:
                 break;
         }
     }
-    
+    initGameplayStruct();
     resetTeamState(); // only needed if restarting the game
     
     resetSpriteColors();
@@ -55,7 +59,7 @@ void gameplay_init() {
     setGoalSize();
 
     if (g_GameOptions.mosaic_display) {
-        mosaic_in = true;
+        g_Transition.mosaic_in = true;
     }
     if (g_GameOptions.mesh_display) {
         menu_bg1.mesh = MESHon;
@@ -64,14 +68,11 @@ void gameplay_init() {
     else {
         menu_bg1.mesh = MESHoff;
     }
-    music_in = true;
-    transition_in = true;
-    play_continue_track = false;
+    g_Transition.music_in = true;
+    g_Transition.all_in = true;
 
     resetPlayerScores();
     getContinues();
-    
-    explode_ball = false;
     reset_ball_movement(&pixel_poppy);
     sprite_frame_reset(&pixel_poppy);
     pixel_poppy.isColliding = false;
@@ -92,17 +93,18 @@ void gameplay_init() {
     g_Game.countofRounds = 0;
     g_Game.isGoalScored = false;
     g_Game.winner = -2;
+    g_Game.explodeBall = false;
     
     // reset timers
     setGameTimer();
     
-    slScrPosNbg1(toFIXED(0), toFIXED(0));
+    slScrPosNbg1(FIXED_0, FIXED_0);
     
     menu_bg1.spr_id = menu_bg1.anim1.asset[4];
     set_spr_position(&menu_bg1, 0, -195, 85);
     set_spr_scale(&menu_bg1, 36, 20);
     
-    explosion_flash = false;    
+    g_Transition.explosion_flash = false;    
     reset_audio(MAX_VOLUME);
     playCDTrack(BEGIN_GAME_TRACK, false);
 }
@@ -115,39 +117,39 @@ void demo_init(void) {
     initTeams();
     initDemoPlayers();
     g_Game.selectStoryCharacter = false;
-    g_Game.DemoTimer = 0;
+    g_Gameplay.DemoTimer = 0;
     g_Game.gameMode = GAME_MODE_BATTLE;
-    fade_in = true;
+    g_Transition.fade_in = true;
 }
 void setGameTimer(void) {
     if (g_Game.countofRounds == 0) {
         switch(g_Game.gameMode)
         {
             case GAME_MODE_BATTLE:
-                g_Game.GameTimer = TIMEOUT_BATTLE;
+                g_Gameplay.GameTimer = TIMEOUT_BATTLE;
                 break;
             case GAME_MODE_CLASSIC:
-                g_Game.GameTimer = TIMEOUT_CLASSIC;
+                g_Gameplay.GameTimer = TIMEOUT_CLASSIC;
                 break;
             case GAME_MODE_STORY:
                 switch(g_Game.gameDifficulty)
                 {
                     case GAME_DIFFICULTY_EASY:
-                        g_Game.GameTimer = TIMEOUT_STORY_EASY;
+                        g_Gameplay.GameTimer = TIMEOUT_STORY_EASY;
                         break;
                     case GAME_DIFFICULTY_MEDIUM:
-                        g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                        g_Gameplay.GameTimer = TIMEOUT_STORY_MEDIUM;
                         break;
                     case GAME_DIFFICULTY_HARD:
-                        g_Game.GameTimer = TIMEOUT_STORY_HARD;
+                        g_Gameplay.GameTimer = TIMEOUT_STORY_HARD;
                         break;
                     default:
-                        g_Game.GameTimer = TIMEOUT_STORY_MEDIUM;
+                        g_Gameplay.GameTimer = TIMEOUT_STORY_MEDIUM;
                         break;
                 }
                 break;
             default:
-                g_Game.GameTimer = TIMEOUT_BATTLE;
+                g_Gameplay.GameTimer = TIMEOUT_BATTLE;
                 break;
         }
     }
@@ -168,23 +170,23 @@ void demo_init(void) {
                 break;
         }
         if (touchedBy[0].touchCount > addedTime) {
-            g_Game.GameTimer += touchedBy[0].touchCount;
+            g_Gameplay.GameTimer += touchedBy[0].touchCount;
         }
         else {
-            g_Game.GameTimer += addedTime;
+            g_Gameplay.GameTimer += addedTime;
         }
-        if (g_Game.GameTimer > 999) {
-            g_Game.GameTimer = 999;
+        if (g_Gameplay.GameTimer > 999) {
+            g_Gameplay.GameTimer = 999;
         }
     }
     g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL;
     g_Game.dropBallTimer = DROP_BALL_TIME_NORMAL;
     g_Game.time_over = false;
-    start_gameplay_timer = false;
-    round_start = false;
+    g_Gameplay.start_gameplay_timer = false;
+    g_Gameplay.round_start = false;
     g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
     g_Game.BeginTimer = 0;
-    convertNumberToDigits(g_Game.GameTimer);
+    convertNumberToDigits(g_Gameplay.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
@@ -202,40 +204,37 @@ void demo_update(void)
     {
         return;
     }
-    if (JO_MOD_POW2(frame, 8) == 0) { // modulus
-        draw_demo_text = !draw_demo_text;
+    if (JO_MOD_POW2(g_Game.frame, 8) == 0) { // modulus
+        g_Gameplay.draw_demo_text = !g_Gameplay.draw_demo_text;
     }
-    if (draw_demo_text) {
+    if (g_Gameplay.draw_demo_text) {
         jo_nbg0_printf(20, 27, "DEMO!");
     }
-    g_Game.DemoTimer++;
+    g_Gameplay.DemoTimer++;
     playerAI(&pixel_poppy);
-    if(g_Game.DemoTimer > DEMO_TIME)
+    if(g_Gameplay.DemoTimer > DEMO_TIME)
     {
-        g_Game.DemoTimer = 0;
+        g_Gameplay.DemoTimer = 0;
         transitionState(GAME_STATE_UNINITIALIZED);
     }
 }void gameplay_timer(void)
 {
-    if (g_Game.BeginTimer > g_Game.roundBeginTimer && !start_gameplay_timer) {
-        start_gameplay_timer = true;
+    if (g_Game.BeginTimer > g_Game.roundBeginTimer && !g_Gameplay.start_gameplay_timer) {
+        g_Gameplay.start_gameplay_timer = true;
         g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL; // reset if the ball explodes
     }
     if (g_Game.BeginTimer > g_Game.dropBallTimer && !g_Game.isBallActive) {
         g_Game.isBallActive = drop_ball_animation(&pixel_poppy);
     }
-    if (!start_gameplay_timer) {
+    if (!g_Gameplay.start_gameplay_timer) {
         g_Game.BeginTimer++;
-        round_start = true;
+        g_Gameplay.round_start = true;
         return;
     }
     
-    // start round    if (round_start) {
-        round_start = startGameplay(); // returns true until ball is active
+    // start round    if (g_Gameplay.round_start) {
+        g_Gameplay.round_start = startGameplay(); // returns true until ball is active
     }
-    // else {
-        // round_start = false;
-    // }
     
     if (g_Game.isRoundOver) {
         return;
@@ -243,17 +242,17 @@ void demo_update(void)
     
     // game timer
     // TODO: minutes/seconds?
-    convertNumberToDigits(g_Game.GameTimer);
+    convertNumberToDigits(g_Gameplay.GameTimer);
     timer_num100.spr_id = timer_num10.anim1.asset[hunds];
     timer_num10.spr_id = timer_num10.anim1.asset[tens];
     timer_num1.spr_id = timer_num1.anim1.asset[ones];
     
-    if (g_Game.GameTimer > 0 && frame % 60 == 0) { // modulus
-        g_Game.GameTimer--;
-        if (g_Game.GameTimer <= 10)
+    if (g_Gameplay.GameTimer > 0 && g_Game.frame % 60 == 0) { // modulus
+        g_Gameplay.GameTimer--;
+        if (g_Gameplay.GameTimer <= 10)
             pcm_play(g_Assets.countdownPcm8, PCM_PROTECTED, 7);
     }
-    else if (g_Game.GameTimer == 0) {
+    else if (g_Gameplay.GameTimer == 0) {
         g_Game.time_over = true;
     }
     
@@ -263,43 +262,43 @@ void demo_update(void)
             g_item.timer[i]--;
         }
     }
-    // if (!explode_ball && !g_GameOptions.testCollision) {
-    if (!explode_ball) {
+    // if (!g_Game.explodeBall && !g_GameOptions.testCollision) {
+    if (!g_Game.explodeBall) {
         ballTtouchTimer++;
     }
-    if (ballTtouchTimer == BALL_TOUCH_TIMEOUT && !explode_ball) {
+    if (ballTtouchTimer == BALL_TOUCH_TIMEOUT && !g_Game.explodeBall) {
         stopBallMovement(&pixel_poppy);
-        explode_ball = true;
-        explosion_flash = true;
+        g_Game.explodeBall = true;
+        g_Transition.explosion_flash = true;
         pixel_poppy.pos.r = EASY_BALL_RADIUS;
         pixel_poppy.scl.x = toFIXED(2.0);
         pixel_poppy.scl.y = toFIXED(2.0);
     }
     
-    if (explode_ball) {
-        if (explosion_flash) {
-            explosion_flash = explosionEffect();
+    if (g_Game.explodeBall) {
+        if (g_Transition.explosion_flash) {
+            g_Transition.explosion_flash = explosionEffect();
         }
-        explode_ball = explode_animation(&pixel_poppy);
-        if (!explode_ball) {
+        g_Game.explodeBall = explode_animation(&pixel_poppy);
+        if (!g_Game.explodeBall) {
             g_Game.roundBeginTimer = ROUND_BEGIN_TIME_FAST;
             g_Game.dropBallTimer = DROP_BALL_TIME_FAST;
             ballTtouchTimer = 0;
             initPixelPoppy();
             resetPlayerAttacks();
-            start_gameplay_timer = false;
+            g_Gameplay.start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
         }
     }        
     // bomb explodes at a specific time
-    if (g_Game.BombTimer == 0 && !g_Game.explodeBomb) {
-        g_Game.explodeBomb = true;
-        explosion_flash = true;
+    if (g_Gameplay.BombTimer == 0 && !g_Gameplay.explodeBomb) {
+        g_Gameplay.explodeBomb = true;
+        g_Transition.explosion_flash = true;
     }
     else {
-        g_Game.BombTimer--;
+        g_Gameplay.BombTimer--;
     }
 }
 void gameplay_draw(void)
@@ -309,8 +308,12 @@ void demo_update(void)
         return;
     }
     
-    if (fade_out) { // works for both ball and bomb..
-        fade_out = fadeOut(8, NEUTRAL_FADE);
+    #if ENABLE_DEBUG_MODE == 1
+    gameplayDebugText();
+    #endif
+    
+    if (g_Transition.fade_out) { // works for both ball and bomb..
+        g_Transition.fade_out = fadeOut(8, NEUTRAL_FADE);
     }
                    
     if (g_Game.endDelayTimer == 0) {
@@ -331,8 +334,9 @@ void demo_update(void)
             if (g_Game.isRoundOver) {
                 pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 6); // play different sound if player wins vs loses?
                 g_Game.isRoundOver = false;
+                g_Gameplay.isGameOver = true;
             }
-            if (frame == 240) { // this is a hack
+            if (g_Game.frame == 240) { // this is a hack
                 if (g_Game.gameMode == GAME_MODE_STORY &&  g_Players[0].subState == PLAYER_STATE_ACTIVE) {
                     g_Players[0].score.points = g_Players[0].score.total;
                     if (g_Game.nextState == GAME_STATE_NAME_ENTRY) {
@@ -370,10 +374,10 @@ void demo_update(void)
     else if (g_Game.currentNumPlayers == 1) {
         if (!g_Game.isRoundOver) {
             g_Game.isRoundOver = true;
-            frame = 0; // this is a hack
+            g_Game.frame = 0; // this is a hack
             g_Game.winner = determineWinner();
-            transition_out = true;
-            story_fade_out = true;
+            g_Transition.all_out = true;
+            g_Transition.story_fade_out = true;
         }       
             switch(g_Game.gameMode)
             {
@@ -405,7 +409,6 @@ void demo_update(void)
                     break;
                 case GAME_MODE_STORY:
                     if (g_Game.winner == 0 && g_Game.countofRounds == MAX_ROUNDS) {
-                        // this has to be more complex to move on to the next round
                         jo_nbg0_printf(17, 10, "GAME OVER!");
                         tallyScore();                        
                         if (g_Game.endDelayTimer < WIN_GAME_DELAY_TIMEOUT)
@@ -415,11 +418,10 @@ void demo_update(void)
                     else if (g_Game.winner == -1) {
                         g_Game.endDelayTimer--;
                         // check for continues
-                        if (g_Players[0].score.deaths < (g_Game.numContinues + 1)) {
+                        if (g_Players[0].score.continues > 0) {
                             g_Game.nextState = GAME_STATE_GAMEPLAY;
-                            play_continue_track = true;
                             jo_nbg0_printf(17, 14, "TRY AGAIN!");
-                            jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Game.numContinues - g_Players[0].score.deaths);
+                            jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Players[0].score.continues);
                             
                         }
                         else {
@@ -444,12 +446,12 @@ void demo_update(void)
         if (!g_Game.isRoundOver) {
             stopBallMovement(&pixel_poppy);
             g_Game.isRoundOver = true;
-            frame = 0; // this is a hack
-            transition_out = true;
-            story_fade_out = true;
+            g_Game.frame = 0; // this is a hack
+            g_Transition.all_out = true;
+            g_Transition.story_fade_out = true;
         }       
         jo_nbg0_printf(16, 14, "OUTTA TIME!");
-        g_Game.GameTimer = 60;
+        g_Gameplay.GameTimer = 60;
         g_Game.endDelayTimer--;
             switch(g_Game.gameMode)
             {
@@ -465,13 +467,12 @@ void demo_update(void)
                     g_Game.winner = -1;
                     // kill player 1
                     if (g_Players[0].subState == PLAYER_STATE_ACTIVE) {
-                        g_Players[0].score.deaths++;
+                        g_Players[0].score.continues--;
                         g_Players[0].subState = PLAYER_STATE_DEAD;
                     }
-                    if (g_Players[0].score.deaths < (g_Game.numContinues + 1)) {
+                    if (g_Players[0].score.continues >= 0) {
                         g_Game.nextState = GAME_STATE_GAMEPLAY;
-                        play_continue_track = true;
-                        jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Game.numContinues - g_Players[0].score.deaths);
+                        jo_nbg0_printf(12, 16, "REMAINING CONTINUES:%i", g_Players[0].score.continues);
                     }
                     else {
                         jo_nbg0_printf(17, 16, "YOU LOSE..");
@@ -484,11 +485,11 @@ void demo_update(void)
     } 
     else if (g_Game.selectStoryCharacter) {
         if (g_Game.countofRounds > 0) {
-            transition_out = true;
-            mosaic_out = true;
+            g_Transition.all_out = true;
+            g_Transition.mosaic_out = true;
         }
         else {
-            mosaic_in = false;
+            g_Transition.mosaic_in = false;
         }
         storySelectUpdate();
     } 
@@ -505,80 +506,12 @@ void demo_update(void)
                 drawGameUI();
                 break;
             case GAME_MODE_STORY:
-                drawVsMode(); // eliminated story mode for now
+                drawVsMode();
                 drawGameUI();
                 break;
             default:
                 break;
         }
-    }
-}
-
-// TODO: move to scores?
-void tallyScore(void) {
-    unsigned int thresholds[] = {100000, 10000, 1000, 50, 1};
-    jo_nbg0_printf(10, 12, "ROUND SCORE:%09d", g_Players[0].score.points);
-    jo_nbg0_printf(10, 14, "TOTAL SCORE:%09d", g_Players[0].score.total);
-    if (g_Game.countofRounds < MAX_ROUNDS) {
-        draw_heart_element(&heart, &g_Players[0], -64, 24, 16);
-    }
-    
-    for (Uint8 i = 0; i < 5; i++) {
-        unsigned int threshold = thresholds[i];
-        if (g_Players[0].score.points > threshold) {
-            pcm_play(g_Assets.scoreAddPcm8, PCM_PROTECTED, 7);
-            g_Players[0].score.points -= threshold;
-            g_Players[0].score.total += threshold;
-            return;
-        }
-    }
-    // additional lives        if (g_Game.endDelayTimer < LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
-        unsigned int millions = g_Players[0].score.total / 1000000;
-        if (millions > g_Players[0].score.lastMillion) {
-            unsigned int livesToAdd = millions - g_Players[0].score.lastMillion;
-            for (unsigned int i = 0; i < livesToAdd; i++) {
-                if (g_Players[0].numLives < g_Players[0].totalLives * 2) {
-                    g_Players[0].numLives += 1;
-                }
-            }
-            g_Players[0].score.lastMillion = millions;      
-        }
-    }
-    // additional time;    if (g_Game.endDelayTimer < LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
-        Uint16 addedTime = 0;
-        switch(g_Game.gameDifficulty)
-        {
-            case GAME_DIFFICULTY_EASY:
-                addedTime = 30;
-                break;
-            case GAME_DIFFICULTY_MEDIUM:
-                addedTime = 20;
-                break;
-            case GAME_DIFFICULTY_HARD:
-                addedTime = 10;
-                break;
-            default:
-                break;
-        }
-        if (touchedBy[0].touchCount > addedTime) {
-            addedTime = touchedBy[0].touchCount;     
-        }
-        jo_nbg0_printf(14, 18, "EXTRA TIME:%i", addedTime);
-    }
-    if (g_Game.endDelayTimer == LIFE_COUNT_DELAY_TIMEOUT && g_Game.countofRounds < MAX_ROUNDS) {
-        pcm_play(g_Assets.startPcm8, PCM_PROTECTED, 7);
-    }  
-    else if (g_Game.endDelayTimer == WIN_GAME_DELAY_TIMEOUT && g_Game.countofRounds == MAX_ROUNDS) {
-        pcm_play(g_Assets.winPcm8, PCM_PROTECTED, 7);
-    }  
-
-    if (g_Players[0].score.points > 0) {
-        pcm_play(g_Assets.scoreTotalPcm8, PCM_PROTECTED, 7);
-        g_Players[0].score.points--;
-        g_Players[0].score.total++;
-    } 
-    else {
-        g_Game.endDelayTimer--;
     }
 }
 
@@ -682,10 +615,10 @@ void reset_ball_movement(Sprite *ball) {
     ball_velocity = 0;
     ball_falling = true;
     ball_bounce = false;
-    ball->pos.x = toFIXED(0);
+    ball->pos.x = FIXED_0;
     ball->pos.y = toFIXED(-280);
-    ball->vel.x = toFIXED(0);
-    ball->vel.y = toFIXED(0);
+    ball->vel.x = FIXED_0;
+    ball->vel.y = FIXED_0;
     ball->vel.z = 0;
     
     // big head option (only with 2 players)    
@@ -694,30 +627,11 @@ void reset_ball_movement(Sprite *ball) {
         ball->pos.r = EASY_BALL_RADIUS;
         ball->scl.x = toFIXED(2.0);
         ball->scl.y = toFIXED(2.0);
-        return;
     }
-    switch(g_Game.gameDifficulty)
-    {
-        case GAME_DIFFICULTY_EASY:
-            if (g_Game.numPlayers > 2) {
-                ball->pos.r = NORMAL_BALL_RADIUS;
-                ball->scl.x = toFIXED(1.0);
-                ball->scl.y = toFIXED(1.1);
-            }
-            else {
-                // ball->pos.r = EASY_BALL_RADIUS;
-                // ball->scl.x = toFIXED(2.0);
-                // ball->scl.y = toFIXED(2.0);
-                ball->pos.r = NORMAL_BALL_RADIUS;
-                ball->scl.x = toFIXED(1.0);
-                ball->scl.y = toFIXED(1.1);
-            }
-            break;
-        default:
-            ball->pos.r = NORMAL_BALL_RADIUS;
-            ball->scl.x = toFIXED(1.0);
-            ball->scl.y = toFIXED(1.1);
-            break;
+    else {
+        ball->pos.r = NORMAL_BALL_RADIUS;
+        ball->scl.x = toFIXED(1.0);
+        ball->scl.y = toFIXED(1.1);
     }
 }
 // TODO:  implement function!
@@ -770,10 +684,10 @@ void gameplay_update(void)
         // TODO: implement this!!    
     // if(g_Game.isRoundOver == true)
     // {
-        // g_Game.RoundOverTimer--;
+        // g_Gameplay.RoundOverTimer--;
 
         // // check if it's time to go to the pause screen
-        // if(g_Game.RoundOverTimer <= 0)
+        // if(g_Gameplay.RoundOverTimer <= 0)
         // {
             // g_Game.isPaused = true;
         // }
@@ -803,7 +717,7 @@ void    demo_input(void)	{
     if (jo_is_pad1_key_down(JO_KEY_START)) {
         g_Game.lastState = GAME_STATE_DEMO_LOOP;
         transitionState(GAME_STATE_TITLE_SCREEN);
-        g_Game.DemoTimer = 0;
+        g_Gameplay.DemoTimer = 0;
     }
 }
 
@@ -815,11 +729,11 @@ bool drop_ball_animation(Sprite *ball) {
     if (ball_falling && !ball_bounce) {
         pcm_play(g_Assets.dropPcm8, PCM_PROTECTED, 6);
         if (ball_velocity < BALL_VELOCITY) {
-            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
-                ball_velocity += toFIXED(1);
+            if (JO_MOD_POW2(g_Game.frame, 2) == 0) { // modulus
+                ball_velocity += FIXED_1;
             }
         }              
-        if (ball->pos.y < toFIXED(0)) {
+        if (ball->pos.y < FIXED_0) {
             ball->pos.y += ball_velocity;
         }
         // ball has hit the "ground"
@@ -852,13 +766,13 @@ bool drop_ball_animation(Sprite *ball) {
     // falling again
     else if (!ball_bounce && !ball_falling) {
         if (ball_velocity < BALL_VELOCITY) {
-            if (JO_MOD_POW2(frame, 2) == 0) { // modulus
+            if (JO_MOD_POW2(g_Game.frame, 2) == 0) { // modulus
                 ball_velocity += toFIXED(1.5);
             }
             
         }
         // final resting place
-        if (ball->pos.y < toFIXED(0)) {
+        if (ball->pos.y < FIXED_0) {
             ball->pos.y += ball_velocity;
         }
         else {

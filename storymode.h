@@ -22,6 +22,7 @@ extern const char *characterQuotes[];
 void initContinue(void);
 void initNextRound(void);
 void storySelectUpdate(void);
+void tallyScore(void);
 
 static __jo_force_inline void drawCharacterList(void) {
     my_sprite_draw(&menu_bg2);
@@ -35,5 +36,3 @@ static __jo_force_inline void drawCharacterList(void) {
         character_pos_y -= CHARACTER_POS_OFFSET;
     }
 }
-
-void resetSpriteColors(void);

@@ -39,7 +39,6 @@
 #include "title_screen.h"
 #include "team_select.h"
 // #include "character_select.h"
-#include "debug.h"
 #include "objects/player.h"
 #include "BG_DEF/nbg1.h"
 #include "BG_DEF/sprite_colors.h"
@@ -48,10 +47,6 @@
 #include "name_entry.h"
 
 GAME g_Game = {0};
-
-jo_datetime now;
-
-Uint8 frame = 0;
 
 // explcitly create callback names so they can be added / removed as neccesary?
 int run_once_callback = 0;
@@ -77,7 +72,59 @@ GameOptions g_GameOptions = {
     .reservedInt = 0,
 };
 
-bool releaseCanidate = true;
+void initGame(void) {
+    g_Game.frame = 1, // frame counter
+    g_Game.cursor_angle = 0, // for title & pawsed menus
+    
+    // current game state
+    g_Game.gameState = GAME_STATE_UNINITIALIZED;
+    g_Game.nextState = GAME_STATE_UNINITIALIZED;
+    g_Game.lastState = GAME_STATE_UNINITIALIZED;
+
+    // number of players
+    g_Game.minPlayers = 0;
+    g_Game.maxPlayers = 0;
+    g_Game.numPlayers = 0;
+    g_Game.currentNumPlayers = 0,
+    
+    // classic, story, battle
+    g_Game.gameMode = 0;
+
+    // easy, medium, hard
+    g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
+        
+    // TIMERS
+    g_Game.endDelayTimer = 0;
+    g_Game.BeginTimer = 0;
+    g_Game.roundBeginTimer = 0;
+    g_Game.dropBallTimer = 0;
+    // g_Game.transitionOutTimer = 0;
+    g_Game.time_over = false;
+
+    g_Game.selectStoryCharacter = false;
+
+    // is the game loading?
+    g_Game.isLoading = false;
+    g_Game.isSoundLoading = false;
+
+    // is the game is paused?
+    g_Game.isPaused = false;
+
+    // did somebody score a goal?
+    g_Game.isGoalScored = false;
+
+    // is the game finished?
+    g_Game.isRoundOver = false;
+    g_Game.countofRounds = 0;
+   
+    g_Game.winner = -2;
+    
+    // is the game playing?
+    g_Game.isActive = false;
+    g_Game.isBallActive = false;
+    
+    g_Game.explodeBall = false;
+}
 
 void loading_screen(void)
 {
@@ -92,12 +139,16 @@ void loading_screen(void)
         jo_nbg0_printf(17, 12, "LOADING!");
         
         if (g_Game.isSoundLoading) {
+            #if ENABLE_DEBUG_MODE == 1
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(15, 14, "SOUNDFX: %i", numberPCMs);
             }
             else {
+            #endif
                 jo_nbg0_printf(17, 14, "SOUNDFX..");
+            #if ENABLE_DEBUG_MODE == 1
             }
+            #endif
             // Generate dot string
             char dots[50];
             for (int i = 0; i < numberPCMs; i++) {
@@ -108,12 +159,16 @@ void loading_screen(void)
             jo_nbg0_printf(0, 15, "%s", dots);            
         }
         else {
+            #if ENABLE_DEBUG_MODE == 1
             if (g_GameOptions.debug_mode) {
                 jo_nbg0_printf(15, 14, "SPRITES: %i", jo_sprite_count());
             }
             else {
+            #endif
                 jo_nbg0_printf(17, 14, "SPRITES..");
+            #if ENABLE_DEBUG_MODE == 1
             }
+            #endif
             // loading bar      
             int sprite_count = jo_sprite_count()/3;
             // Clamp sprite count to prevent overflow
@@ -134,18 +189,21 @@ void loading_screen(void)
 }
 
 void main_loop(void) {
-    frame++; // this controls a lot of logic, drawing, & timing..
-    if (frame > 240)
-        frame = 1;
+    g_Game.frame++; // this controls a lot of logic, drawing, & timing..
+    if (g_Game.frame > 240)
+        g_Game.frame = 1;
     jo_nbg0_clear(); // clear text before every frame is drawn
     gameScore_draw();
+    #if ENABLE_DEBUG_MODE == 1
     debux_text();
+    #endif
     loading_screen();
 }
 
 // returns to title screen if player one presses ABC+Start
 void abcStart_callback(void)
 {
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_mode) {
         // manually switch states
         if (jo_is_pad1_key_down(JO_KEY_Z) && g_Game.lastState != GAME_STATE_PPP_LOGO) {
@@ -156,6 +214,7 @@ void abcStart_callback(void)
             transitionState(g_Game.nextState);
         }
     }
+    #endif
     if(g_Game.gameState == GAME_STATE_UNINITIALIZED || g_Game.gameState == GAME_STATE_TRANSITION)
     {        
         return;
@@ -228,7 +287,7 @@ void my_color_calc(void)
         }
         case GAME_STATE_TITLE_SCREEN: {
             if (do_update_logo1) {
-                update_palette_logo1 = update_sprites_color(&p_rangeLogo);
+                update_palette_logo1 = update_sprites_color(&p_rangeLogo, HSL_LOGO);
                 do_update_logo1 = false;
             }
             break;

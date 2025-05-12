@@ -7,6 +7,20 @@
 
 #define FONT_CHARS 30
 
+typedef enum _HSL_INC
+{
+    HSL_PLAYER = 0,
+    HSL_GOAL,
+    HSL_LOGO,
+    HSL_MENU,
+    HSL_CURSOR,
+    HSL_METER,
+    HSL_SHROOM,
+    HSL_BOMB,
+    HSL_POPPY,
+    HSL_MAX,
+} HSL_INC;
+
 extern bool do_update_All;
 extern bool do_update_font2All;
 extern bool do_update_ppplogo;
@@ -38,7 +52,7 @@ extern bool update_palette_bomb;
 extern bool update_palette_shroom;
 
 // tracks the accumulation of changes for the HSL color model
-extern GlobalHSL hsl_incSprites;
+extern GlobalHSL hsl_incSprites[HSL_MAX]; // TODO: use array so multiple objects can be calculated at the same time
 
 extern HslPalette hslSprites;
 
@@ -66,7 +80,7 @@ void init_sprites_img(void);
 
 bool calculate_sprites_color(PaletteRange *range);
 
-bool update_sprites_color(PaletteRange *range);
+bool update_sprites_color(PaletteRange *range, unsigned char hsl_id);
 
 bool update_sprites_palette(PaletteRange *range);
 
@@ -80,7 +94,7 @@ void update_ppplogo_palette(void);
 static inline void updateAllColors(void) {
 	if (!do_update_All)
 		return;
-	update_palette_All = update_sprites_color(&p_rangeSpritesAll);
+	update_palette_All = update_sprites_color(&p_rangeSpritesAll, HSL_MAX);
 	do_update_All = false;
 }
 static inline void updateAllPalette(void) {
@@ -92,19 +106,19 @@ static inline void updateAllPalette(void) {
 // title screen menu
 static inline void updateTitleMenuColors(void) {
 	if (do_update_menu1) {
-		update_palette_menu1 = update_sprites_color(&p_rangeMenu1);
+		update_palette_menu1 = update_sprites_color(&p_rangeMenu1, HSL_MENU);
 		do_update_menu1 = false;
 	}
 	if (do_update_menu2) {
-		update_palette_menu2 = update_sprites_color(&p_rangeMenu2);
+		update_palette_menu2 = update_sprites_color(&p_rangeMenu2, HSL_MENU);
 		do_update_menu2 = false;
 	}
 	if (do_update_menu3) {
-		update_palette_menu3 = update_sprites_color(&p_rangeMenu3);
+		update_palette_menu3 = update_sprites_color(&p_rangeMenu3, HSL_MENU);
 		do_update_menu3 = false;
 	}
 	if (do_update_menu4) {
-		update_palette_menu4 = update_sprites_color(&p_rangeMenu4);
+		update_palette_menu4 = update_sprites_color(&p_rangeMenu4, HSL_MENU);
 		do_update_menu4 = false;
 	}
 }
@@ -126,13 +140,13 @@ static inline void updateTitleMenuPalette(void) {
 // team select menu
 static inline void updateTeamSelectColors(void) {
 	if (do_update_PmenuAll) {
-		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll);
+		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll, HSL_CURSOR);
 		do_update_PmenuAll = false;
 	}
 	// cursors
 	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
 		if (do_update_Pmenu[i]) {
-			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
+			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i], HSL_CURSOR);
 			do_update_Pmenu[i] = false;
 		}
 	}
@@ -152,22 +166,22 @@ static inline void updateTeamSelectPalette(void) {
 // gameplay
 static __jo_force_inline void updateGameColors(void) {
 	if (do_update_shroom) {
-		update_palette_shroom = update_sprites_color(&p_rangeShroom);
+		update_palette_shroom = update_sprites_color(&p_rangeShroom, HSL_SHROOM);
 		do_update_shroom = false;
 	}
 	for (Uint8 i = 0; i < MAX_PLAYERS; i++) {
 		// power meter
 		if (do_update_Pmenu[i]) {
-			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
+			update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i], HSL_CURSOR);
 			do_update_Pmenu[i] = false;
 		}
 		if (update_palette_Goals[i]) {
-			update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i]);
+			update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i], HSL_GOAL);
 			do_update_Goals[i] = false;
 		}
 	}
 	if (do_update_PmenuAll) {
-		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll);
+		update_palette_PmenuAll = update_sprites_color(&p_rangePmenuAll, HSL_MAX);
 		do_update_PmenuAll = false;
 	}
 }
@@ -202,7 +216,7 @@ static inline void initNameEntryColors(void) {
 }
 static inline void updateNameEntryColors(void) {
 	if (do_update_font2All) {
-		update_palette_font2All = update_sprites_color(&p_rangeFont2All);
+		update_palette_font2All = update_sprites_color(&p_rangeFont2All, HSL_MAX);
 		do_update_font2All = false;
 	}
 }

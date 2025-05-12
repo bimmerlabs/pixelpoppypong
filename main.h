@@ -4,8 +4,11 @@
 #include "state.h"
 #include "util.h"
 #include "audio.h"
+#if ENABLE_DEBUG_MODE == 1
+    #include "debug.h"
+#endif
 
-#define VERSION "0.78"
+#define VERSION "0.79"
 #define MAX_PLAYERS 4
 
 // Screen position
@@ -16,10 +19,6 @@
 #define SCREEN_HEIGHT  toFIXED(480.0)
 #define SCREEN_TOP toFIXED(-240.0)
 #define SCREEN_BOTTOM toFIXED(240.0)
-
-extern jo_datetime now;
-extern Uint8 frame;
-extern Uint16 cursor_angle; // for title & pawsed menus
 
 typedef struct {
     bool debug_mode;
@@ -43,8 +42,6 @@ typedef struct {
 } GameOptions, *PGameOptions;
 
 extern GameOptions g_GameOptions;
-
-extern bool releaseCanidate;
 
 // 1-4 players
 typedef enum _NUMBER_OF_PLAYERS
@@ -85,6 +82,10 @@ typedef enum _GAME_RESOLUTION
 // represents game state
 typedef struct _GAME
 {
+    Uint8 frame; // frame counter
+    jo_datetime now;
+    Uint16 cursor_angle; // for title & pawsed menus
+    
     // current game state
     GAME_STATE gameState;
     GAME_STATE nextState;
@@ -101,28 +102,10 @@ typedef struct _GAME
 
     // easy, medium, hard
     GAME_DIFFICULTY gameDifficulty;
-
-    // TODO: move to goals.h
-    // easy, medium, hard, vs_mode
-    int goalScale;
-    int goalYPosTop;
-    int goalYPosBot;
-    int goalYPosMid;
-    
-    FIXED maxBallVelocity;
-    // debug level
-    int debug;
-    
-    // number of stars (1, 2, 3)
-    Uint8 numStars;
     
     // TIMERS
     Uint16 endDelayTimer;
     Uint16 BeginTimer;
-    Uint16 GameTimer;
-    Uint16 BombTimer;
-    Uint16 RoundOverTimer;
-    Uint16 DemoTimer;
     Uint16 roundBeginTimer;
     Uint16 dropBallTimer;
     // Uint16 transitionOutTimer;
@@ -143,10 +126,6 @@ typedef struct _GAME
     // is the game finished?
     bool isRoundOver;
     Uint8 countofRounds;
-    Uint8 numContinues;
-
-    // is the game finished?
-    bool isGameOver;
     
     int winner;
     
@@ -154,12 +133,11 @@ typedef struct _GAME
     bool isActive;
     bool isBallActive;
     
-    bool explodeBomb;
-
-    // how many frames since all players were dead
-    int gameOverFrames;
+    bool explodeBall;
     
 } GAME, *PGAME;
 
 // globals
 extern GAME g_Game;
+
+void initGame(void);

@@ -24,15 +24,13 @@ typedef struct {
 } BallTouchTracker;
 
 extern BallTouchTracker touchedBy[MAX_PLAYERS];
-
+extern Sint8 lastTouchedBy;
+extern Sint8 previouslyTouchedBy[3]; // use as a buffer
 extern unsigned int ballTtouchTimer;
 
 void initTouchCounter(Uint8 resetTouchCount);
-
 void stopBallMovement(Sprite *ball);
 void start_ball_movement(Sprite *ball);
-
-void adjust_xy_velocity_based_on_spin(Sprite *ball);
 
 // distance formula without the square root
 bool checkItemDistance(Sprite *player, Sprite *item);
@@ -82,6 +80,12 @@ static __jo_force_inline void updateBallTouch(PPLAYER player) {
 
     // Update the player who last touched the ball
     touchedBy[player->playerID].hasTouched = true;
+    if (lastTouchedBy != player->playerID) {
+        previouslyTouchedBy[2] = previouslyTouchedBy[1];
+        previouslyTouchedBy[1] = previouslyTouchedBy[0];
+        previouslyTouchedBy[0] = lastTouchedBy;
+    }
+    lastTouchedBy = player->playerID;
     if (player->_sprite->isColliding == false && touchedBy[player->playerID].touchCount < 99) {
         touchedBy[player->playerID].touchCount++;
         switch (touchedBy[player->playerID].touchCount) {
@@ -104,7 +108,7 @@ static __jo_force_inline void updateBallTouch(PPLAYER player) {
                 break;
         }
     }
-    touchedBy[player->playerID].teamChoice = player->teamChoice; // needs to be initialized, not here
+    touchedBy[player->playerID].teamChoice = player->teamChoice; // not really needed anymore
     ballTtouchTimer = 0;
 }
 
@@ -113,5 +117,3 @@ void update_ball(Sprite *ball);
 
 // // Function to detect and handle ball-player collision
 bool detect_player_ball_collision(Sprite *ball, PPLAYER player);
-
-void handle_ball_player_reaction(Sprite *ball, PPLAYER player, int distance_squared, FIXED dx, FIXED dy);

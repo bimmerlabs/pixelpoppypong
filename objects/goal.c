@@ -1,10 +1,10 @@
 #include <jo/jo.h>
 #include "goal.h"
 #include "../main.h"
+#include "../highscores.h"
 #include "../BG_DEF/sprite_colors.h"
 
 GOAL g_Goal[MAX_PLAYERS] = {0};
-Uint8 g_ActiveGoals = 0;
 
 void initGoalColors(void)
 {
@@ -12,26 +12,24 @@ void initGoalColors(void)
     {
         // set initial player colors (player 0 uses the default)
         if (i == 1) {
-            hsl_incSprites.h -= 90;
+            hsl_incSprites[HSL_GOAL].h -= 90;
         }
         else if (i == 2) {
-            hsl_incSprites.h -= 180;
+            hsl_incSprites[HSL_GOAL].h -= 180;
         }
         else if (i == 3) {
-            hsl_incSprites.h -= 270;
+            hsl_incSprites[HSL_GOAL].h -= 270;
         }
-        update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i]);
+        update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i], HSL_GOAL);
     }
 }
 
 void initGoals(void)
 {
-    g_ActiveGoals = g_Game.numPlayers; // TODO: remove?
     PGOAL _goal = NULL;
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         _goal = &g_Goal[i];
-        // _goal->objectState = OBJECT_STATE_INACTIVE;
         _goal->isColliding = false;
         _goal->onLeftSide = false;
         _goal->drawSingleGoal = true;
@@ -58,10 +56,8 @@ void setGoalSize(void)
         _goal = &g_Goal[i];
         _goal->player = &g_Players[i];
         if (_goal->player->objectState == OBJECT_STATE_INACTIVE) {
-            // _goal->objectState = OBJECT_STATE_INACTIVE;
             continue;
         }
-        // _goal->objectState = OBJECT_STATE_ACTIVE;
         _goal->id = i;
         
         switch (_goal->player->teamChoice) 
@@ -208,5 +204,57 @@ void drawGoals(void) {
         drawGoalSprites(_goal->sprite, 0, 2, _goal->pos.top_zmode, _goal->pos.top_flip, _goal->pos.x, _goal->pos.top, 2);
         drawGoalSprites(_goal->sprite, 1, 3, _goal->pos.mid_zmode, _goal->pos.top_flip, _goal->pos.x, _goal->pos.mid, _goal->scale);
         drawGoalSprites(_goal->sprite, 0, 2, _goal->pos.bot_zmode, _goal->pos.bot_flip, _goal->pos.x, _goal->pos.bot, 2);
+    }
+}
+
+void checkRightGoalCollision(Sprite *ball) {
+    // iterate through goals on right side, check bounds
+    PGOAL _goal;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        _goal = &g_Goal[i];
+        if (_goal->player->objectState == OBJECT_STATE_INACTIVE || _goal->player->subState == PLAYER_STATE_DEAD || _goal->onLeftSide) {
+            continue;
+        }
+        if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            if (g_Game.gameMode == GAME_MODE_STORY) {
+                g_Game.isGoalScored = true;
+                calculateScore(ball, 0);
+                updatePlayerLives(1);
+                playCDTrack(g_Audio.goalScoredTrack, false);
+                nextGoalScoredTrack();
+                break;
+            }
+            else if (!g_Game.isGoalScored) { // scored on TEAM_2 or TEAM_4
+                updateScore(ball, _goal->id);
+                break;
+            }
+        }
+    }
+}
+
+void checkLeftGoalCollision(Sprite *ball) {
+    // iterate through goals on left side, check bounds
+    PGOAL _goal;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        _goal = &g_Goal[i];
+        if (_goal->player->objectState == OBJECT_STATE_INACTIVE || _goal->player->subState == PLAYER_STATE_DEAD || !_goal->onLeftSide) {
+            continue;
+        }
+        if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            if (g_Game.gameMode == GAME_MODE_STORY) {
+                g_Game.isGoalScored = true;
+                ballTtouchTimer = 0;
+                updatePlayerLives(0);
+                playCDTrack(g_Audio.goalScoredTrack, false);
+                nextGoalScoredTrack();
+                break;
+            }
+            else if (!g_Game.isGoalScored) { // scored on TEAM_2 or TEAM_4
+                updateScore(ball, _goal->id);
+                break;
+            }
+        }
     }
 }

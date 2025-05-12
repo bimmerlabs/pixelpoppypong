@@ -19,7 +19,7 @@ void playerAI(Sprite *ball) {
         }
         else if (player->onLeftSide == true) {
             // Check if the ball is moving towards player 2's goal
-            if (ball->vel.x < toFIXED(0)) {
+            if (ball->vel.x < FIXED_0) {
 
                 // Check if the ball is close enough to start tracking
                 if (ball->pos.x <= toFIXED(128)) {
@@ -40,7 +40,7 @@ void playerAI(Sprite *ball) {
         }
         else {
             // Check if the ball is moving towards player 2's goal
-            if (ball->vel.x > toFIXED(0)) {
+            if (ball->vel.x > FIXED_0) {
 
                 // Check if the ball is close enough to start tracking
                 if (ball->pos.x >= -toFIXED(128)) {
@@ -77,7 +77,6 @@ void centerAiPlayer(PPLAYER player)
 {
     FIXED middle;
     PGOAL _goal = &g_Goal[player->playerID];
-    // account for game modes (1-4 players)
     switch(player->teamChoice)
     {
         case TEAM_1: {
@@ -110,7 +109,7 @@ void centerAiPlayer(PPLAYER player)
         player->curPos.dy -= jo_fixed_mult(SLOW_MOVEMENT_FACTOR, center_diff);
     }
     else {
-        player->curPos.dy = toFIXED(0);
+        player->curPos.dy = FIXED_0;
     }
     player->_sprite->pos.y += player->curPos.dy;
     player->_sprite->vel.y += player->curPos.dy;
@@ -140,7 +139,6 @@ void boundAiPlayer(PPLAYER player)
         }
     }
 
-    // account for game modes (1-4 players)
     FIXED bottom = SCREEN_BOTTOM;
     FIXED top = SCREEN_MIDDLE;
     PGOAL _goal = &g_Goal[player->playerID];
@@ -173,12 +171,12 @@ void boundAiPlayer(PPLAYER player)
     if(player->_sprite->pos.y > bottom)
     {
         player->_sprite->pos.y = bottom;
-        player->curPos.dy = toFIXED(0);
+        player->curPos.dy = FIXED_0;
     }
 
     if(player->_sprite->pos.y < top)
     {
         player->_sprite->pos.y = top;
-        player->curPos.dy = toFIXED(0);
+        player->curPos.dy = FIXED_0;
     }
 }

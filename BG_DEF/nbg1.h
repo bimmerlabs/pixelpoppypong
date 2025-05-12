@@ -3,6 +3,10 @@
 
 #include "../palettetools.h"
 
+extern RgbPalette rgbBg0;
+extern RgbBuff bufferBg0;
+extern HslPalette hslBg0;
+
 extern Uint8 current_background;
 
 extern ImageAttr attrNbg1;

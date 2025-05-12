@@ -8,7 +8,7 @@
 #include "backup.h"
 #include "BG_DEF/nbg1.h"
 
-unsigned int g_ScoreTimer = 0;
+static unsigned int highScoreTimer = 0;
 
 HighScoreEntry highScores[SCORE_ENTRIES];
 
@@ -30,9 +30,10 @@ void init_scores(void)
     if (g_Game.lastState == GAME_STATE_NAME_ENTRY) {
         unloadNameEntryAssets();
     }
-    fade_in = true;
-    transition_in = true;
+    g_Transition.fade_in = true;
+    g_Transition.all_in = true;
     
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_mode) { // only needed if manually changing states
         reset_sprites();
         do_update_All = true;
@@ -43,8 +44,9 @@ void init_scores(void)
         set_spr_position(&pixel_poppy, 0, 0, 100);
         sprite_frame_reset(&pixel_poppy);
     }
-
-    g_ScoreTimer = 0;
+    #endif
+    
+    highScoreTimer = 0;
     
     if (g_GameOptions.mesh_display) {
         menu_bg2.mesh = MESHon;
@@ -63,36 +65,6 @@ void init_scores(void)
     reset_audio(g_Audio.masterVolume);
     playCDTrack(FINISH_TRACK, false);
 }
-
-// TODO: merge with explodePLayer
-bool updatePlayerLives(Uint8 scoredOnPlayerID)
-{
-    if (g_Players[scoredOnPlayerID].numLives > 0) {
-        g_Players[scoredOnPlayerID].numLives--;
-        touchedBy[scoredOnPlayerID].touchCount = 0;
-        if (g_Players[scoredOnPlayerID].numLives == 0) {
-            // kill player
-            g_Players[scoredOnPlayerID].score.deaths++;
-            if (g_Players[scoredOnPlayerID].isAI) {
-                g_Game.countofRounds++; // for story mode only
-                // unlock character once you've beaten them
-                if (!characterUnlocked[g_Game.countofRounds] && g_Game.gameDifficulty > GAME_DIFFICULTY_EASY) {
-                    characterUnlocked[g_Game.countofRounds] = true;
-                    save_game_backup();
-                }
-            }
-            g_Players[scoredOnPlayerID].subState = PLAYER_STATE_DEAD;
-            // g_Players[scoredOnPlayerID].objectState = OBJECT_STATE_INACTIVE;
-            g_Team.objectState[g_Players[scoredOnPlayerID].teamChoice] = OBJECT_STATE_INACTIVE;
-            g_Game.currentNumPlayers--;
-            if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
-                setGoalSize(); // not in story mode
-            }
-            return true;
-        }
-    }
-    return false;
-}
 static bool draw_header_text = true;
 void display_scores(void)
 {
@@ -102,9 +74,9 @@ void display_scores(void)
     }
     int options_x = 12;
     int options_y = 4;
-    g_ScoreTimer++;
+    highScoreTimer++;
     
-    if (JO_MOD_POW2(frame, 8) == 0) { // modulus
+    if (JO_MOD_POW2(g_Game.frame, 8) == 0) { // modulus
         draw_header_text = !draw_header_text;
     }
     if (draw_header_text) {
@@ -116,7 +88,7 @@ void display_scores(void)
         options_y += 2;
     }
     my_sprite_draw(&menu_bg2);
-    update_bg_position();    if (g_ScoreTimer == SCORE_DISPLAY_TIME) {
+    update_bg_position();    if (highScoreTimer == SCORE_DISPLAY_TIME) {
         if (g_Game.lastState == GAME_STATE_NAME_ENTRY) {
             g_Game.lastState = GAME_STATE_HIGHSCORES;
             transitionState(GAME_STATE_CREDITS);
@@ -127,12 +99,11 @@ void display_scores(void)
         }
     }
 }
-
 static int backgroundAngle = 360;
 
 // draw an ellipse
 void update_bg_position(void) {
-    if (JO_MOD_POW2(frame, 2) == 0) {
+    if (JO_MOD_POW2(g_Game.frame, 2) == 0) {
         backgroundAngle -= 1;
         if (backgroundAngle == 0)
             backgroundAngle = 360;
@@ -179,4 +150,38 @@ void addHighScore(unsigned int newScore, const char *initials) {
 
     // Sort the list
     sortHighScores(highScores);
+}
+
+void calculateScore(Sprite *ball, Uint8 playerID) {
+    unsigned int points = (JO_ABS(toINT(ball->vel.x)) * 50) 
+                         + (JO_ABS(toINT(ball->vel.y)) * 500) 
+                         + (JO_ABS(toINT(ball->vel.z)) * 1000);
+    g_Players[playerID].score.points += points * touchedBy[playerID].touchCount;
+    ballTtouchTimer = 0;
+}
+
+void updateScore(Sprite *ball, int playerID) {      
+    if (g_Players[playerID].subState == PLAYER_STATE_DEAD) {
+        return;
+    }
+    // Assign score if a valid player touched it
+    if (lastTouchedBy != -1 && playerID != lastTouchedBy) {
+        calculateScore(ball, lastTouchedBy);        
+    }
+    else {
+        for (Uint8 i = 0; i < 3; i++) {
+            Sint8 id = previouslyTouchedBy[i];
+            if (id == -1) continue;
+            if (g_Players[id].subState == PLAYER_STATE_DEAD) continue;
+            if (g_Players[id].objectState == OBJECT_STATE_INACTIVE) continue;
+            if (id == playerID) continue;
+            if (g_Players[playerID].onLeftSide == g_Players[id].onLeftSide) continue;
+            calculateScore(ball, id);
+            break;
+        }
+    }
+    updatePlayerLives(playerID);
+    g_Game.isGoalScored = true; // still set to true - no score assigned to a player, but somebody loses a life
+    playCDTrack(g_Audio.goalScoredTrack, false);
+    nextGoalScoredTrack();
 }

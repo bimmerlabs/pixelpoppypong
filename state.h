@@ -3,7 +3,6 @@
 #define TRANSITION_TIMER (3 * 60)
 #define STATE_FADE_TIMER (1 * 60)
 
-extern unsigned int g_TransitionTimer;
 extern unsigned int g_AttractScreenState;
 
 // each game state has it's own input/update/draw routines

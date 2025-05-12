@@ -40,10 +40,6 @@ void characterSelectInit(void)
     // initCharacterEntryColors();
     
     g_CharacterEntrySelection = 0;
-    
-    // char_id[0] = 10; // A
-    // char_id[1] = 39; // blank
-    // char_id[2] = 39; // blank
     xRadius = NAME_X_RADIUS;
     yRadius = NAME_Y_RADIUS;
     yPos = NAME_Y_POS;
@@ -69,10 +65,10 @@ void characterSelectInit(void)
     g_Game.lastState = GAME_STATE_NAME_ENTRY;
     
     jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN); // use the default here    
-    mosaic_in = true;
-    music_in = true;
-    fade_in = true;
-    transition_in = true;
+    g_Transition.mosaic_in = true;
+    g_Transition.music_in = true;
+    g_Transition.fade_in = true;
+    g_Transition.all_in = true;
     playCDTrack(NAME_ENTRY_TRACK, true);
 }
 
@@ -90,24 +86,24 @@ void characterEntryInput(void)
     // }
     if(jo_is_pad1_key_pressed(JO_KEY_UP))
     {
-        if (yRadius < toFIXED(0)) {
-            xRadius -= toFIXED(0.5);
-            yRadius += toFIXED(2);
+        if (yRadius < FIXED_0) {
+            xRadius -= FIXED_HALF;
+            yRadius += FIXED_2;
         }
-        else if (yRadius < toFIXED(100)) {
-            xRadius += toFIXED(0.5);
-            yRadius += toFIXED(2);
+        else if (yRadius < FIXED_100) {
+            xRadius += FIXED_HALF;
+            yRadius += FIXED_2;
         }
     }
     if(jo_is_pad1_key_pressed(JO_KEY_DOWN))
     {
-        if (yRadius > toFIXED(0)) {
-            xRadius -= toFIXED(0.5);
-            yRadius -= toFIXED(2);
+        if (yRadius > FIXED_0) {
+            xRadius -= FIXED_HALF;
+            yRadius -= FIXED_2;
         }
-        else if (yRadius > toFIXED(-100)) {
-            xRadius += toFIXED(0.5);
-            yRadius -= toFIXED(2);
+        else if (yRadius > -FIXED_100) {
+            xRadius += FIXED_HALF;
+            yRadius -= FIXED_2;
         }
     }
     if (!isAngleSnapped) {
@@ -191,7 +187,7 @@ void characterEntryUpdate(void)
     {
         return;
     }
-    if (g_CharacterEntryTimer > 0 && frame % 60 == 0) { // modulus
+    if (g_CharacterEntryTimer > 0 && g_Game.frame % 60 == 0) { // modulus
         g_CharacterEntryTimer--;
     }
     
@@ -272,6 +268,7 @@ void characterEntryDraw(void)
     set_spr_position(&pixel_poppy, 0, 0, 100);
     my_sprite_draw(&pixel_poppy);
     
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_display) {
         jo_nbg0_printf(2, 24, "RAD:X=%3d,Y=%3d", JO_FIXED_TO_INT(xRadius), JO_FIXED_TO_INT(yRadius));
         jo_nbg0_printf(2, 25, "POS:X=%3d,Y=%3d", JO_FIXED_TO_INT(light.x), JO_FIXED_TO_INT(light.y));
@@ -285,6 +282,7 @@ void characterEntryDraw(void)
         // jo_nbg0_printf(2, 17, "LUM:%d", hslSprites.color[74].l);
         // jo_nbg0_printf(20, 15, "RGB:%d", bufferSprites.color[74]);
     }
+    #endif
 }
 
 void characterEntryPositionUpdate(int angle, int sprAngle) {
@@ -311,7 +309,7 @@ void characterEntryPositionUpdate(int angle, int sprAngle) {
         font.scl.x = toFIXED(2.7);
     }
     else {
-        font.scl.x = toFIXED(1) + (FIXED_127 + jo_fixed_mult(jo_cos(scaleAngle), NAME_X_RADIUS))/200;
+        font.scl.x = FIXED_1 + (FIXED_127 + jo_fixed_mult(jo_cos(scaleAngle), NAME_X_RADIUS))/200;
     }
     font.scl.y = font.scl.x;
     font.rot.z = 0;
@@ -335,8 +333,8 @@ void characterEntryPositionUpdate(int angle, int sprAngle) {
         // hslSprites.color[colorid].l = 255 - zPos;
     // }
     // else {
-        // jo_getdate(&now);
-        // int hue = now.minute*6;
+        // jo_getdate(&g_Game.now);
+        // int hue = g_Game.minute*6;
         // hslSprites.color[colorid].h = hue;
         // hslSprites.color[colorid].s = 240;
         // hslSprites.color[colorid].l = 240;

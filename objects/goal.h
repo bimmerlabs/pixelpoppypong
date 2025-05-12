@@ -1,13 +1,13 @@
 #pragma once
 #include "player.h"
 #include "../assets.h"
-// #include "../sprites.h"
 
 #define GOAL_X_POS 330
 #define GOAL_X_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_LEFT_BOUNDS -toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_RIGHT_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_CENTER_POS 0
+#define GOAL_MARGIN toFIXED(20)
 
 typedef enum _GOAL_SCALE
 {
@@ -45,7 +45,7 @@ typedef struct _GOAL_POSITION
 typedef struct _GOAL_OBJECT
 {
     bool isColliding;
-    bool onLeftSide; // is this needed?
+    bool onLeftSide; // is this needed? (use player as proxy)
     int scale;
     GOAL_POSITION pos;
     Uint8 id;
@@ -56,10 +56,11 @@ typedef struct _GOAL_OBJECT
 
 extern GOAL g_Goal[MAX_PLAYERS];
 
-extern Uint8 g_ActiveGoals;
-
 void initGoalColors(void);
 void initGoals(void);
 void setGoalSize(void);
 
 void drawGoals(void);
+
+void checkRightGoalCollision(Sprite *ball);
+void checkLeftGoalCollision(Sprite *ball);

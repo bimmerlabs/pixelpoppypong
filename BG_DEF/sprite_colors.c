@@ -200,7 +200,7 @@ PaletteRange p_rangeShroom    = { 158, 159 };   // mushroom
 PaletteRange p_rangeNormalMap = { 234, 254 };   // normal map
 
 // tracks the accumulation of changes for the HSL color model
-GlobalHSL hsl_incSprites = {0, 0, 0};
+GlobalHSL hsl_incSprites[HSL_MAX] = {0};
 
 // initial image setup: hue, saturation, luminance, x_pos, y_pos, x_scale, y_scale, x_scroll (rate), y_scroll (rate), min_sat_id, max_sat_id, min_lum_id, max_lum_id
 ImageAttr attrSprites = { 200, 255, 255, toFIXED(0.0), toFIXED(0.0), toFIXED(0.25), toFIXED(0.0), 0, 0, 0, 0};
@@ -217,7 +217,7 @@ void init_sprites_img(void) {
     
     // normal maps
     InitNormal2d(&hslSprites, &rgbSprites, &light, &p_rangeNormalMap, &attrSprites);
-    MultiPaletteUpdate(&game_palette, &hslSprites, &hsl_incSprites, &p_rangeNormalMap);
+    MultiPaletteUpdate(&game_palette, &hslSprites, &hsl_incSprites[HSL_MAX], &p_rangeNormalMap);
 }
 
 // directly set the HSL color
@@ -227,8 +227,8 @@ bool calculate_sprites_color(PaletteRange *range) {
 }
 
 // set the HSL color by hue, saturation, and luminance increments
-bool update_sprites_color(PaletteRange *range) {
-    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, range);
+bool update_sprites_color(PaletteRange *range, unsigned char hsl_id) {
+    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites[hsl_id], range);
     return true;
 }
 
@@ -241,12 +241,12 @@ bool update_sprites_palette(PaletteRange *range) {
 void reset_sprites (void) {
     MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSpritesAll);
     min_max_sl_id(&hslSprites, &p_rangeSpritesAll, &attrSprites);
-    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites, &p_rangeSpritesAll);
+    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites[HSL_MAX], &p_rangeSpritesAll);
 }
 
 
 void update_ppplogo_color(void) {
-    NormalMapLighting2d(&hslSprites, &rgbSprites, &bufferSprites, &light, &p_rangeNormalMap, &hsl_incSprites);
+    NormalMapLighting2d(&hslSprites, &rgbSprites, &bufferSprites, &light, &p_rangeNormalMap, &hsl_incSprites[HSL_MAX]);
 }
 
 void update_ppplogo_palette(void) {

@@ -4,13 +4,15 @@
 
 #include <jo/jo.h>
 
-// TODO: add more fixed values
+#define FIXED_HALF toFIXED(0.5)
+#define FIXED_0 toFIXED(0)
+#define FIXED_1 toFIXED(1)
+#define FIXED_2 toFIXED(2)
+#define FIXED_4 toFIXED(4)
+#define FIXED_8 toFIXED(8)
 #define FIXED_100 toFIXED(100)
 #define FIXED_127 toFIXED(127)
 #define FIXED_255 toFIXED(255)
-#define FIXED_510 toFIXED(510)
-#define FIXED_765 toFIXED(765)
-#define FIXED_1024 toFIXED(1024)
 
 // these could be useful, but they aren't currently used
 // static  __jo_force_inline void      my_fixed_3d_translate_matrix(jo_pos3D_fixed *p)

@@ -8,7 +8,7 @@
 #include "lighting.h"
 #include "BG_DEF/sprite_colors.h"
 
-unsigned int g_LogoTimer = 0;
+unsigned int g_LogoTimer = 0; // not worth putting these in a struct..
 int transparency_rate = TRANSPARENCY_MAX;
 Uint8 current_background = BG_NIGHT;
 
@@ -40,21 +40,21 @@ void pppLogo_init(void)
     }
     else {
         // update based on time of day
-        jo_getdate(&now);
+        jo_getdate(&g_Game.now);
         // dawn
-        if (now.hour >= T_DAWN && now.hour < T_DAY) {
+        if (g_Game.now.hour >= T_DAWN && g_Game.now.hour < T_DAY) {
             current_background = BG_DAWN;
         }
         // day
-        if (now.hour >= T_DAY && now.hour < T_DUSK) {
+        if (g_Game.now.hour >= T_DAY && g_Game.now.hour < T_DUSK) {
             current_background = BG_DAY;
         }
         // dusk
-        if (now.hour >= T_DUSK && now.hour < T_NIGHT) {
+        if (g_Game.now.hour >= T_DUSK && g_Game.now.hour < T_NIGHT) {
             current_background = BG_DUSK;
         }
         // night
-        if (now.hour >= T_NIGHT && now.hour < T_DAWN) {
+        if (g_Game.now.hour >= T_NIGHT && g_Game.now.hour < T_DAWN) {
             current_background = BG_NIGHT;
         }
     }
@@ -69,8 +69,8 @@ void pppLogo_init(void)
     }
     
     light.x = toFIXED(10);
-    light.y = toFIXED(255);
-    light.z = toFIXED(255);
+    light.y = FIXED_255;
+    light.z = FIXED_255;
     
     set_spr_scale(&pixel_poppy, 1.0, 1.0);
     pixel_poppy.rot.z = 0;
@@ -87,8 +87,7 @@ void pppLogo_init(void)
     if (g_GameOptions.mosaic_display) {
         mosaicInit(NBG1ON);
     }
-    fade_in_rate = 1;
-    
+    g_Transition.fade_in_rate = 1;
     if (!g_GameOptions.debug_display) {
         jo_set_displayed_screens(JO_NBG0_SCREEN | JO_SPRITE_SCREEN | JO_NBG1_SCREEN);
         slColOffsetOn(NBG0ON | SPRON);
@@ -105,9 +104,9 @@ void pppLogo_init(void)
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
     }
     
-    mosaic_in_rate = MOSAIC_SLOW_RATE;
-    music_in = true;
-    transition_in = true;
+    g_Transition.mosaic_in_rate = MOSAIC_SLOW_RATE;
+    g_Transition.music_in = true;
+    g_Transition.all_in = true;
     
     jo_set_default_background_color(JO_COLOR_Black);
 }
@@ -115,9 +114,6 @@ void pppLogo_init(void)
 // update callback routine for PPP logo
 void pppLogo_input(void)
 {
-    // if (!g_GameOptions.debug_mode) {
-        // return;
-    // }
     //
     // skip the logo if player 1 hits start
     //
@@ -127,10 +123,10 @@ void pppLogo_input(void)
         nbg1_rate = NEUTRAL_FADE;
         slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
         slColOffsetB(nbg1_rate, nbg1_rate, nbg1_rate);
-        mosaic_x = MOSAIC_MIN;
-        mosaic_y = MOSAIC_MIN;
-	slScrMosSize(mosaic_x, mosaic_y);
-        fade_in_rate = 8;
+        g_Transition.mosaic_x = MOSAIC_MIN;
+        g_Transition.mosaic_y = MOSAIC_MIN;
+	slScrMosSize(g_Transition.mosaic_x, g_Transition.mosaic_y);
+        g_Transition.fade_in_rate = 8;
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }
@@ -211,16 +207,16 @@ void pppLogo_update(void)
     // transition mosaic in
     if(g_LogoTimer > 4)
     {
-        slow_fade_in = true;
-        transition_in = true;
+        g_Transition.slow_fade_in = true;
+        g_Transition.all_in = true;
     }    
     // transition mosaic in
     if(g_LogoTimer > PPP_MOSAIC_TIMER)
     {
-        mosaic_in = true;
-        transition_in = true;
-        if (fade_out) {
-            fade_out = fadeOut(1, NEUTRAL_FADE);
+        g_Transition.mosaic_in = true;
+        g_Transition.all_in = true;
+        if (g_Transition.fade_out) {
+            g_Transition.fade_out = fadeOut(1, NEUTRAL_FADE);
         }
         pppLogo_draw();
         update_light_position();
@@ -231,7 +227,7 @@ void pppLogo_update(void)
     
     if(g_LogoTimer == PPP_MOSAIC_TIMER)
     {
-        fade_out = true;
+        g_Transition.fade_out = true;
         nbg1_rate = MAXIMUM_FADE;
         if (!g_GameOptions.debug_display) {
             slColOffsetA(nbg1_rate, nbg1_rate, nbg1_rate);
@@ -245,7 +241,7 @@ void pppLogo_update(void)
     if(g_LogoTimer > PPP_LOGO_TIMER)
     {
         jo_set_displayed_screens(JO_NBG0_SCREEN | JO_NBG1_SCREEN);
-        fade_in_rate = 8;
+        g_Transition.fade_in_rate = 8;
         changeState(GAME_STATE_TITLE_SCREEN);
         return;
     }
@@ -262,11 +258,12 @@ void pppLogo_draw(void)
     
     my_sprite_draw(&pixel_poppy);
     jo_nbg0_printf(17, 19, "PRESENTS...");
-        
+    #if ENABLE_DEBUG_MODE == 1
     if (g_GameOptions.debug_display) {
         jo_nbg0_printf(2, 25, "LIGHT:X=%3d,Y=%3d,Z=%3d", JO_FIXED_TO_INT(light.x), JO_FIXED_TO_INT(light.y), JO_FIXED_TO_INT(light.z));
         jo_nbg0_printf(2, 26, "LIGHTANGLE:%3d", lightAngle);
     }
+    #endif
 }
 
 // draw an ellipse

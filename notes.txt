@@ -126,8 +126,8 @@ competition entry goals: (order of preference)
 	4 finish story presentation:
 		A cursor on CPU character select (done)
 		B player vs character text on selection (done)
-		C continue timer when you die (show # of continues)
-		D winning / losing messages
+		C continue timer when you die (show # of continues) (done)
+		D winning / losing messages (done)
 		E transitions (done)
 		F adjust timers (done)
 		G "battle is over" sound (only play at the end of the game?) (done)
@@ -141,7 +141,7 @@ competition entry goals: (order of preference)
 		A at least implement craig and garf so they can be unlocked (ball touches count?)
 	8 playtest!
 		transition to credits after name entry / score (done)
-		release build
+		release build (done)
 		turn off some debug stuff (state skip) (done)
 
 tommorrow morning:
@@ -154,14 +154,14 @@ tommorrow morning:
 		goal 5a (done)
 		goal 5b (done)
 tommorrow afternoon:
-	goal 8
+	goal 8 (done)
 	goal 4b (done)
-	goal 4c (partial)
+	goal 4c (done)
 	goal 4e (done)
 	goal 4f (done)
 friday morning:
 	goal 6b (done)
-	goal 7a (implemented explosion instead)
+	goal 7a (done)
 	stretch:
 		-sound effects (done)
 	
@@ -169,23 +169,11 @@ friday morning:
 version 0.6:
 -unlockables:
 	new characters (done)
-	big head mode
+	big head mode (done)
 	garfield (special) (done)
 	stadler (special) (done)
--items: implement collision (started)
--character select (story mode) (LATER)
-	note: is a combo of team_select and name_entry
-	-load assets (same as team_select
-	-abstractions for the character draw / name input routines (ellipse)
-	-draw portraits depending on unlocks
-	-draw character attributes and paw
--high scores (started)
-	add up final score after beating a character (DONE)
-	store what character was used?
-	store difficulty selected?
-	store mode played?
-	store big head mode?
--team high scores? (need to reimplmement teams with 2 people)	
+-items: implement collision (ball collisions dropped) (done)
+-team high scores? (need to reimplmement teams with 2 people) (nope)	
 -save game (done?)
 -remove or re-implement star system (done)
 -endings
@@ -215,7 +203,7 @@ version 0.6:
 		beat the game:
 			easy (done)
 			medium (done)
-				-bug found: after beating in medium, started a game in hard.  the game immediately went to the "you won" screen (something didn't get set to defaults after winning)
+				-bug found: after beating in medium, started a game in hard.  the game immediately went to the "you won" screen (something didn't get set to defaults after winning) (fixed)
 				team_select.c has an overflow bug on the number of players (fixed)
 			hard (done)
 		die:
@@ -223,14 +211,11 @@ version 0.6:
 			-lose to AI (done)
 
 version 0.7
--make screen boundaries part of player object
-	-set by difficulty (medium!)
-	-fixes player boundaries based on # of players issue (see below)
 -difficulty:
-	-adjust timer (too easy right now) (preliminary)
-	-don't charge energy if outside of goal
+	-adjust timer (too easy right now) (done)
+	-don't charge energy if outside of goal (done)
 		(use an "effect" to show the user when they're recharging)
-	-fix balance of random item generation
+	-fix balance of random item generation (done)
 	-make "fish" give you +1 hearts, or half of missing hearts, whatever is less (done)
 -fix story mode:
 	-if player dies, reactivate objectstates when continuing (see below - "restart game") (done)
@@ -240,30 +225,32 @@ version 0.7
 	-reset goal drawing location depending on what teams are active (done)
 	-reset player location/orientation depending on what teams are active 9(done)
 	-reset team objecstates when "restarting" the game (done)
-	-merge the explode player & kill player routines
+	-merge the explode player & kill player routines (refactored)
 	-fix the demo mode so goals are drawn properly (done)
-		-teams are not being activated in demo mode
+		-teams are not being activated in demo mode (fixed)
 	-fix the UI for when some teams are dead (done)
-		-don't draw the score 
-	-use only goal or team object state, not both (0.8)
-	-fix bug when restarting game (game over message)
--add effects/transitions when somebody dies
-	-explosion (player & goals)
-	-grow the goal/player in the new location
+		-don't draw the score (done)
+	-use only goal or team object state, not both (0.8?)
+	-fix bug when restarting game (game over message) (done)
 -story mode:
 	-don't get full hearts when winning a level (done)
 	-get a score for touching items (done)
 
 version 0.8
+-BUG FIX:	
+	-if nobody has touched the ball, the player loses most of their lives if scored on (fixed)
+-add effects/transitions when somebody dies
+	-explosion (player & goals)
+	-grow the goal/player in the new location
 -remove extra "object states" (maybe later)
 	-only keep player objectstate and substate
 	-remove player "isplaying"
 	-add player pointer to team object, and use player objectstate like the goal object does
 -make "RTC" option update background colors in real time (either to indexed or to the time zone color)
--make "big head" option hidden (have to beat in normal mode?)
-	-remove "big head" from easy mode
+-make "big head" option hidden (have to beat in normal mode?) (done)
+	-remove "big head" from easy mode (done)
 -fix loading screen at first boot (audio takes a while) (DONE)
--add makefile option to turn off all debug stuff for "release" build
+-add makefile option to turn off all debug stuff for "release" build (done)
 -music
 	-fix glitches at end of songs?
 	-stop song from playing before other one has ended while scoring
@@ -282,20 +269,32 @@ version 0.8
 	"tick" sound (done)
 
 version 0.9? (review build)
--tweak pause menu to be more responsive
+-character select (story mode) (LATER)
+	note: is a combo of team_select and name_entry
+	-load assets (same as team_select
+	-abstractions for the character draw / name input routines (ellipse)
+	-draw portraits depending on unlocks
+	-draw character attributes and paw
+-high scores (started)
+	add up final score after beating a character (DONE)
+	store what character was used?
+	store difficulty selected?
+	store mode played?
+	store big head mode?
+-tweak pause menu to be more responsive (done)
 -fix "restart" in storymode so background is dark
 -AI enhancements
 -polishing?
 -big head mode? (done)
 -remove unused assets
--review mode (debug on, debug display disabled)
+-review mode (debug on, debug display disabled) (nope)
 -RTC turned off by default (done)
 -emulation disclaimer? (kronos is too slow - SSF doesn't work, no other emulators tested that work.  Yabuse and most forks other than Kronos are hopelessly broken.  Mednafen works, but doesn't look the best)
 
 version 1.0:
 -final logo / intro (done)
--final title screen (close? needs sfx)
--final menu (screen?)
+-final title screen (done)
+-final menu
 	-controller inputs (done)
 	-analog support (done)
 	-screen modes (2026)
@@ -309,9 +308,9 @@ version 1.0:
 	-bosses
 	-ending
 -multiplayer
-	-vs / battle
+	-vs / battle (done)
 	-co-op (dropped)
-	-4 player?
+	-4 player? (done)
 -credit roll (done)
 -sound effects (started)
 -music by random (started)

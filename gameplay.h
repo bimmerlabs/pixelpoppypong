@@ -42,11 +42,22 @@
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
-extern ANGLE ball_rotation;
-extern bool start_gameplay_timer;
-extern bool round_start;
-extern bool explode_ball;
-extern bool play_continue_track;
+typedef struct _GAMEPLAY
+{
+    Uint16 GameTimer;
+    Uint16 BombTimer;
+    // Uint16 RoundOverTimer; // not currently used
+    Uint16 DemoTimer;
+    bool isGameOver;  // not currently used
+    bool explodeBomb;
+    
+    bool draw_demo_text;
+    bool start_gameplay_timer;
+    bool round_start;
+} GAMEPLAY, *PGAMEPLAY;
+
+// globals
+extern GAMEPLAY g_Gameplay;
 
 typedef enum _GAME_ITEMS
 {
@@ -72,7 +83,6 @@ void demo_update(void);
 
 void gameplay_timer(void);
 void gameplay_draw(void);
-void tallyScore(void);
 int determineWinner(void);
 void gameScore_draw(void);
 void gameplayUI_draw(PPLAYER player);
@@ -183,7 +193,6 @@ static __jo_force_inline void setItemPositions(void) {
         g_item.id = GAME_ITEM_MAX;
     }
     else {
-        // TODO: implement weighted average random selection
         int item = jo_random(1000000);
         switch(g_Game.gameDifficulty)
         {
@@ -256,8 +265,8 @@ static __jo_force_inline void setItemPositions(void) {
     item_velocity = 0.1;
     switch (g_item.id) {
         case GAME_ITEM_BOMB:
-            g_Game.explodeBomb = false;
-            g_Game.BombTimer = BOMB_TIMER;
+            g_Gameplay.explodeBomb = false;
+            g_Gameplay.BombTimer = BOMB_TIMER;
             g_item._sprite = &bomb_item;
             bomb_item.visible = true;
             sprite_frame_reset(&bomb_item);
@@ -307,12 +316,12 @@ static __jo_force_inline void drawGameItems(void) {
                     g_item.isActive = true;
                 }
             }
-            if (g_Game.explodeBomb) {
-                if (explosion_flash) {
-                    explosion_flash = explosionEffect();
+            if (g_Gameplay.explodeBomb) {
+                if (g_Transition.explosion_flash) {
+                    g_Transition.explosion_flash = explosionEffect();
                 }
-                g_Game.explodeBomb = explode_animation(&bomb_item);
-                if (g_Game.explodeBomb == false) {
+                g_Gameplay.explodeBomb = explode_animation(&bomb_item);
+                if (g_Gameplay.explodeBomb == false) {
                     bomb_item.visible = false;
                     g_item.isActive = false;
                 }
@@ -340,7 +349,7 @@ static __jo_force_inline void drawGameItems(void) {
                 }
             }
             looped_animation_pow(&shroom_item, 4);
-            hsl_incSprites.h += 2; // TODO: replace with one just for the mushroom?
+            hsl_incSprites[HSL_SHROOM].h += 2; // TODO: replace with one just for the mushroom?
             do_update_shroom = true;
             break;
         case GAME_ITEM_GARF:
@@ -374,8 +383,8 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
     g_item.isActive = false;
     switch (g_item.id) {
         case GAME_ITEM_BOMB:
-            g_Game.explodeBomb = true;
-            explosion_flash = true;
+            g_Gameplay.explodeBomb = true;
+            g_Transition.explosion_flash = true;
             if (!player->isExploded) {
                 player->isExploded = explodePLayer(player);
             }
@@ -473,7 +482,7 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
         if (!g_Game.isGoalScored && !g_Game.isRoundOver) {
             if (g_Game.isBallActive) {
                 update_ball(&pixel_poppy);
-                g_item._sprite->isColliding = checkItemDistance(&pixel_poppy, g_item._sprite);
+                // g_item._sprite->isColliding = checkItemDistance(&pixel_poppy, g_item._sprite);
                 // TODO: handle collision
                 // if (g_item._sprite->isColliding) {
                     // handleItemCollision()
@@ -485,7 +494,7 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
         if (g_Game.isGoalScored) {
             initPixelPoppy();
             resetPlayerAttacks();
-            start_gameplay_timer = false;
+            g_Gameplay.start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
@@ -510,7 +519,7 @@ static __jo_force_inline void handlePlayerItemCollision(PPLAYER player) {
         if (g_Game.isGoalScored) {
             initPixelPoppy();
             resetPlayerAttacks();
-            start_gameplay_timer = false;
+            g_Gameplay.start_gameplay_timer = false;
             g_Game.isBallActive = false;
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
@@ -532,7 +541,6 @@ static __jo_force_inline void drawGameUI(void) {
         looped_animation_pow(player->_sprite, 4); // TODO: change animations based on player input
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         gameplayUI_draw(player);
-        // drawGoals(player);
     }
     drawGoals();
 }

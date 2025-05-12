@@ -8,6 +8,7 @@
 #include "../AI.h"
 #include "../physics.h"
 #include "../team_select.h"
+#include "../backup.h"
 #include "../BG_DEF/sprite_colors.h"
 
 PLAYER g_Players[MAX_PLAYERS] = {0};
@@ -33,7 +34,7 @@ const CHARACTER_ATTRIBUTES characterAttributes[] = {
 
 void resetPlayerScores(void)
 {
-    g_Game.numStars = getStars();
+    // g_Game.numStars = getStars();
     initTouchCounter(1);
     
     PPLAYER player = NULL;
@@ -42,7 +43,7 @@ void resetPlayerScores(void)
         player = &g_Players[i];
         player->shield.power = SHIELD_POWER;
         player->score.stars  = 0;
-        player->score.deaths = 0;
+        player->score.continues = 0;
         player->score.total  = 0;
         player->score.points = 0;
         player->score.lastMillion = 0;
@@ -100,6 +101,22 @@ int getLives(PPLAYER player)
         case GAME_MODE_BATTLE:
             numLives = 9;
             // numLives = 3;
+            break;
+        case GAME_MODE_CLASSIC:
+            switch(g_Game.gameDifficulty)
+            {
+                case GAME_DIFFICULTY_EASY:
+                    numLives = 9;
+                    break;
+                case GAME_DIFFICULTY_MEDIUM:
+                    numLives = 6;
+                    break;
+                case GAME_DIFFICULTY_HARD:
+                    numLives = 4;
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
             if (player->isAI) {
@@ -191,30 +208,19 @@ int getStars(void)
 
 void getContinues(void)
 {
-    switch(g_Game.gameMode)
+    if (g_Game.gameMode != GAME_MODE_STORY) {
+        return;
+    }
+    switch(g_Game.gameDifficulty)
     {
-        case GAME_MODE_CLASSIC:
-            g_Game.numContinues = 0;
+        case GAME_DIFFICULTY_EASY:
+            g_Players[0].score.continues = 3;
             break;
-        case GAME_MODE_STORY: {
-            switch(g_Game.gameDifficulty)
-            {
-                case GAME_DIFFICULTY_EASY:
-                    g_Game.numContinues = 3;
-                    break;
-                case GAME_DIFFICULTY_MEDIUM:
-                    g_Game.numContinues = 2;
-                    break;
-                case GAME_DIFFICULTY_HARD:
-                    g_Game.numContinues = 1;
-                    break;
-                default:
-                    break;
-            }
+        case GAME_DIFFICULTY_MEDIUM:
+            g_Players[0].score.continues = 2;
             break;
-        }
-        case GAME_MODE_BATTLE:
-            g_Game.numContinues = 0;
+        case GAME_DIFFICULTY_HARD:
+            g_Players[0].score.continues = 1;
             break;
         default:
             break;
@@ -237,7 +243,7 @@ void initPlayers(void)
         player->input->id = 0;
         player->input->isSelected = false;
         
-        player->score.deaths = 0;
+        player->score.continues = 0;
         player->score.points = 0;
         player->score.total = 0;
         player->score.lastMillion = 0;
@@ -258,10 +264,10 @@ void initPlayers(void)
         // CHARACTER
         player->character.choice = CHARACTER_NONE;
         player->character.selected = false;
-        player->maxSpeed = toFIXED(0);
-        player->acceleration = toFIXED(0);
-        player->basePower = toFIXED(0);
-        player->power = toFIXED(0);
+        player->maxSpeed = FIXED_0;
+        player->acceleration = FIXED_0;
+        player->basePower = FIXED_0;
+        player->power = FIXED_0;
         
         // TEAM
         player->teamChoice = TEAM_COUNT;
@@ -283,21 +289,21 @@ void initPlayers(void)
         
         // cursors
         if (i == 1) {
-            hsl_incSprites.h -= 90;
+            hsl_incSprites[HSL_CURSOR].h -= 90;
         }
         else if (i == 2) {
-            hsl_incSprites.h -= 180;
+            hsl_incSprites[HSL_CURSOR].h -= 180;
         }
         else if (i == 3) {
-            hsl_incSprites.h -= 270;
+            hsl_incSprites[HSL_CURSOR].h -= 270;
         }
-        update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i]);
+        update_palette_Pmenu[i] = update_sprites_color(&p_rangePmenu[i], HSL_CURSOR);
         
         // INPUTS
-        player->curPos.dx = toFIXED(0);
-        player->_sprite->vel.x = toFIXED(0);
-        player->curPos.dy = toFIXED(0);
-        player->_sprite->vel.y = toFIXED(0);
+        player->curPos.dx = FIXED_0;
+        player->_sprite->vel.x = FIXED_0;
+        player->curPos.dy = FIXED_0;
+        player->_sprite->vel.y = FIXED_0;
         
         player->attack1 = false;
         player->attack2 = false;
@@ -716,8 +722,8 @@ void getClassicModeInput(void)
         player->moveHorizontal = false;
         player->moveVertical = false;
         if (player->input->isAnalog) {
-            player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
-            if (player->curPos.dy > toFIXED(0) || player->curPos.dy < toFIXED(0)) {
+            player->curPos.dy = jo_fixed_mult(player->input->axis_y, FIXED_HALF);
+            if (player->curPos.dy > FIXED_0 || player->curPos.dy < FIXED_0) {
                 player->moveVertical = true;
             }
         }
@@ -757,11 +763,11 @@ void getPlayersInput(void)
         player->moveVertical = false;
         if (player->input->isAnalog) {
             player->curPos.dx = player->input->axis_x;
-            player->curPos.dy = jo_fixed_mult(player->input->axis_y, toFIXED(0.5));
-            if (player->curPos.dx > toFIXED(0) || player->curPos.dx < toFIXED(0)) {
+            player->curPos.dy = jo_fixed_mult(player->input->axis_y, FIXED_HALF);
+            if (player->curPos.dx > FIXED_0 || player->curPos.dx < FIXED_0) {
                 player->moveHorizontal = true;
             }
-            if (player->curPos.dy > toFIXED(0) || player->curPos.dy < toFIXED(0)) {
+            if (player->curPos.dy > FIXED_0 || player->curPos.dy < FIXED_0) {
                 player->moveVertical = true;
             }
         }
@@ -895,7 +901,6 @@ void playerAttack(PPLAYER player) {
 
 void regenPlayerPower(PPLAYER player)
 {
-    // TODO: don't charge shield it outside of a certain area
     // TODO: draw some sort of visual effect when the shield is charging (maybe a sound effect)
     if (player->onLeftSide && player->_sprite->pos.x > -BOUNDARY_SHIELD_REGEN_SLOW) {
         return;
@@ -914,7 +919,7 @@ void regenPlayerPower(PPLAYER player)
         !jo_is_input_key_pressed(player->input->id, JO_KEY_B) || 
         !jo_is_input_key_pressed(player->input->id, JO_KEY_C)) {
         if (player->shield.power < SHIELD_POWER) {
-            if (JO_MOD_POW2(frame, regen_speed) == 0) { // modulus
+            if (JO_MOD_POW2(g_Game.frame, regen_speed) == 0) { // modulus
                 // pcm_play(g_Assets.rechargePcm8, PCM_PROTECTED, 6); // don't think this works because it keeps playing
                 player->shield.power++;
             }
@@ -978,10 +983,9 @@ void updatePlayers(void)
     }
 }
 
-
 void speedLimitPlayer(PPLAYER player)
 {
-    FIXED bonusSpeed = toFIXED(0);
+    FIXED bonusSpeed = FIXED_0;
     FIXED y_up_speed;
     FIXED y_dn_speed;
     FIXED x_l_speed;
@@ -998,13 +1002,6 @@ void speedLimitPlayer(PPLAYER player)
         x_l_speed  = MAX_X_SPEED;
         x_r_speed  = -MAX_X_SPEED;
     }
-    /*
-    if(player->exceedLimitTimer > 0)
-    {
-        player->exceedLimitTimer--;
-        bonusSpeed = toFIXED(4.0);
-    }
-    */
 
     // validate speeds
     if(player->curPos.dx > x_l_speed + bonusSpeed)
@@ -1029,13 +1026,7 @@ void speedLimitPlayer(PPLAYER player)
 }
 
 void boundPlayer(PPLAYER player)
-{
-    // TODO:  charge power only when inside boundary
-    // regenPlayerPower(player);
-    // idea: set a boolean "insideGoal"
-    // if it meets each case, set to true - otherwise, default to false
-    // if it's true, charge the shield/power meter
-       
+{       
     FIXED boundary_middle;
     if (g_Game.isActive) {
         boundary_middle = PLAYER_BOUNDARY_MIDDLE;
@@ -1100,18 +1091,62 @@ bool explodePLayer(PPLAYER player)
         touchedBy[player->playerID].touchCount = 0;
         if (player->numLives == 0) {
             // kill player
-            player->score.deaths++;
+            player->score.continues--;
+            player->subState = PLAYER_STATE_DEAD;
+            g_Team.objectState[player->teamChoice] = OBJECT_STATE_INACTIVE;
+            g_Game.currentNumPlayers--;
             if (player->isAI && g_Game.gameMode == GAME_MODE_STORY) {
                 g_Game.countofRounds++; // for story mode only
             }
-            player->subState = PLAYER_STATE_DEAD;
-            // player->objectState = OBJECT_STATE_INACTIVE;
-            g_Team.objectState[player->teamChoice] = OBJECT_STATE_INACTIVE;
-            g_Game.currentNumPlayers--;
             if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
                 setGoalSize(); // not in story mode
             }
         }
     }
     return true;
+}
+
+void killPlayer(Sint8 playerID) {
+    g_Players[playerID].score.continues--;
+    g_Players[playerID].subState = PLAYER_STATE_DEAD;
+    g_Team.objectState[g_Players[playerID].teamChoice] = OBJECT_STATE_INACTIVE;
+    g_Game.currentNumPlayers--;
+    if (g_Players[playerID].isAI && g_Game.gameMode == GAME_MODE_STORY) {
+        g_Game.countofRounds++;
+        // unlock character once you've beaten them
+        if (!characterUnlocked[g_Game.countofRounds] && g_Game.gameDifficulty > GAME_DIFFICULTY_EASY) {
+            characterUnlocked[g_Game.countofRounds] = true;
+            save_game_backup();
+        }
+    }
+    if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
+        setGoalSize();
+    }
+    // player lost all their lives, assign stars to scoring player
+    if (lastTouchedBy != -1 && lastTouchedBy != playerID) {
+        g_Players[lastTouchedBy].score.stars++;
+    }
+    else {
+        for (Uint8 i = 0; i < 3; i++) {
+            Sint8 id = previouslyTouchedBy[i];
+            if (id == -1) continue;
+            if (g_Players[id].subState == PLAYER_STATE_DEAD) continue;
+            if (g_Players[id].objectState == OBJECT_STATE_INACTIVE) continue;
+            if (id == playerID) continue;
+            if (g_Players[playerID].onLeftSide == g_Players[id].onLeftSide) continue;
+            g_Players[id].score.stars++;
+            break;
+        }
+    }
+}
+
+void updatePlayerLives(Uint8 scoredOnPlayerID)
+{
+    if (g_Players[scoredOnPlayerID].numLives > 0) {
+        g_Players[scoredOnPlayerID].numLives--;
+        touchedBy[scoredOnPlayerID].touchCount = 0;
+    }
+    if (g_Players[scoredOnPlayerID] .numLives == 0) {
+        killPlayer(scoredOnPlayerID);
+    }
 }
