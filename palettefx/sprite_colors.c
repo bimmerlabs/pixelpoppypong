@@ -1,14 +1,14 @@
 #include "sprite_colors.h"
+#include "palettetools.h"
+#include "lighting.h"
+#include "font.h"
 #include "../main.h"
-
-#include "../palettetools.h"
-#include "../lighting.h"
-#include "../font.h"
 
 bool do_update_All = false;
 bool do_update_font2All = false;
 bool do_update_ppplogo = false;
 bool do_update_logo1 = false;
+bool do_update_timer = false;
 bool do_update_Goals[MAX_PLAYERS];
 bool do_update_Pmenu[MAX_PLAYERS];
 bool do_update_PmenuAll = false;
@@ -24,6 +24,7 @@ bool update_palette_All = false;
 bool update_palette_font2All = false;
 bool update_palette_ppplogo = false;
 bool update_palette_logo1 = false;
+bool update_palette_timer = false;
 bool update_palette_Goals[MAX_PLAYERS];
 bool update_palette_Pmenu[MAX_PLAYERS];
 bool update_palette_PmenuAll = false;
@@ -45,8 +46,8 @@ RgbPalette rgbSprites = {
       {255, 255, 255}, {1, 1, 1}, {27, 27, 27}, {27, 27, 27}, {247, 247, 1}, {255, 255, 255}, {63, 73, 205}, {247, 247, 1}, 
       {1, 1, 1}, {161, 25, 99}, {213, 77, 153}, {235, 121, 185}, {255, 175, 201}, {40, 130, 200}, {153, 217, 234}, {199, 235, 245}, 
       {205, 205, 205}, {215, 206, 203}, {231, 227, 223}, {255, 255, 255}, {143, 211, 251}, {47, 157, 223}, {39, 123, 173}, {255, 251, 177}, 
-      {255, 243, 1}, {243, 231, 1}, {243, 119, 167}, {223, 47, 91}, {173, 39, 107}, {225, 163, 177}, {195, 75, 99}, {149, 51, 71}, 
-      {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, 
+      {255, 243, 1}, {243, 231, 1}, {243, 119, 167}, {223, 47, 91}, {173, 39, 107}, {225, 164, 176}, {194, 75, 99}, {149, 51, 70}, 
+      {1, 1, 1}, {255, 255, 255}, {0, 0, 0}, {0, 0, 0}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, {85, 217, 255}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {137, 125, 119}, {195, 195, 195}, {201, 197, 193}, {217, 215, 213}, 
       {255, 255, 255}, {0, 0, 0}, {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {195, 195, 195}, {255, 255, 255}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {137, 125, 119}, {195, 195, 195}, {241, 217, 175}, {243, 209, 159}, 
@@ -58,7 +59,7 @@ RgbPalette rgbSprites = {
       {1, 1, 1}, {237, 137, 171}, {241, 189, 207}, {127, 127, 127}, {19, 19, 19}, {195, 195, 195}, {65, 65, 65}, {0, 0, 0}, 
       {71, 65, 63}, {1, 1, 1}, {255, 255, 255}, {63, 73, 205}, {1, 163, 233}, {5, 183, 255}, {1, 203, 255}, {153, 217, 235}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {137, 125, 119}, {195, 195, 195}, {253, 245, 239}, {201, 197, 193}, 
-      {255, 255, 255}, {255, 103, 53}, {253, 179, 1}, {255, 201, 15}, {255, 205, 1}, {255, 255, 255}, {255, 46, 40}, {205, 31, 27}, 
+      {255, 255, 255}, {255, 103, 53}, {218, 154, 5}, {255, 201, 15}, {255, 205, 1}, {255, 255, 255}, {255, 46, 40}, {205, 31, 27}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {79, 55, 25}, {195, 195, 195}, {175, 141, 103}, {129, 89, 39}, 
       {255, 255, 255}, {255, 241, 187}, {255, 233, 157}, {255, 205, 121}, {225, 155, 85}, {167, 99, 31}, {0, 0, 0}, {0, 0, 0}, 
       {1, 1, 1}, {255, 125, 169}, {255, 175, 201}, {127, 127, 127}, {85, 121, 129}, {195, 195, 195}, {177, 201, 217}, {127, 175, 191}, 
@@ -148,7 +149,7 @@ HslPalette hslSprites = {
 // palette ranges
 PaletteRange p_rangeSpritesAll   = { 0, 233 };     // all colors (excluding normal map colors)
 
-// FONT (start index chosen arbitrarily - don't forget to reset palette after exiting screen!
+// FONT (start index chosen arbitrarily) - don't forget to reset palette after exiting screen!
 PaletteRange p_rangeFont2All  = {64, 93}; // A - END
 PaletteRange p_rangeFont2[FONT_CHARS] = {
     {64, 64}, {65, 65}, {66, 66}, {67, 67}, {68, 68}, {69, 69}, // A B C D E F
@@ -174,6 +175,7 @@ PaletteRange p_rangeMenu4     = { 31, 31 };
 PaletteRange p_rangePpoppy1   = { 33, 36 };     // pixel poppy
 PaletteRange p_rangePpoppy2   = { 37, 39 };
 PaletteRange p_rangePpoppy3   = { 40, 43 };
+PaletteRange p_rangeTimer     = { 56, 57 };
 PaletteRange p_rangeMacchi1   = { 65, 66 };     // macchi
 PaletteRange p_rangeMacchi2   = { 68, 71 };
 PaletteRange p_rangeJelly1    = { 81, 82 };     // jelly
@@ -195,7 +197,7 @@ PaletteRange p_rangeWuppy2    = { 196, 199 };
 PaletteRange p_rangeStadler1  = { 209, 215 };   // stadler
 PaletteRange p_rangeGarfield1 = { 225, 231 };   // garfield
 PaletteRange p_rangeBomb      = { 89, 91 };     // bomb
-PaletteRange p_rangeFish      = { 153, 156 };   // fish
+PaletteRange p_rangeFish      = { 154, 156 };   // fish
 PaletteRange p_rangeShroom    = { 158, 159 };   // mushroom
 PaletteRange p_rangeNormalMap = { 234, 254 };   // normal map
 
@@ -238,12 +240,19 @@ bool update_sprites_palette(PaletteRange *range) {
     return false;
 }
 
-void reset_sprites (void) {
+void reset_sprites(void) {
     MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeSpritesAll);
     min_max_sl_id(&hslSprites, &p_rangeSpritesAll, &attrSprites);
     MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites[HSL_MAX], &p_rangeSpritesAll);
 }
 
+void reset_bomb_color(void) {
+    hsl_incSprites[HSL_BOMB].h = 0;
+    MultiRgbToHsl(&hslSprites, &rgbSprites, &p_rangeBomb);
+    // min_max_sl_id(&hslSprites, &p_rangeBomb, &attrSprites);
+    MultiPalette2Buffer(&bufferSprites, &hslSprites, &hsl_incSprites[HSL_BOMB], &p_rangeBomb);
+    do_update_bomb = true;
+}
 
 void update_ppplogo_color(void) {
     NormalMapLighting2d(&hslSprites, &rgbSprites, &bufferSprites, &light, &p_rangeNormalMap, &hsl_incSprites[HSL_MAX]);
