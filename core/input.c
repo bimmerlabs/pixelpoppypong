@@ -1,11 +1,8 @@
 #include <jo/jo.h>
 #include "../main.h"
 #include "input.h"
-#include "assets.h"
-#include "../objects/player.h"
-INPUT g_Inputs[MAX_INPUTS] = {0};
-
-extern PLAYER g_Players[MAX_PLAYERS];
+#include "assets.h"
+INPUT g_Inputs[MAX_INPUTS] = {0};
 void init_inputs(void) {
     PINPUT input = NULL;
     for(unsigned int i = 0; i < COUNTOF(g_Inputs); i++)
