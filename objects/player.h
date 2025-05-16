@@ -1,6 +1,6 @@
 #pragma once
-#include "../sprites.h"
-#include "../input.h"
+#include "../core/sprites.h"
+#include "../core/input.h"
 #include "object.h"
 #include "teams.h"
 

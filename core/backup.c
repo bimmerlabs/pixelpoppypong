@@ -1,7 +1,7 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "backup.h"
-#include "gameplay.h"
+#include "../game/gameplay.h"
 
 static Uint8 backup_device = 0;
 SaveGame save_game;

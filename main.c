@@ -28,23 +28,22 @@
 
 #include <jo/jo.h>
 #include "main.h"
-#include "backup.h"
-#include "font.h"
-#include "gameplay.h"
-#include "input.h"
-#include "pause.h"
-#include "assets.h"
-#include "screen_transition.h"
-#include "ppp_logo.h"
-#include "title_screen.h"
-#include "team_select.h"
-// #include "character_select.h"
+#include "core/backup.h"
+#include "core/input.h"
+#include "core/pause.h"
+#include "core/assets.h"
+#include "core/screen_transition.h"
+#include "game/ppp_logo.h"
+#include "game/title_screen.h"
+#include "game/gameplay.h"
+#include "game/team_select.h"
+#include "game/credits.h"
+#include "game/highscores.h"
+#include "game/name_entry.h"
 #include "objects/player.h"
-#include "BG_DEF/nbg1.h"
-#include "BG_DEF/sprite_colors.h"
-#include "credits.h"
-#include "highscores.h"
-#include "name_entry.h"
+#include "palettefx/font.h"
+#include "palettefx/nbg1.h"
+#include "palettefx/sprite_colors.h"
 
 GAME g_Game = {0};
 
@@ -112,6 +111,7 @@ void initGame(void) {
 
     // did somebody score a goal?
     g_Game.isGoalScored = false;
+    g_Game.goalID = -1;
 
     // is the game finished?
     g_Game.isRoundOver = false;
@@ -276,6 +276,9 @@ void my_input_callback(void) {
 // cycle through HSL colors
 void my_color_calc(void)
 {
+    // if (g_Game.gameState != GAME_STATE_UNINITIALIZED && g_Game.gameState != GAME_STATE_TRANSITION && g_Game.gameState != GAME_STATE_PPP_LOGO) {
+        // updateStarsColors();
+    // }
     switch (g_Game.gameState) {
         case GAME_STATE_PPP_LOGO: {
             if (do_update_ppplogo) {
@@ -320,6 +323,9 @@ void my_color_calc(void)
 }
 void my_palette_update(void)
 {
+    // if (g_Game.gameState != GAME_STATE_UNINITIALIZED && g_Game.gameState != GAME_STATE_TRANSITION && g_Game.gameState != GAME_STATE_PPP_LOGO) {
+        // updateStarsPalette();
+    // }
     switch (g_Game.gameState) {
         case GAME_STATE_PPP_LOGO: {
             if (update_palette_ppplogo) {
@@ -360,6 +366,7 @@ void my_palette_update(void)
         }
     }
 }
+
 
 void run_once(void) {
     load_game_backup();
@@ -427,6 +434,7 @@ void			jo_main(void)
     
     // do this last?
     jo_core_add_callback(my_color_calc);
+    // jo_core_add_vblank_callback(animateStars);
     jo_core_add_vblank_callback(my_palette_update);
             
     jo_core_run();

@@ -1,8 +1,8 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "input.h"
 #include "assets.h"
-#include "objects/player.h"
+#include "../objects/player.h"
 INPUT g_Inputs[MAX_INPUTS] = {0};
 
 extern PLAYER g_Players[MAX_PLAYERS];

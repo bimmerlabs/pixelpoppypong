@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jo/jo.h>
-#include "objects/player.h"
+#include "../objects/player.h"
 
 #define TEAM_SELECT_TIMER (1 * 60)
 

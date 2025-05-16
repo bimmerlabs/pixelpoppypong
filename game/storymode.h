@@ -1,8 +1,8 @@
 #pragma once
 
 #include <jo/jo.h>
-#include "assets.h"
-#include "sprites.h"
+#include "../core/assets.h"
+#include "../core/sprites.h"
 #include "gameplay.h"
 #include "team_select.h"
 

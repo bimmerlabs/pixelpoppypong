@@ -1,16 +1,15 @@
 #include <jo/jo.h>
-#include "main.h"
-#include "assets.h"
-#include "state.h"
+#include "../main.h"
 #include "ppp_logo.h"
-#include "screen_transition.h"
-#include "BG_DEF/nbg1.h"
-#include "lighting.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/assets.h"
+#include "../core/state.h"
+#include "../core/screen_transition.h"
+#include "../palettefx/nbg1.h"
+#include "../palettefx/lighting.h"
+#include "../palettefx/sprite_colors.h"
 
 unsigned int g_LogoTimer = 0; // not worth putting these in a struct..
 int transparency_rate = TRANSPARENCY_MAX;
-Uint8 current_background = BG_NIGHT;
 
 // // cheat codes?
 // static bool draw_start_text = true;
@@ -30,35 +29,7 @@ void pppLogo_init(void)
      || g_Game.lastState == GAME_STATE_CREDITS) {
         unloadGameAssets();
     }
-        
-    // this way only until I implement palette adjustments
-    if (!g_GameOptions.use_rtc) {
-        current_background++;
-        if (current_background > 4) {
-            current_background = 1;
-        }
-    }
-    else {
-        // update based on time of day
-        jo_getdate(&g_Game.now);
-        // dawn
-        if (g_Game.now.hour >= T_DAWN && g_Game.now.hour < T_DAY) {
-            current_background = BG_DAWN;
-        }
-        // day
-        if (g_Game.now.hour >= T_DAY && g_Game.now.hour < T_DUSK) {
-            current_background = BG_DAY;
-        }
-        // dusk
-        if (g_Game.now.hour >= T_DUSK && g_Game.now.hour < T_NIGHT) {
-            current_background = BG_DUSK;
-        }
-        // night
-        if (g_Game.now.hour >= T_NIGHT && g_Game.now.hour < T_DAWN) {
-            current_background = BG_NIGHT;
-        }
-    }
-    update_nbg1_palette();
+
     loadTitleScreenAssets();
     
     if (g_GameOptions.mesh_display) {

@@ -1,6 +1,6 @@
 #include <jo/jo.h>
+#include "../main.h"
 #include "screen_transition.h"
-#include "main.h"
 #include "state.h"
 #include "math.h"
 #include "assets.h"

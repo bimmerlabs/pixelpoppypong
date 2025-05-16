@@ -5,6 +5,12 @@ unsigned char hunds = 0;
 unsigned char tens = 0;
 unsigned char ones = 0;
 
+TIME g_Timer = {
+    .min_ones = 0,
+    .sec_tens = 0,
+    .sec_ones = 0,
+};
+
 // shuffles an array of integers
 void shuffleArray(unsigned int* array, unsigned int size)
 {
@@ -54,4 +60,23 @@ void convertNumberToDigits(int number)
     hunds = (number / 100);
     tens = ((number - ((number/100) * 100))/10);
     ones = (number % 10); // modulus
+}
+
+void convertSecondsToTime(int totalSeconds)
+{
+    if(totalSeconds == 0)
+    {
+        g_Timer.min_ones = 0;
+        g_Timer.sec_tens = 0;
+        g_Timer.sec_ones = 0;
+        return;
+    }
+    
+    int minutes = totalSeconds / 60;
+    int seconds = totalSeconds % 60;
+
+    g_Timer.min_ones = minutes % 10;
+
+    g_Timer.sec_tens = seconds / 10;
+    g_Timer.sec_ones = seconds % 10;
 }

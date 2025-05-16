@@ -1,6 +1,6 @@
 #pragma once
-#include "objects/player.h"
-#include "highscores.h"
+#include "../objects/player.h"
+#include "../game/highscores.h"
 
 typedef struct _SAVEGAME 
 {

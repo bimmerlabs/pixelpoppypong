@@ -1,8 +1,7 @@
 #pragma once
 
-#include "assets.h"
-// #include "character_select.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/assets.h"
+#include "../palettefx/sprite_colors.h"
 
 #define NAME_ENTRY_TIMER 99
 #define NAME_X_RADIUS toFIXED(140)

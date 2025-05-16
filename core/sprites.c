@@ -1,6 +1,6 @@
 #include "sprites.h"
 #include "assets.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../palettefx/sprite_colors.h"
     
 Sprite font = {
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
@@ -139,6 +139,20 @@ Sprite character_portrait = {
     .zmode = _ZmCC
 };
 
+Sprite dead = {
+    .pos = {toFIXED(0), toFIXED(0), toFIXED(85)},      // Position x, y, z (all initialized to 0)
+    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
+    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
+    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
+    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
+    .spr_id = 0,                                       // Sprite ID initialized to 0
+    .visible = true,       
+    .pal_id = 0,                                       // Palette ID initialized to 0
+    .flip = sprNoflip,
+    .mesh = MESHoff,
+    .zmode = _ZmCC
+};
+
 Sprite menu_bg2 = {
     .pos = {toFIXED(0), toFIXED(130), toFIXED(95)},    // Position x, y, z (all initialized to 0)
     .scl = {toFIXED(156), toFIXED(50)},                // Scale x, y, z (all initialized to 1)
@@ -181,21 +195,7 @@ Sprite player_cursor = {
     .zmode = _ZmCC
 };
 
-Sprite timer_num1 = {
-    .pos = {toFIXED(16), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
-    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
-    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
-    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
-    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
-    .spr_id = 0,                                       // Sprite ID initialized to 0
-    .visible = true,       
-    .pal_id = 0,                                       // Palette ID initialized to 0
-    .flip = sprNoflip,
-    .mesh = MESHoff,
-    .zmode = _ZmLT
-};
-
-Sprite timer_num10 = {
+Sprite timer = {
     .pos = {toFIXED(0), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
     .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
     .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
@@ -207,20 +207,6 @@ Sprite timer_num10 = {
     .flip = sprNoflip,
     .mesh = MESHoff,
     .zmode = _ZmCT
-};
-
-Sprite timer_num100 = {
-    .pos = {toFIXED(-14), toFIXED(-210), toFIXED(80)},   // Position x, y, z (all initialized to 0)
-    .scl = {toFIXED(2), toFIXED(2)},                   // Scale x, y, z (all initialized to 1)
-    .rot = {0, 0, 0},                                  // Rotation x, y, z (all initialized to 0 ANGLE)
-    .vec2 = {JO_FIXED_0, JO_FIXED_0},                  // 2D Vector (x and y initialized to 0)
-    .vel = {JO_FIXED_0, JO_FIXED_0},                   // Velocity (x and y initialized to 0)
-    .spr_id = 0,                                       // Sprite ID initialized to 0
-    .visible = true,       
-    .pal_id = 0,                                       // Palette ID initialized to 0
-    .flip = sprNoflip,
-    .mesh = MESHoff,
-    .zmode = _ZmRT
 };
 
 Sprite meter = {

@@ -1,14 +1,15 @@
 #pragma once
 
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "sprites.h"
 #include "pcmsys.h"
 
 #define NUM_PAW_SPRITES 5
-#define NUM_POPPY_SPRITES 8
+#define NUM_POPPY_SPRITES 7
 
 #define NUM_CHARACTER_SPRITES 12
+#define NUM_X_SPRITES 1
 #define NUM_PCURSOR_SPRITES 4
 
 #define NUM_FONT_CHARS 40
@@ -16,8 +17,8 @@
 #define NUM_TITLE_MENU_TEXT 12
 
 #define NUM_GOAL_SPRITES 4
-#define NUM_TIMER_SPRITES 11
-#define NUM_HEART_SPRITES 5
+#define NUM_TIMER_SPRITES 12
+#define NUM_HEART_SPRITES 4
 #define NUM_SHIELD_SPRITES 7
 
 #define NUM_MENUBG_SPRITES 9
@@ -59,6 +60,7 @@ typedef struct _assets
 
     // team selection
     int characters[NUM_CHARACTER_SPRITES];
+    int dead[NUM_X_SPRITES];
     int pcursor[NUM_PCURSOR_SPRITES];
     
     // players sprites

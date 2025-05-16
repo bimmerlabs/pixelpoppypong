@@ -1,14 +1,14 @@
 #pragma once
 
 #include <jo/jo.h>
-#include "state.h"
-#include "util.h"
-#include "audio.h"
+#include "core/state.h"
+#include "core/util.h"
+#include "core/audio.h"
 #if ENABLE_DEBUG_MODE == 1
-    #include "debug.h"
+    #include "core/debug.h"
 #endif
 
-#define VERSION "0.79"
+#define VERSION "0.84"
 #define MAX_PLAYERS 4
 
 // Screen position
@@ -122,6 +122,7 @@ typedef struct _GAME
 
     // did somebody score a goal?
     bool isGoalScored;
+    signed char goalID;
 
     // is the game finished?
     bool isRoundOver;

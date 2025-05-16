@@ -1,14 +1,14 @@
 #include <jo/jo.h>
-#include "main.h"
-#include "assets.h"
-#include "state.h"
-#include "backup.h"
 #include "highscores.h"
 #include "name_entry.h"
-#include "screen_transition.h"
-#include "BG_DEF/nbg1.h"
-#include "lighting.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../main.h"
+#include "../core/assets.h"
+#include "../core/state.h"
+#include "../core/backup.h"
+#include "../core/screen_transition.h"
+#include "../palettefx/nbg1.h"
+#include "../palettefx/lighting.h"
+#include "../palettefx/sprite_colors.h"
 
 const char letters[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!.< ";
 

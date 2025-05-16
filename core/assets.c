@@ -32,6 +32,7 @@ jo_tile shield_tileset[NUM_SHIELD_SPRITES] = {0};
 jo_tile menubg_tileset[NUM_MENUBG_SPRITES] = {0};
 
 jo_tile character_tileset[NUM_CHARACTER_SPRITES] = {0};
+jo_tile dead_tileset[NUM_X_SPRITES] = {0};
 jo_tile pcursor_tileset[NUM_PCURSOR_SPRITES] = {0};
 
 jo_tile bomb_tileset[NUM_BOMB_SPRITES] = {0};
@@ -240,15 +241,29 @@ void loadCharacterAssets(void)
 void loadGameAssets(void)
 {
     g_Game.isLoading = true;
+    
+    // Items (load first so the explosion can be re-used for other elements)
+    loadSprite(&bomb_item, g_Assets.bomb, "BOMB.TGA", bomb_tileset, NUM_BOMB_SPRITES, 24, 24, true);
+    loadSprite(&bomb_item, g_Assets.explosion, "EXPLOD.TGA", explode_tileset, NUM_EXPLOD_SPRITES, 72, 72, false);
+    loadSprite(&fishtank_item, g_Assets.fishtank, "FISH.TGA", fishtank_tileset, NUM_FISH_SPRITES, 24, 24, true);
+    loadSprite(&shroom_item, g_Assets.shroom, "SHROOM.TGA", shroom_tileset, NUM_SHROOM_SPRITES, 24, 24, true);
+    
     // UI elements
-    loadSprite(&timer_num1, g_Assets.timer, "NUM1X1.TGA", timer_tileset, NUM_TIMER_SPRITES, 16, 16, true);
-    timer_num10.anim1.asset = g_Assets.timer;
-    timer_num100.anim1.asset = g_Assets.timer;
+    loadSprite(&timer, g_Assets.timer, "NUM1X1.TGA", timer_tileset, NUM_TIMER_SPRITES, 16, 16, true);
 
     loadSprite(&goal[0], g_Assets.goal1, "GOAL1.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
     loadSprite(&goal[1], g_Assets.goal2, "GOAL2.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
     loadSprite(&goal[2], g_Assets.goal3, "GOAL3.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
     loadSprite(&goal[3], g_Assets.goal4, "GOAL4.TGA", goal_tileset, NUM_GOAL_SPRITES, 32, 12, true);
+    
+    goal[0].anim2.asset = g_Assets.explosion;
+    goal[0].anim2.max = bomb_item.anim2.max;   
+    goal[1].anim2.asset = g_Assets.explosion;
+    goal[1].anim2.max = bomb_item.anim2.max;   
+    goal[2].anim2.asset = g_Assets.explosion;
+    goal[2].anim2.max = bomb_item.anim2.max;   
+    goal[3].anim2.asset = g_Assets.explosion;
+    goal[3].anim2.max = bomb_item.anim2.max;
     
     loadSprite(&heart, g_Assets.heart, "HEARTS.TGA", heart_tileset, NUM_HEART_SPRITES, 8, 8, true);
     star.anim1.asset = g_Assets.heart;
@@ -265,13 +280,8 @@ void loadGameAssets(void)
     shield[3].anim1.max = 6,
     shield[3].spr_id = shield[3].anim1.asset[6];
     
-    
-    // Items
-    loadSprite(&bomb_item, g_Assets.bomb, "BOMB.TGA", bomb_tileset, NUM_BOMB_SPRITES, 24, 24, true);
-    loadSprite(&bomb_item, g_Assets.explosion, "EXPLOD.TGA", explode_tileset, NUM_EXPLOD_SPRITES, 72, 72, false);
-    loadSprite(&fishtank_item, g_Assets.fishtank, "FISH.TGA", fishtank_tileset, NUM_FISH_SPRITES, 24, 24, true);
-    loadSprite(&shroom_item, g_Assets.shroom, "SHROOM.TGA", shroom_tileset, NUM_SHROOM_SPRITES, 24, 24, true);
-    
+    loadSprite(&dead, g_Assets.dead, "X.TGA", dead_tileset, NUM_X_SPRITES, 24, 24, true);
+        
     pixel_poppy.anim2.asset = g_Assets.explosion;
     pixel_poppy.anim2.max = bomb_item.anim2.max;
     

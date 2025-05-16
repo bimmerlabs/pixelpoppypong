@@ -1,14 +1,14 @@
 #include <jo/jo.h>
-#include "main.h"
-#include "assets.h"
-#include "state.h"
-#include "backup.h"
+#include "../main.h"
 #include "highscores.h"
 #include "character_select.h"
-#include "screen_transition.h"
-#include "BG_DEF/nbg1.h"
-#include "lighting.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/assets.h"
+#include "../core/state.h"
+#include "../core/backup.h"
+#include "../core/screen_transition.h"
+#include "../palettefx/nbg1.h"
+#include "../palettefx/lighting.h"
+#include "../palettefx/sprite_colors.h"
 
 unsigned int g_CharacterEntryTimer = 0;
 unsigned int g_CharacterEntrySelection = 0;

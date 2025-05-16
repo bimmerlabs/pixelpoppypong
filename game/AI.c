@@ -1,8 +1,8 @@
 #include "AI.h"
-#include "main.h"
-#include "assets.h"
 #include "physics.h"
 #include "gameplay.h"
+#include "../main.h"
+#include "../core/assets.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 

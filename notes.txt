@@ -237,38 +237,39 @@ version 0.7
 	-get a score for touching items (done)
 
 version 0.8
--BUG FIX:	
+-BUG FIX:
+	-still have transition issues when pressing start on the ppplogo screen
 	-if nobody has touched the ball, the player loses most of their lives if scored on (fixed)
+	-fix "restart" in storymode so background is dark
 -add effects/transitions when somebody dies
-	-explosion (player & goals)
+	-explosion (player & goals) (done)
 	-grow the goal/player in the new location
--remove extra "object states" (maybe later)
-	-only keep player objectstate and substate
-	-remove player "isplaying"
-	-add player pointer to team object, and use player objectstate like the goal object does
 -make "RTC" option update background colors in real time (either to indexed or to the time zone color)
 -make "big head" option hidden (have to beat in normal mode?) (done)
 	-remove "big head" from easy mode (done)
 -fix loading screen at first boot (audio takes a while) (DONE)
 -add makefile option to turn off all debug stuff for "release" build (done)
+-sound effects (started)
+	-add consistent volume setting (like CD playback)
+	-fix order or menu effects (start, select, back, etc) (done)
+	-add "taunt" sounds whe player presses x-y-z
+	-sound test
+-lighting
+	adjust backgrounds depending on items (bombs, shrooms, etc)
+	flash the goal of the person scored on (done)
+	flash bomb red when it's about to explode (done)
+	adjust the color of the fish so it's not always gold (done)
+	adjust color of background depending shroom?
+-finish analog adjustment menu (done)
+	graphics/slider (maybe in a future game)
+	"tick" sound (done)
+
+version 0.9? (review build)
 -music
 	-fix glitches at end of songs?
 	-stop song from playing before other one has ended while scoring
 	-continue music
--sound effects (started)
-	-add consistent volume setting (like CD playback)
-	-fix order or menu effects (start, select, back, etc) (done)
-	-additional effects?
--lighting
-	adjust backgrounds depending on items (bombs, shrooms, etc)
-	flash the goal of the person scored on
-	adjust color of player depending items (shrooms)
--sound test
--finish analog adjustment menu
-	graphics/slider
-	"tick" sound (done)
-
-version 0.9? (review build)
+	-shield effect doesn't always get initialized (as blank)
 -character select (story mode) (LATER)
 	note: is a combo of team_select and name_entry
 	-load assets (same as team_select
@@ -282,7 +283,6 @@ version 0.9? (review build)
 	store mode played?
 	store big head mode?
 -tweak pause menu to be more responsive (done)
--fix "restart" in storymode so background is dark
 -AI enhancements
 -polishing?
 -big head mode? (done)
@@ -298,7 +298,6 @@ version 1.0:
 	-controller inputs (done)
 	-analog support (done)
 	-screen modes (2026)
-	-sound test
 -player select (done)
 -full gameplay loop
 	-physics (done)
@@ -319,6 +318,10 @@ version 1.0:
 -lighting (normal maps?)
 -palette animations (done)
 -screen modes (2026)
+-remove extra "object states" (maybe later)
+	-only keep player objectstate and substate
+	-remove player "isplaying"
+	-add player pointer to team object, and use player objectstate like the goal object does
 
 play music on title screen (temp) (done)
 transition from menu to title (nextstate) (done)

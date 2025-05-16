@@ -1,10 +1,10 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "credits.h"
-#include "assets.h"
 #include "ppp_logo.h" // references transparency_rate
-#include "screen_transition.h"
-#include "BG_DEF/nbg1.h"
+#include "../core/assets.h"
+#include "../core/screen_transition.h"
+#include "../palettefx/nbg1.h"
 static CREDITS credits = {0};
 
 void initCreditsStruct(void) {

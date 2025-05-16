@@ -1,13 +1,24 @@
 #include <jo/jo.h>
 #include "goal.h"
 #include "../main.h"
-#include "../highscores.h"
-#include "../BG_DEF/sprite_colors.h"
+#include "../game/highscores.h"
+#include "../palettefx/sprite_colors.h"
 
 GOAL g_Goal[MAX_PLAYERS] = {0};
+bool g_AnimateGoal = false;
+bool g_ExplodeGoal = false;
+
+static bool goal_increasing = false;
+static int goal_h_value = 0;
+static short goal_animation_cycles = 0;
 
 void initGoalColors(void)
 {
+    g_AnimateGoal = false;
+    g_ExplodeGoal = false;
+    goal_increasing = false;
+    goal_h_value = 0;
+    goal_animation_cycles = 0;
     for(unsigned int i = 0; i < MAX_PLAYERS; i++)
     {
         // set initial player colors (player 0 uses the default)
@@ -21,6 +32,40 @@ void initGoalColors(void)
             hsl_incSprites[HSL_GOAL].h -= 270;
         }
         update_palette_Goals[i] = update_sprites_color(&p_rangeGoals[i], HSL_GOAL);
+    }
+}
+
+void animateGoalColor(bool *_do_update) {
+    if (!g_AnimateGoal) {
+        return;
+    }
+    if (goal_animation_cycles < 9) {
+        if (goal_increasing) {
+            if (goal_h_value < 6) {
+                goal_h_value += 1;
+                hsl_incSprites[HSL_GOAL].h = -5;
+            } 
+            else {
+                goal_increasing = false;
+            }
+        } 
+        else {
+            if (goal_h_value > -6) {
+                goal_h_value -= 1;
+                hsl_incSprites[HSL_GOAL].h = +5;
+            } 
+            else {
+                goal_increasing = true;
+            }
+            if (goal_h_value == 0) {
+                goal_animation_cycles++;
+            }
+        }
+        *_do_update = true;
+    }
+    else {
+        g_AnimateGoal = false;
+        goal_animation_cycles = 0;
     }
 }
 
@@ -207,6 +252,40 @@ void drawGoals(void) {
     }
 }
 
+void explodeGoals(void) {
+    if (!g_ExplodeGoal) {
+        return;
+    }
+    PGOAL _goal = NULL;
+    for(unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        _goal = &g_Goal[i];
+        if (_goal->player->isAI && g_Game.gameMode == GAME_MODE_STORY) {
+            continue;
+        }
+        if (g_Team.objectState[_goal->player->teamChoice] == OBJECT_STATE_ACTIVE && _goal->player->subState == PLAYER_STATE_DEAD) {
+            _goal->sprite->rot.z += 1;
+            if (g_Transition.explosion_flash) {
+                g_Transition.explosion_flash = explosionEffect();
+                set_spr_scale(_goal->sprite, 3, 3);
+                _goal->sprite->pos.y = toFIXED(_goal->pos.mid);
+                _goal->sprite->zmode = _ZmCC;
+            }
+            else {
+                my_sprite_draw(_goal->sprite);
+                g_ExplodeGoal = explode_animation(_goal->sprite);
+                if (!g_ExplodeGoal) {
+                    _goal->sprite->rot.z = 0;
+                    if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
+                        g_Team.objectState[_goal->player->teamChoice] = OBJECT_STATE_INACTIVE;
+                        setGoalSize(); // not in story mode
+                    }
+                }
+            }
+        }
+    }
+}
+
 void checkRightGoalCollision(Sprite *ball) {
     // iterate through goals on right side, check bounds
     PGOAL _goal;
@@ -217,6 +296,8 @@ void checkRightGoalCollision(Sprite *ball) {
             continue;
         }
         if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            g_Game.goalID = _goal->id;
+            g_AnimateGoal = true;
             if (g_Game.gameMode == GAME_MODE_STORY) {
                 g_Game.isGoalScored = true;
                 calculateScore(ball, 0);
@@ -243,6 +324,8 @@ void checkLeftGoalCollision(Sprite *ball) {
             continue;
         }
         if (ball->pos.y - GOAL_MARGIN > toFIXED(_goal->pos.top) && ball->pos.y + GOAL_MARGIN < toFIXED(_goal->pos.bot)) { // removed ball radius - need another solution
+            g_Game.goalID = _goal->id;
+            g_AnimateGoal = true;
             if (g_Game.gameMode == GAME_MODE_STORY) {
                 g_Game.isGoalScored = true;
                 ballTtouchTimer = 0;

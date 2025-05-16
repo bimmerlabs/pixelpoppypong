@@ -1,13 +1,13 @@
 #include <jo/jo.h>
-#include "main.h"
-#include "backup.h"
-#include "input.h"
-#include "assets.h"
-#include "font.h"
+#include "../main.h"
 #include "title_screen.h"
-#include "screen_transition.h"
-#include "BG_DEF/nbg1.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/screen_transition.h"
+#include "../core/backup.h"
+#include "../core/input.h"
+#include "../core/assets.h"
+#include "../palettefx/font.h"
+#include "../palettefx/nbg1.h"
+#include "../palettefx/sprite_colors.h"
 
 // globals for menu options
 static TITLESCREEN titleScreen = {0};
@@ -118,11 +118,11 @@ void startScreen_update(void)
         return;
     }
     titleScreen.timer++;
-    #if ENABLE_DEBUG_MODE == 1
+    // #if ENABLE_DEBUG_MODE == 1
     titleScreen.poppy_animation_id = my_random_range(0, 4);
-    #else
-    titleScreen.poppy_animation_id = my_random_range(0, 3);
-    #endif
+    // #else
+    // titleScreen.poppy_animation_id = my_random_range(0, 3);
+    // #endif
     if (!titleScreen.logo_bounce && !titleScreen.logo_falling) {
         if (titleScreen.timer == LOGO_TIMER) {
             reset_sprites();
@@ -573,7 +573,7 @@ void drawMenu(void)
             giggle = true;
         }
     }
-    #if ENABLE_DEBUG_MODE == 1
+    // #if ENABLE_DEBUG_MODE == 1
     // eyeroll
     else if (titleScreen.poppy_animation_id == 4) 
     {
@@ -589,7 +589,7 @@ void drawMenu(void)
             titleScreen.poppy_animation_id = 0;
         }
     }
-    #endif
+    // #endif
     
     // make sure poppy continues to scale up if user presses start too fast
     if (titleScreen.poppy_scale < POPPY_MAX_SCALE) {
@@ -866,11 +866,11 @@ void optionsScreen_update(void)
         if (attrNbg1.x_pos > toFIXED(512.0))
             attrNbg1.x_pos = FIXED_0;
     }
-    if (attrNbg1.y_scroll > FIXED_0) {
-        attrNbg1.y_pos += attrNbg1.y_scroll;
-        if (attrNbg1.y_pos > toFIXED(512.0))
-            attrNbg1.y_pos = FIXED_0;
-    }
+    // if (attrNbg1.y_scroll > FIXED_0) {
+        // attrNbg1.y_pos += attrNbg1.y_scroll;
+        // if (attrNbg1.y_pos > toFIXED(512.0))
+            // attrNbg1.y_pos = FIXED_0;
+    // }
     slScrPosNbg1(attrNbg1.x_pos, attrNbg1.y_pos);
     
     drawOptions();

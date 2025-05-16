@@ -1,7 +1,7 @@
 #pragma once
 
-#include "assets.h"
-#include "objects/player.h"
+#include "../core/assets.h"
+#include "../objects/player.h"
 
 #define MIN_VELOCITY_X toFIXED(7)
 #define MIN_VELOCITY_Y toFIXED(3)
@@ -15,6 +15,7 @@
 #define REBOUND toFIXED(0.1) // the lower this is, the bigger the rebound?
 #define FRICTION_COEFFICIENT toFIXED(2.5) // Adjust this value to alter the ball curve
 #define ITEM_RADIUS 32 // Adjust this value to alter the ball curve
+#define TOUCHEDBY_BUFFER 8
 
 typedef struct {
     bool onLeftSide;
@@ -25,7 +26,7 @@ typedef struct {
 
 extern BallTouchTracker touchedBy[MAX_PLAYERS];
 extern Sint8 lastTouchedBy;
-extern Sint8 previouslyTouchedBy[3]; // use as a buffer
+extern Sint8 previouslyTouchedBy[TOUCHEDBY_BUFFER]; // use as a buffer
 extern unsigned int ballTtouchTimer;
 
 void initTouchCounter(Uint8 resetTouchCount);
@@ -80,9 +81,20 @@ static __jo_force_inline void updateBallTouch(PPLAYER player) {
 
     // Update the player who last touched the ball
     touchedBy[player->playerID].hasTouched = true;
-    if (lastTouchedBy != player->playerID) {
-        previouslyTouchedBy[2] = previouslyTouchedBy[1];
-        previouslyTouchedBy[1] = previouslyTouchedBy[0];
+    // if (lastTouchedBy != player->playerID) { // could make a loop, but it is probably slower?
+        // previouslyTouchedBy[7] = previouslyTouchedBy[6];
+        // previouslyTouchedBy[6] = previouslyTouchedBy[5];
+        // previouslyTouchedBy[5] = previouslyTouchedBy[4];
+        // previouslyTouchedBy[4] = previouslyTouchedBy[3];
+        // previouslyTouchedBy[3] = previouslyTouchedBy[2];
+        // previouslyTouchedBy[2] = previouslyTouchedBy[1];
+        // previouslyTouchedBy[1] = previouslyTouchedBy[0];
+        // previouslyTouchedBy[0] = lastTouchedBy;
+    // }
+    if (lastTouchedBy != player->playerID) { // creates buffer of previous touches
+        for (int i = TOUCHEDBY_BUFFER-1; i > 0; i--) {
+            previouslyTouchedBy[i] = previouslyTouchedBy[i - 1];
+        }
         previouslyTouchedBy[0] = lastTouchedBy;
     }
     lastTouchedBy = player->playerID;

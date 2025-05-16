@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "math.h"
 
 #define FRAMERATE1 4 // for animation speed (power of 2)
@@ -76,13 +76,12 @@ extern Sprite menu_choices;
 extern Sprite menu_bg1;
 extern Sprite menu_bg2;
 extern Sprite character_portrait;
+extern Sprite dead;
 extern Sprite player_bg;
 extern Sprite player_cursor;
 
 // game UI
-extern Sprite timer_num1;
-extern Sprite timer_num10;
-extern Sprite timer_num100;
+extern Sprite timer;
 extern Sprite meter;
 extern Sprite heart;
 extern Sprite star;

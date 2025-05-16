@@ -1,21 +1,19 @@
 #include <jo/jo.h>
-#include "main.h"
-#include "input.h"
+#include "../main.h"
 #include "gameplay.h"
 #include "storymode.h"
-#include "backup.h"
-#include "AI.h"
+#include "AI.h"
+#include "../core/input.h"
+#include "../core/backup.h"
 Item g_item = {0};
 // TODO: implement this function
 // static bool isRoundOver(void);
 
 GAMEPLAY g_Gameplay = {0};void initGameplayStruct(void) {
     g_Gameplay.GameTimer = 0;
-    g_Gameplay.BombTimer = 0;
     // g_Gameplay.RoundOverTimer = 0; // NOT USED
     g_Gameplay.DemoTimer = 0;
     g_Gameplay.isGameOver = false; // NOT USED
-    g_Gameplay.explodeBomb = false;
     
     g_Gameplay.draw_demo_text = false;
     g_Gameplay.start_gameplay_timer = false;
@@ -54,6 +52,8 @@ void gameplay_init() {
     
     resetSpriteColors();
     initGoalColors();
+    hsl_incSprites[HSL_FISH].h += FISH_HUE_INCREMENT;
+    do_update_fish = true;
     
     initGoals();
     setGoalSize();
@@ -64,9 +64,11 @@ void gameplay_init() {
     if (g_GameOptions.mesh_display) {
         menu_bg1.mesh = MESHon;
         menu_bg1.spr_id = menu_bg1.anim1.asset[4];
+        // dead.spr_id = dead.anim1.asset[1];
     }
     else {
         menu_bg1.mesh = MESHoff;
+        // dead.spr_id = dead.anim1.asset[0];
     }
     g_Transition.music_in = true;
     g_Transition.all_in = true;
@@ -98,7 +100,7 @@ void gameplay_init() {
     // reset timers
     setGameTimer();
     
-    slScrPosNbg1(FIXED_0, FIXED_0);
+    // slScrPosNbg1(FIXED_0, FIXED_0);
     
     menu_bg1.spr_id = menu_bg1.anim1.asset[4];
     set_spr_position(&menu_bg1, 0, -195, 85);
@@ -175,8 +177,8 @@ void demo_init(void) {
         else {
             g_Gameplay.GameTimer += addedTime;
         }
-        if (g_Gameplay.GameTimer > 999) {
-            g_Gameplay.GameTimer = 999;
+        if (g_Gameplay.GameTimer > TIMER_MAX) {
+            g_Gameplay.GameTimer = TIMER_MAX;
         }
     }
     g_Game.roundBeginTimer = ROUND_BEGIN_TIME_NORMAL;
@@ -186,10 +188,7 @@ void demo_init(void) {
     g_Gameplay.round_start = false;
     g_Game.endDelayTimer = GAME_END_DELAY_TIMEOUT;
     g_Game.BeginTimer = 0;
-    convertNumberToDigits(g_Gameplay.GameTimer);
-    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
-    timer_num10.spr_id = timer_num10.anim1.asset[tens];
-    timer_num1.spr_id = timer_num1.anim1.asset[ones];
+    
     for(unsigned int i = 0; i < MAX_PLAYERS; i++) // this is resetting the mushroom between rounds
     {
         if (!g_Players[i].isBig || !g_Players[i].isSmall) {
@@ -239,14 +238,7 @@ void demo_update(void)
     if (g_Game.isRoundOver) {
         return;
     }
-    
-    // game timer
-    // TODO: minutes/seconds?
-    convertNumberToDigits(g_Gameplay.GameTimer);
-    timer_num100.spr_id = timer_num10.anim1.asset[hunds];
-    timer_num10.spr_id = timer_num10.anim1.asset[tens];
-    timer_num1.spr_id = timer_num1.anim1.asset[ones];
-    
+        
     if (g_Gameplay.GameTimer > 0 && g_Game.frame % 60 == 0) { // modulus
         g_Gameplay.GameTimer--;
         if (g_Gameplay.GameTimer <= 10)
@@ -262,7 +254,6 @@ void demo_update(void)
             g_item.timer[i]--;
         }
     }
-    // if (!g_Game.explodeBall && !g_GameOptions.testCollision) {
     if (!g_Game.explodeBall) {
         ballTtouchTimer++;
     }
@@ -291,15 +282,8 @@ void demo_update(void)
             g_Game.isActive = false;
             g_Game.BeginTimer = 0;
         }
-    }        
-    // bomb explodes at a specific time
-    if (g_Gameplay.BombTimer == 0 && !g_Gameplay.explodeBomb) {
-        g_Gameplay.explodeBomb = true;
-        g_Transition.explosion_flash = true;
     }
-    else {
-        g_Gameplay.BombTimer--;
-    }
+    bombTimer();
 }
 void gameplay_draw(void)
 {    
@@ -312,10 +296,14 @@ void demo_update(void)
     gameplayDebugText();
     #endif
     
+    explodeGoals();
     if (g_Transition.fade_out) { // works for both ball and bomb..
         g_Transition.fade_out = fadeOut(8, NEUTRAL_FADE);
     }
                    
+    animateGoalColor(&do_update_Goals[g_Game.goalID]);
+    animateBombColor(&do_update_bomb);
+    
     if (g_Game.endDelayTimer == 0) {
         // game ending
         if (g_Game.nextState == GAME_STATE_GAMEPLAY && g_Game.countofRounds == MAX_ROUNDS) {
@@ -332,7 +320,7 @@ void demo_update(void)
         }
         else {
             if (g_Game.isRoundOver) {
-                pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 6); // play different sound if player wins vs loses?
+                pcm_play(g_Assets.gameOverPcm8, PCM_PROTECTED, 7); // play different sound if player wins vs loses?
                 g_Game.isRoundOver = false;
                 g_Gameplay.isGameOver = true;
             }
@@ -570,6 +558,7 @@ void gameplayUI_draw(PPLAYER player) {
             heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
             star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             offset = 16;
+            set_spr_position(&dead, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
@@ -579,6 +568,7 @@ void gameplayUI_draw(PPLAYER player) {
             heart_y = -(GAMEPLAY_PORTRAIT_Y - 8);
             star_x = GAMEPLAY_PORTRAIT_X - 208;
             offset = -16;
+            set_spr_position(&dead, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, -GAMEPLAY_PORTRAIT_Y, 90);
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (-GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
@@ -588,6 +578,7 @@ void gameplayUI_draw(PPLAYER player) {
             heart_y = GAMEPLAY_PORTRAIT_Y + 12;
             star_x = -(GAMEPLAY_PORTRAIT_X - 208);
             offset = 16;
+            set_spr_position(&dead, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             set_spr_position(player->_portrait, -GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             set_spr_position(player->_bg, (-GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
@@ -597,6 +588,7 @@ void gameplayUI_draw(PPLAYER player) {
             heart_y = GAMEPLAY_PORTRAIT_Y + 12;
             star_x = GAMEPLAY_PORTRAIT_X - 208;
             offset = -16;
+            set_spr_position(&dead, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             set_spr_position(player->_portrait, GAMEPLAY_PORTRAIT_X, GAMEPLAY_PORTRAIT_Y-2, 90);
             set_spr_position(player->_bg, (GAMEPLAY_PORTRAIT_X-25), (GAMEPLAY_PORTRAIT_Y+24), 80);
             break;
@@ -604,11 +596,15 @@ void gameplayUI_draw(PPLAYER player) {
         default:
             break;
     }
+    my_sprite_draw(player->_portrait);
     draw_heart_element(&heart, player, heart_x, heart_y, offset);
+    if (player->subState == PLAYER_STATE_DEAD) {
+        my_sprite_draw(&dead);
+        return;
+    }
     draw_star_element(&star, player->score.stars, star_x, heart_y, offset);
     set_spr_scale(player->_bg, player->shield.power, POWER_METER_HEIGHT);
     my_sprite_draw(player->_bg);
-    my_sprite_draw(player->_portrait);
 }
 
 void reset_ball_movement(Sprite *ball) {
@@ -782,4 +778,24 @@ bool drop_ball_animation(Sprite *ball) {
         }
     }
     return false;
+}
+
+void drawGameTimer(void) {
+    convertSecondsToTime(g_Gameplay.GameTimer);
+    // min_ones
+    timer.spr_id =timer.anim1.asset[g_Timer.min_ones];
+    set_spr_position(&timer, -30, -210, 80);
+    my_sprite_draw(&timer);
+    // :
+    timer.spr_id = timer.anim1.asset[11];
+    set_spr_position(&timer, -12, -210, 80);
+    my_sprite_draw(&timer);
+    // sec_tens
+    timer.spr_id = timer.anim1.asset[g_Timer.sec_tens];
+    set_spr_position(&timer, 6, -210, 80);
+    my_sprite_draw(&timer);
+    // sec_tens
+    timer.spr_id = timer.anim1.asset[g_Timer.sec_ones];
+    set_spr_position(&timer, 36, -210, 80);
+    my_sprite_draw(&timer); 
 }

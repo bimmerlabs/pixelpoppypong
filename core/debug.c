@@ -1,17 +1,17 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "backup.h"
 #include "screen_transition.h"
-#include "ppp_logo.h"
-#include "title_screen.h"
-#include "team_select.h"
-#include "gameplay.h"
 #include "pause.h"
 #include "assets.h"
-#include "physics.h"
-#include "objects/player.h"
-#include "BG_DEF/nbg1.h"
-#include "credits.h"
+#include "../game/ppp_logo.h"
+#include "../game/title_screen.h"
+#include "../game/team_select.h"
+#include "../game/gameplay.h"
+#include "../game/physics.h"
+#include "../game/credits.h"
+#include "../objects/player.h"
+#include "../palettefx/nbg1.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
@@ -319,14 +319,19 @@ void gameplayDebugText(void) {
         // jo_nbg0_printf(2, 8, "CURPOS.DX:%i", g_Players[0].curPos.dx);
         // jo_nbg0_printf(2, 9, "CURPOS.DY:%i", g_Players[0].curPos.dy);
 
-        jo_nbg0_printf(22, 10, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
-        jo_nbg0_printf(22, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
-        jo_nbg0_printf(22, 12, "WINNER:%i", g_Game.winner);
+        // jo_nbg0_printf(22, 10, "NUMPLAYERS:%i", g_Game.currentNumPlayers);
+        // jo_nbg0_printf(22, 11, "ROUNDOVER:%i", g_Game.isRoundOver);
+        // jo_nbg0_printf(22, 12, "WINNER:%i", g_Game.winner);
         // jo_nbg0_printf(22, 13, "NUMTEAMS:%i", g_Team.numTeams+1);
-        // jo_nbg0_printf(22, 14, "GOALSCORED:%i", g_Game.isGoalScored);
+        jo_nbg0_printf(22, 10, "DOUPDATE1:%i", do_update_Goals[0]);
+        jo_nbg0_printf(22, 11, "DOUPDATE2:%i", do_update_Goals[1]);
+        jo_nbg0_printf(22, 12, "ANIMATEGOAL:%i", g_AnimateGoal);
+        jo_nbg0_printf(22, 13, "GOALID:%i", g_Game.goalID);
+        jo_nbg0_printf(22, 14, "PALETTE1:%i", update_palette_Goals[0]);
+        jo_nbg0_printf(22, 15, "PALETTE2:%i", update_palette_Goals[1]);
 
-        jo_nbg0_printf(4, 10, "P2 SUBSTATE:%i", g_Players[1].subState);
-        jo_nbg0_printf(4, 11, "P2 LIVES:%i", g_Players[1].numLives);
+        // jo_nbg0_printf(4, 10, "P2 SUBSTATE:%i", g_Players[1].subState);
+        // jo_nbg0_printf(4, 11, "P2 LIVES:%i", g_Players[1].numLives);
         // jo_nbg0_printf(4, 12, "P1 CONTINUES:%i", g_Players[0].score.continues);
         // jo_nbg0_printf(4, 10, "LASTTOUCHED:%i", lastTouchedBy);
         // jo_nbg0_printf(4, 11, "PREVIOUSTOUCH:%i", previouslyTouchedBy[0]);

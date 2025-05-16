@@ -1,10 +1,10 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "storymode.h"
-#include "assets.h"
-#include "screen_transition.h"
-#include "objects/player.h"
-#include "BG_DEF/nbg1.h"
+#include "../core/assets.h"
+#include "../core/screen_transition.h"
+#include "../objects/player.h"
+#include "../palettefx/nbg1.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 

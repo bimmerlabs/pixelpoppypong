@@ -1,12 +1,12 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "team_select.h"
-#include "assets.h"
-#include "screen_transition.h"
 #include "physics.h"
-#include "objects/player.h"
-#include "BG_DEF/nbg1.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/assets.h"
+#include "../core/screen_transition.h"
+#include "../objects/player.h"
+#include "../palettefx/nbg1.h"
+#include "../palettefx/sprite_colors.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 

@@ -3,7 +3,7 @@
 
 #include <jo/jo.h>
 #include "palettetools.h"
-#include "math.h"
+#include "../core/math.h"
 
 #define ARC_CENTER_X 127
 #define ARC_CENTER_Z 255

@@ -1,12 +1,12 @@
 #include <jo/jo.h>
-#include "main.h"
+#include "../main.h"
 #include "highscores.h"
-#include "screen_transition.h"
 #include "gameplay.h"
-#include "sprites.h"
 #include "name_entry.h"
-#include "backup.h"
-#include "BG_DEF/nbg1.h"
+#include "../core/screen_transition.h"
+#include "../core/sprites.h"
+#include "../core/backup.h"
+#include "../palettefx/nbg1.h"
 
 static unsigned int highScoreTimer = 0;
 
@@ -169,7 +169,7 @@ void updateScore(Sprite *ball, int playerID) {
         calculateScore(ball, lastTouchedBy);        
     }
     else {
-        for (Uint8 i = 0; i < 3; i++) {
+        for (Uint8 i = 0; i < TOUCHEDBY_BUFFER; i++) {
             Sint8 id = previouslyTouchedBy[i];
             if (id == -1) continue;
             if (g_Players[id].subState == PLAYER_STATE_DEAD) continue;

@@ -2,11 +2,10 @@
 
 #include "physics.h"
 #include "gameplay.h"
-#include "physics.h"
-#include "audio.h"
-#include "objects/player.h"
-#include "objects/goal.h"
-#include "objects/teams.h"
+#include "../core/audio.h"
+#include "../objects/player.h"
+#include "../objects/goal.h"
+#include "../objects/teams.h"
 
 #define SCORE_DISPLAY_TIME (15 * 60)
 

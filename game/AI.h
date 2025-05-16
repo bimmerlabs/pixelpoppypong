@@ -1,8 +1,8 @@
 #ifndef AI_H
 #define AI_H
 
-#include "sprites.h"
-#include "objects/player.h"
+#include "../core/sprites.h"
+#include "../objects/player.h"
 
 #define FIELD_THRESHOLD toFIXED(5) // how far the ball is on the other side (makes AI move ealier / easier)
 #define LARGE_GOAL_THRESHOLD_MAX toFIXED(20)
@@ -16,7 +16,7 @@
 
 #define HARD_AI_MOVEMENT_SPEED   toFIXED(0.0030)
 #define MEDIUM_AI_MOVEMENT_SPEED toFIXED(0.0015)
-#define EASY_AI_MOVEMENT_SPEED   toFIXED(0.0007)
+#define EASY_AI_MOVEMENT_SPEED   toFIXED(0.0010)
 
 void playerAI(Sprite *ball);
 void centerAiPlayer(PPLAYER player);

@@ -1,5 +1,6 @@
 #pragma once
-#include "BG_DEF/sprite_colors.h"
+#include "../palettefx/sprite_colors.h"
+#include "../objects/teams.h"
 
 #define TITLE_TIMER (30 * 60)
 #define LOGO_TIMER (25 * 60)

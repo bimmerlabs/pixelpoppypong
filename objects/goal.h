@@ -1,6 +1,6 @@
 #pragma once
 #include "player.h"
-#include "../assets.h"
+#include "../core/assets.h"
 
 #define GOAL_X_POS 330
 #define GOAL_X_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
@@ -8,6 +8,9 @@
 #define GOAL_RIGHT_BOUNDS toFIXED(GOAL_X_POS - 40) // goal width is 64px
 #define GOAL_CENTER_POS 0
 #define GOAL_MARGIN toFIXED(20)
+
+extern bool g_AnimateGoal;
+extern bool g_ExplodeGoal;
 
 typedef enum _GOAL_SCALE
 {
@@ -57,10 +60,12 @@ typedef struct _GOAL_OBJECT
 extern GOAL g_Goal[MAX_PLAYERS];
 
 void initGoalColors(void);
+void animateGoalColor(bool *_do_update);
+
 void initGoals(void);
 void setGoalSize(void);
-
 void drawGoals(void);
+void explodeGoals(void);
 
 void checkRightGoalCollision(Sprite *ball);
 void checkLeftGoalCollision(Sprite *ball);

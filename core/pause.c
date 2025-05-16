@@ -1,13 +1,13 @@
 #include <jo/jo.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
+#include "../main.h"
 #include "input.h"
 #include "assets.h"
 #include "backup.h"
 #include "util.h"
 #include "screen_transition.h"
-#include "objects/player.h"
+#include "../objects/player.h"
 
 static int pauseChoice = 0;
 

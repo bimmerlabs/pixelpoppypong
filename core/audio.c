@@ -1,6 +1,6 @@
 #include <jo/jo.h>
 #include "audio.h"
-#include "main.h"
+#include "../main.h"
 
 AudioSettings g_Audio = {
     .goalScoredTrack = GOAL_SCORED_TRACK_1,

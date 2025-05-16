@@ -1,7 +1,7 @@
 #pragma once
 
-#include "assets.h"
-#include "BG_DEF/sprite_colors.h"
+#include "../core/assets.h"
+#include "../palettefx/sprite_colors.h"
 
 #define CHARACTER_ENTRY_TIMER 99
 

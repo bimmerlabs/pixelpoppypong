@@ -1,17 +1,18 @@
-#include "main.h"
+#include "../main.h"
 #include "state.h"
 #include "backup.h"
 #include "assets.h"
-#include "gameplay.h"
-#include "ppp_logo.h"
-#include "title_screen.h"
 #include "screen_transition.h"
-#include "team_select.h"
-#include "objects/player.h"
 #include "audio.h"
-#include "credits.h"
-#include "highscores.h"
-#include "name_entry.h"
+#include "../game/gameplay.h"
+#include "../game/ppp_logo.h"
+#include "../game/title_screen.h"
+#include "../game/team_select.h"
+#include "../game/credits.h"
+#include "../game/highscores.h"
+#include "../game/name_entry.h"
+#include "../objects/player.h"
+#include "../palettefx/nbg1.h"
 
 Uint16 state_fade_timer = STATE_FADE_TIMER;
 
@@ -74,7 +75,7 @@ void changeState(GAME_STATE newState)
         // }
         case GAME_STATE_TEAM_SELECT:
         {
-            reset_audio(HALF_VOLUME);
+            reset_audio(MAX_VOLUME);
             teamSelect_init();
             playCDTrack(SELECT_TRACK, true);
             g_Game.gameState = GAME_STATE_TEAM_SELECT;
@@ -125,6 +126,7 @@ void changeState(GAME_STATE newState)
             do_update_All = true;
             updateAllColors();
             updateAllPalette();
+            update_nbg1_time_slot();
             g_Game.isLoading = true;
             loadCommonAssets();
             reset_audio(MAX_VOLUME);

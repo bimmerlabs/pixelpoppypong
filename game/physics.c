@@ -1,17 +1,17 @@
 #include <jo/jo.h>
 #include "physics.h"
-#include "audio.h"
-#include "math.h"
 #include "gameplay.h"
-#include "objects/goal.h"
-#include "screen_transition.h"
+#include "../core/audio.h"
+#include "../core/math.h"
+#include "../core/screen_transition.h"
+#include "../objects/goal.h"
 
 extern PLAYER g_Players[MAX_PLAYERS];
 
 BallTouchTracker touchedBy[MAX_PLAYERS];
 unsigned int ballTtouchTimer = 0;
 Sint8 lastTouchedBy = -1;
-Sint8 previouslyTouchedBy[3];
+Sint8 previouslyTouchedBy[TOUCHEDBY_BUFFER];
     
 static FIXED maxBallVelocity = FIXED_0;
 
@@ -27,9 +27,9 @@ void initTouchCounter(Uint8 resetTouchCount) {
     }
     ballTtouchTimer = 0;
     lastTouchedBy = -1;
-    previouslyTouchedBy[0] = -1;
-    previouslyTouchedBy[1] = -1;
-    previouslyTouchedBy[2] = -1;
+    for (int i = 0; i < TOUCHEDBY_BUFFER; i++) {
+        previouslyTouchedBy[i] = -1;
+    }
 }
 
 void stopBallMovement(Sprite *ball) {

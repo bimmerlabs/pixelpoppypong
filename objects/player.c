@@ -1,15 +1,15 @@
 #include <jo/jo.h>
 #include <string.h>
-#include "../main.h"
-#include "../assets.h"
 #include "player.h"
-#include "../sprites.h"
-#include "../gameplay.h"
-#include "../AI.h"
-#include "../physics.h"
-#include "../team_select.h"
-#include "../backup.h"
-#include "../BG_DEF/sprite_colors.h"
+#include "../main.h"
+#include "../core/assets.h"
+#include "../core/sprites.h"
+#include "../core/backup.h"
+#include "../game/gameplay.h"
+#include "../game/AI.h"
+#include "../game/physics.h"
+#include "../game/team_select.h"
+#include "../palettefx/sprite_colors.h"
 
 PLAYER g_Players[MAX_PLAYERS] = {0};
 
@@ -1093,14 +1093,12 @@ bool explodePLayer(PPLAYER player)
             // kill player
             player->score.continues--;
             player->subState = PLAYER_STATE_DEAD;
-            g_Team.objectState[player->teamChoice] = OBJECT_STATE_INACTIVE;
             g_Game.currentNumPlayers--;
             if (player->isAI && g_Game.gameMode == GAME_MODE_STORY) {
                 g_Game.countofRounds++; // for story mode only
             }
-            if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
-                setGoalSize(); // not in story mode
-            }
+            g_ExplodeGoal = true;
+            g_Transition.explosion_flash = true;
         }
     }
     return true;
@@ -1109,7 +1107,6 @@ bool explodePLayer(PPLAYER player)
 void killPlayer(Sint8 playerID) {
     g_Players[playerID].score.continues--;
     g_Players[playerID].subState = PLAYER_STATE_DEAD;
-    g_Team.objectState[g_Players[playerID].teamChoice] = OBJECT_STATE_INACTIVE;
     g_Game.currentNumPlayers--;
     if (g_Players[playerID].isAI && g_Game.gameMode == GAME_MODE_STORY) {
         g_Game.countofRounds++;
@@ -1119,15 +1116,14 @@ void killPlayer(Sint8 playerID) {
             save_game_backup();
         }
     }
-    if (g_Game.gameMode != GAME_MODE_STORY && g_Game.currentNumPlayers > 1) {
-        setGoalSize();
-    }
+    g_ExplodeGoal = true;
+    g_Transition.explosion_flash = true;
     // player lost all their lives, assign stars to scoring player
     if (lastTouchedBy != -1 && lastTouchedBy != playerID) {
         g_Players[lastTouchedBy].score.stars++;
     }
     else {
-        for (Uint8 i = 0; i < 3; i++) {
+        for (Uint8 i = 0; i < TOUCHEDBY_BUFFER; i++) {
             Sint8 id = previouslyTouchedBy[i];
             if (id == -1) continue;
             if (g_Players[id].subState == PLAYER_STATE_DEAD) continue;
