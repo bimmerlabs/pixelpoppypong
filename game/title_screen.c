@@ -84,9 +84,9 @@ void titleScreen_init(void)
     g_Game.maxPlayers = ONE_PLAYER;
     g_Game.currentNumPlayers = 0;
     g_Game.numPlayers = ONE_PLAYER;    
-    g_Team.minTeams = -1;
-    g_Team.maxTeams = -1;
-    g_Team.numTeams = -1;    
+    g_Team.minTeams = 0;
+    g_Team.maxTeams = 0;
+    g_Team.numTeams = 0;    
     g_Game.gameDifficulty = GAME_DIFFICULTY_MEDIUM;
     
     g_Transition.mosaic_in = true;

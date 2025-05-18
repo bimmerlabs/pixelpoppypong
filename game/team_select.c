@@ -77,7 +77,7 @@ void teamSelect_init(void)
     all_players_ready = false;
     g_TeamSelectPressedStart = false;
     g_StartGameFrames = TEAM_SELECT_TIMER;
-    g_Team.numTeams = -1;
+    g_Team.numTeams = 0;
     g_Team.minTeams = TEAM_1;
     
     if (g_GameOptions.mesh_display) {
@@ -124,7 +124,7 @@ void teamSelect_update(void)
             for(unsigned int i = 0; i < COUNTOF(g_Players); i++)
             {
                 PPLAYER player = &g_Players[i];
-                if(player->isPlaying != PLAYING)
+                if(!player->isPlaying)
                 {
                     if (g_Game.numPlayers >= g_Game.currentNumPlayers) {
                         initAiPlayers();               
@@ -208,6 +208,7 @@ void drawCharacterSelectGrid(void)
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "PRESS");
             }
             else if (!player->teamSelected && g_Game.numPlayers > ONE_PLAYER) {
+                validateTeam(player);
                 jo_nbg0_printf(text_x+TEAM_TEXT_X1, text_y, "TEAM:");
             }
 
@@ -391,6 +392,7 @@ void characterSelect_input(void)
             if (jo_is_input_key_down(player->input->id, JO_KEY_B) && player->pressedB == false)
             {
                 pcm_play(g_Assets.cancelPcm8, PCM_VOLATILE, 6);
+                player->teamChoice = TEAM_COUNT;
                 player->startSelection = false;
                 characterAvailable[player->character.choice] = true;
                 player->_sprite = &paw_blank;
@@ -537,7 +539,7 @@ void teamSelect_input(void)
                         player->teamChoice = g_Team.maxTeams;
                     }
                 } while (!g_Team.isAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
-
+                
                 // Flip the sprite based on even/odd team
                 if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
                     player->_sprite->flip = sprHflip;
@@ -556,7 +558,6 @@ void teamSelect_input(void)
                     }
                 } while (!g_Team.isAvailable[player->teamChoice]); // Skip full teams // replace with teamAvailable
 
-
                 // Flip the sprite based on even/odd team
                 if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
                     player->_sprite->flip = sprHflip;
@@ -572,6 +573,7 @@ void teamSelect_input(void)
             {
                 pcm_play(g_Assets.cancelPcm8, PCM_VOLATILE, 6);
                 player->pressedB = true;
+                player->teamChoice = TEAM_COUNT;
                 characterAvailable[player->character.choice] = true;
                 player->character.selected = false;
                 return;
@@ -584,7 +586,7 @@ void teamSelect_input(void)
             {
                 pcm_play(g_Assets.nextPcm8, PCM_VOLATILE, 6);
                 // assign_team(player->teamOldTeam, player->teamChoice);
-                player->teamOldTeam = player->teamChoice;
+                // player->teamOldTeam = player->teamChoice;
                 player->teamSelected = true;
                 g_Team.isAvailable[player->teamChoice] = false;
                 g_Team.objectState[player->teamChoice] = OBJECT_STATE_ACTIVE;
@@ -604,7 +606,7 @@ void teamSelect_input(void)
             // PRESS START TO BE "READY"
             if (jo_is_input_key_down(player->input->id, JO_KEY_START))
             {
-                if(!validateTeamCount())
+                if(!validateTeamCount() || player->isReady)
                 {
                     return;
                 }
@@ -621,6 +623,7 @@ void teamSelect_input(void)
                 resetReadyState();
                 all_players_ready = false;
                 player->isReady = false;
+                player->isPlaying = false;
                 player->teamSelected = false;
                 g_Team.isAvailable[player->teamChoice] = true;
                 g_Team.objectState[player->teamChoice] = OBJECT_STATE_INACTIVE;
@@ -656,6 +659,12 @@ void validateTeam(PLAYER *player)
         player->teamChoice++;
         if (player->teamChoice >= TEAM_COUNT)
             player->teamChoice = TEAM_1;
+    }
+    if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
+        player->_sprite->flip = sprHflip;
+    }
+    else {
+        player->_sprite->flip = sprNoflip;
     }
 }
 
@@ -709,12 +718,12 @@ bool validateTeamCount(void)
         if(player->teamChoice == TEAM_COUNT)
         {
             player->numLives = 0;
-            player->isPlaying = NOT_PLAYING;
+            player->isPlaying = false;
             continue;
         }
         else
         {
-            player->isPlaying = PLAYING;
+            player->isPlaying = true;
         }
     }
     return true;

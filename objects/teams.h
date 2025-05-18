@@ -14,10 +14,10 @@ typedef enum _TEAM_SELECT
 
 typedef enum _TEAMS_FOR_SCORING
 {
-    ONE_TEAM = 0,
-    TWO_TEAMS = 1,
-    THREE_TEAMS = 2,
-    FOUR_TEAMS = 3,
+    ONE_TEAM = 1,
+    TWO_TEAMS = 2,
+    THREE_TEAMS = 3,
+    FOUR_TEAMS = 4,
 } TEAMS_FOR_SCORING;
 
 typedef struct _TEAM_OBJECT

@@ -143,7 +143,7 @@ typedef struct _PLAYER
     
     // Team (replaces team struct values)
     short teamChoice;
-    short teamOldTeam;
+    // short teamOldTeam;
     bool teamSelected;
     
     // Attributes from the selected character

@@ -20,7 +20,7 @@
 #define METER_Y1 34
 #define METER_Y2 3
 #define METER_Y3 29
-#define METER_HEIGHT 12
+#define METER_HEIGHT 10
 #define METER_WIDTH 100
 #define PLAYER_OFFSET_Y 112
 #define PLAYER_TEXT_OFFSET_Y 7

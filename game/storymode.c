@@ -87,7 +87,7 @@ void initStoryMode(void)
     
     set_spr_position(player->_cursor, FIXED_0, FIXED_0, CURSOR_DEPTH);
     player->objectState = OBJECT_STATE_ACTIVE;
-    player->isPlaying = PLAYING;
+    player->isPlaying = true;
     player->isAI = false;
     boundPlayer(player);
     draw_story_cursor = false;

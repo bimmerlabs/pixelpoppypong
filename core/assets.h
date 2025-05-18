@@ -134,7 +134,7 @@ typedef struct _assets
 } ASSETS, *PASSETS;
 
 extern ASSETS g_Assets;
-extern int paw_blank_id;
+extern unsigned int paw_blank_id;
 
 // create sprite / animation object
 void loadSprite(Sprite *sprite, int *asset, const char *file, jo_tile *tileset, unsigned int frames, int w, int h, bool asset1or2);

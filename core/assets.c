@@ -6,7 +6,7 @@
 // NOTE: Palette is loaded with the font and shared with all other sprites.
 
 Uint8 palette_transparent_index = 2;
-int paw_blank_id = 0;
+unsigned int paw_blank_id = 0;
 
 ASSETS g_Assets = {
     .GameplaySoundsLoaded = false,
@@ -226,9 +226,9 @@ void loadCharacterAssets(void)
     loadSprite(&stadler, g_Assets.paw10, "PAW10.TGA", paw_tileset, NUM_PAW_SPRITES, 32, 32, true);
     loadSprite(&garfield, g_Assets.paw11, "PAW11.TGA", paw_tileset, NUM_PAW_SPRITES, 32, 32, true);
 
-
+    paw_blank_id = 0;
     paw_blank_id = jo_sprite_add_tga(NULL, "PAW0.TGA", palette_transparent_index);
-    paw_blank.spr_id = paw_blank_id;
+    paw_blank.spr_id = paw_blank_id; // not sure why this is needed - if I set directly, the id is 0
     
     loadSprite(&character_portrait, g_Assets.characters, "PORTRAIT.TGA", character_tileset, NUM_CHARACTER_SPRITES, 48, 48, true);
     

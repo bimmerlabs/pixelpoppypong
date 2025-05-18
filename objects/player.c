@@ -106,13 +106,13 @@ int getLives(PPLAYER player)
             switch(g_Game.gameDifficulty)
             {
                 case GAME_DIFFICULTY_EASY:
-                    numLives = 9;
+                    numLives = 4;
                     break;
                 case GAME_DIFFICULTY_MEDIUM:
                     numLives = 6;
                     break;
                 case GAME_DIFFICULTY_HARD:
-                    numLives = 4;
+                    numLives = 9;
                     break;
                 default:
                     break;
@@ -252,7 +252,7 @@ void initPlayers(void)
         player->startSelection = false;
         player->isReady = false;
         player->pressedB = false; // get rid of this?
-        player->isPlaying = NOT_PLAYING;
+        player->isPlaying = false;
         player->scored = false;
         player->isAI = false;
         player->isExploded = false;
@@ -271,7 +271,7 @@ void initPlayers(void)
         
         // TEAM
         player->teamChoice = TEAM_COUNT;
-        player->teamOldTeam = TEAM_COUNT;
+        // player->teamOldTeam = TEAM_COUNT;
         player->teamSelected = false;
         
         player->moveHorizontal = false;
@@ -325,14 +325,27 @@ void initAiPlayers(void)
 {
     PPLAYER player = NULL;
     
-    for(unsigned int i = 0; i <= g_Game.numPlayers; i++)
+    for(unsigned short i = 0; i < g_Team.maxTeams; i++)
     {
         player = &g_Players[i];
-        if (player->isPlaying == PLAYING) {
+        if (player->isPlaying) {
             continue;
         }
         
+        player->teamChoice = TEAM_1;
         validateTeam(player);
+        // do {
+            // player->teamChoice++;
+            // if (player->teamChoice > g_Team.maxTeams) {
+                // player->teamChoice = TEAM_1;
+            // }
+        // } while (!g_Team.isAvailable[player->teamChoice]);
+        // if (player->teamChoice == TEAM_2 || player->teamChoice == TEAM_4) {
+            // player->_sprite->flip = sprHflip;
+        // }
+        // else {
+            // player->_sprite->flip = sprNoflip;
+        // }
         g_Team.isAvailable[player->teamChoice] = false;
         g_Team.objectState[player->teamChoice] = OBJECT_STATE_ACTIVE;
         g_Team.numTeams++;
@@ -349,7 +362,7 @@ void initAiPlayers(void)
         player->_sprite->pos.r = PLAYER_RADIUS;
         player->shield.activate = false;
         
-        player->isPlaying = PLAYING;
+        player->isPlaying = true;
         player->objectState = OBJECT_STATE_ACTIVE;
         player->isAI = true;
     }
@@ -371,7 +384,7 @@ void initStoryCharacters(void)
     assignCharacterSprite(player);
     assignCharacterStats(player);
     
-    player->isPlaying = PLAYING;
+    player->isPlaying = true;
     player->objectState = OBJECT_STATE_ACTIVE;
     player->subState = PLAYER_STATE_ACTIVE;
     player->isAI = true;
@@ -504,7 +517,7 @@ void initDemoPlayers(void)
     PPLAYER player = NULL;
         
     g_Game.numPlayers = my_random_range(ONE_PLAYER, FOUR_PLAYER);
-    g_Team.numTeams = -1;
+    g_Team.numTeams = 0;
     g_Game.gameMode = GAME_MODE_BATTLE;
     initPlayers();
     
@@ -611,7 +624,7 @@ void initDemoPlayers(void)
         player->_portrait->spr_id = player->_portrait->anim1.asset[player->character.choice];
         set_spr_scale(player->_portrait, 1.1, 1);
         player->objectState = OBJECT_STATE_ACTIVE;
-        player->isPlaying = PLAYING;
+        player->isPlaying = true;
         player->isAI = true;
         player->_sprite->isColliding = false;
         boundPlayer(player);
